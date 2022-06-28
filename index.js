@@ -8,6 +8,7 @@ const cookieSession = require('express-session');
 const router = require('./routes')
 require('dotenv').config()
 require('./services/googleStrategy')
+require('./services/jwtStrategy')
 
 const COOKIE_SECRET = process.env.COOKIE_SECRET;
 

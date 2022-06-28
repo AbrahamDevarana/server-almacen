@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
 const bcrypt = require('bcrypt')
-const { nanoid } = require('nanoid')
 
 
 const Users = db.define('users', {
@@ -65,11 +64,11 @@ const Users = db.define('users', {
             usuario.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10))
         }
     },
-    defaultScope:{
+    defaultScope: {
         attributes:{
             exclude: ['password']
         }
     }
 })
 
-module.exports = Users
+module.exports = Users;

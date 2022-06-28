@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const passport = require('passport')
 const isUserAuthenticated = require('../middleware/loginWithGoogle')
+const requireJwtAuth = require('../middleware/requireJwtAuth')
 require('dotenv').config()
 
 
@@ -21,20 +22,6 @@ router.get(
     (req, res) => {
         console.log('[Callback Login]', req.user);
         res.status(200).json({message: 'Has iniciado sesión correctamente'})
-    }
-)
-
-router.get(
-    'validate',
-    isUserAuthenticated,
-    (req, res) => {
-        if(req.user){
-            res.status(200).json({
-                user: req.user
-            })
-        }else{
-            res.status(401).json({ message: 'Debes iniciar sesión primero'})
-        }
     }
 )
 
