@@ -7,6 +7,6 @@ const requireJwtAuth = require('../middleware/requireJwtAuth');
 
 router.use('/login', googleRoutes)
 router.use('/auth', authRoutes)
-router.use('/api', requireJwtAuth, apiRoutes)
+router.use('/', requireJwtAuth, apiRoutes)
 
 module.exports = router

@@ -21,7 +21,7 @@ app.use(cookieSession({
     maxAge: 24 * 60 * 60 * 1000, // 24 hours,
     saveUninitialized: true,
     resave: false,
-    name: 'express',
+    name: 'dev-session',
     cookie: {
         sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
         secure: process.env.NODE_ENV === "production", // must be true if sameSite='none'
@@ -32,7 +32,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.set("trust proxy", 1);
 
-app.use('/', router)
+app.use('/api', router)
 
 dbConfig.sync()
     .then( () => console.log('Conectado al servidor'))
@@ -42,5 +42,5 @@ const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "0.0.0.0"
 
 app.listen(PORT, HOST, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${process.env.PORT}`);
 });

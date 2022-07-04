@@ -17,9 +17,16 @@ const googleLogin = new GoogleStrategy({
             console.log('Error Login', err);
             return cb(err, null)
         })
-        console.log('User', user.dataValues);
-        if( user.dataValues ) {
+
+        if( user ) {
+            await user.update({
+                google_id: profile.id,
+                password: 'Devarana#1234*'
+            })
+            await user.save()
             return cb(null, user.dataValues)
+        } else {
+            return done(null, false);
         }
 })
 
@@ -28,14 +35,16 @@ passport.serializeUser( (user, cb) => {
 })
 
 passport.deserializeUser( async (id, cb) => {
-    const user = await Users.findOne({ where: {id}}).catch( err => {
+    const user = await Users.findOne({ where: {id:id}}).catch( err => {
         console.log('DeserializeUser Error', err );
         return cb (err, null)
     })
 
     if(user){
-        return cb (null, err)
+        return cb (null, user)
     }
+
+    
 })
 
 

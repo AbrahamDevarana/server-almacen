@@ -43,8 +43,12 @@ const Users = db.define('users', {
         allowNull: false
     },
     google_id:{
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
         allowNull: true
+    },
+    status: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
     },
     createdAt: {
         type: Sequelize.DATE,
@@ -61,7 +65,7 @@ const Users = db.define('users', {
             usuario.updatedAt = new Date()
         },
         beforeCreate: (usuario) => {
-            usuario.password = bcrypt.hashSync(user.password, bcrypt.genSaltSync(10))
+            usuario.password = bcrypt.hashSync(usuario.password, bcrypt.genSaltSync(10))
         }
     },
     defaultScope: {

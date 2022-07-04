@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const isUserAuthenticated = require('../middleware/loginWithGoogle')
+const authController = require('../controllers/authController')
 const jwt = require('../services/jwtStrategy');
 require('dotenv').config()
 
@@ -32,4 +33,6 @@ router.get(
     }
 )
 
+
+router.post('/refresh-access-token', authController.refreshAccessToken)
 module.exports = router
