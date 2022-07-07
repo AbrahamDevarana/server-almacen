@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
 const bcrypt = require('bcrypt')
+const Role = require('./Role')
 
 
 const Users = db.define('users', {
@@ -74,5 +75,8 @@ const Users = db.define('users', {
         }
     }
 })
+
+
+Users.hasOne(Role, { foreignKey: 'id', sourceKey: 'tipoUsuario_id' })
 
 module.exports = Users;

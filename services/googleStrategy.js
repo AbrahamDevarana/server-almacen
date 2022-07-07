@@ -26,7 +26,7 @@ const googleLogin = new GoogleStrategy({
             await user.save()
             return cb(null, user.dataValues)
         } else {
-            return done(null, false);
+            return cb(null, false);
         }
 })
 

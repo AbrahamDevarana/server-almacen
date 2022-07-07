@@ -13,7 +13,7 @@ exports.getAccessToken = (req, res) => {
             refreshToken
         })
     }else{
-        res.status(401).json({ message: "Debes Iniciar Sesión Primero" })
+        res.status(401).json({ message: "Error al iniciar sesión" })
     }
 }
 
