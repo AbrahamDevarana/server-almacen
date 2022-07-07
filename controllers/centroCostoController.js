@@ -1,4 +1,4 @@
-const centroCosto = require('../models/centroCosto');
+const centroCosto = require('../models/CentroCosto');
 
 exports.getCentrosCosto = async (req, res) => {
     try {
