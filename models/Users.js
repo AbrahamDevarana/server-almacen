@@ -77,6 +77,6 @@ const Users = db.define('users', {
 })
 
 
-Users.hasOne(Role, { foreignKey: 'id', sourceKey: 'tipoUsuario_id' })
+Users.belongsTo(Role, { foreignKey: 'tipoUsuario_id' })
 
 module.exports = Users;
