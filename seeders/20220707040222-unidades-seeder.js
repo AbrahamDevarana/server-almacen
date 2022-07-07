@@ -6,7 +6,7 @@ module.exports = {
 		{
 			nombre: 'Tonelada',
 			nombreCorto: 'TON',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 
@@ -14,21 +14,21 @@ module.exports = {
 		{
 			nombre: 'Kilogramo',
 			nombreCorto: 'KG',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Mililitro',
 			nombreCorto: 'ML',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Tramo',
 			nombreCorto: 'TRAMO',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 
@@ -36,21 +36,21 @@ module.exports = {
 		{
 			nombre: 'Bulto',
 			nombreCorto: 'BULTO',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Pieza',
 			nombreCorto: 'PZA',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Litro',
 			nombreCorto: 'LT',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 
@@ -58,35 +58,35 @@ module.exports = {
 		{
 			nombre: 'Bolsa',
 			nombreCorto: 'BOLSA',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Litro',
 			nombreCorto: 'LITRO',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Bote',
 			nombreCorto: 'BOTE',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Galon',
 			nombreCorto: 'GALON',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Cubet',
 			nombreCorto: 'CUBET',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 
@@ -94,21 +94,21 @@ module.exports = {
 		{
 			nombre: 'Metros',
 			nombreCorto: 'MTS',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Metros con M',
 			nombreCorto: 'M',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Rollo',
 			nombreCorto: 'ROLLO',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 
@@ -116,14 +116,14 @@ module.exports = {
 		{
 			nombre: 'Metros cuadrados',
 			nombreCorto: 'M2',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Caja',
 			nombreCorto: 'CAJA',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},

@@ -7,7 +7,7 @@ module.exports = {
 		{
 			nombre: 'Administrador',
 			descripcion: 'Administrador del sistema',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 
@@ -15,7 +15,7 @@ module.exports = {
 		{
 			nombre: 'Compras',
 			descripcion: 'Usuario de compras',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},

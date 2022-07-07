@@ -13,7 +13,7 @@ module.exports = {
       telefono: '1234567890',
       tipoUsuario_id: '1',
       puesto_id: '1',
-      status: true,
+      status: 1,
       createdAt: new Date(),
       updatedAt: new Date()
 		},
@@ -26,7 +26,7 @@ module.exports = {
       telefono: '1234567890',
       tipoUsuario_id: '2',
       puesto_id: '1',
-      status: true,
+      status: 1,
       createdAt: new Date(),
       updatedAt: new Date()
 		},

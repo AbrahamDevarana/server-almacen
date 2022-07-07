@@ -19,7 +19,6 @@ const Actividades = db.define('actividades', {
     status: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: true
     },
     createdAt: {
         type: Sequelize.DATE,

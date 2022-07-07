@@ -7,7 +7,7 @@ module.exports = {
 		{
 			nombre: 'Centro de Costo 1',
 			nombreCorto: 'CC1',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 
@@ -15,14 +15,14 @@ module.exports = {
 		{
 			nombre: 'Centro de Costo 2',
 			nombreCorto: 'CC2',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
 		{
 			nombre: 'Centro de Costo 3',
 			nombreCorto: 'CC3',
-			status: true,
+			status: 1,
 			createdAt: new Date(),
 			updatedAt: new Date()
 		}

@@ -16,7 +16,6 @@ const Nivel = db.define('niveles', {
     status: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: true
     },
     createdAt: {
         type: Sequelize.DATE,
