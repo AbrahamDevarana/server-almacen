@@ -11,7 +11,6 @@ const Nivel = db.define('niveles', {
     nombre: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
     },
     status: {
         type: Sequelize.BOOLEAN,
@@ -33,5 +32,6 @@ const Nivel = db.define('niveles', {
         }
     }
 })
+
 
 module.exports = Nivel

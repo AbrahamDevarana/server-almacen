@@ -2,7 +2,7 @@ const Sequelize = require('sequelize')
 const db = require('../config/db')
 
 
-const CentroCosto = db.define('centro_costos', {
+const Obra = db.define('obra', {
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -12,11 +12,18 @@ const CentroCosto = db.define('centro_costos', {
     nombre: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
     },
-    nombreCorto: {
+    clave: {
         type: Sequelize.STRING,
         allowNull: false,
+    },
+    centroCosto: {
+        type: Sequelize.STRING,
+        allowNull: true,
+    },
+    obra: {
+        type: Sequelize.STRING,
+        allowNull: true,
     },
     status: {
         type: Sequelize.BOOLEAN,
@@ -33,10 +40,19 @@ const CentroCosto = db.define('centro_costos', {
 }, {
     paranoid: true,
     hooks: {
-        beforeUpdate: (centroCosto) => {
-            centroCosto.updatedAt = new Date()
+        beforeUpdate: (obra) => {
+            obra.updatedAt = new Date()
+            obra.obra = obra.clave.split('-')[0]
+            obra.centroCosto = obra.clave.split('-')[1]
+        },
+        beforeCreate: (obra) => {
+            obra.obra = obra.clave.split('-')[0]
+            obra.centroCosto = obra.clave.split('-')[1]
         }
-    }
-})
+    
+    }}
+)
 
-module.exports = CentroCosto
+
+
+module.exports = Obra
