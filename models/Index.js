@@ -1,7 +1,7 @@
 const Obra = require('./Obra')
-const Nivel = require('../models/Nivel')
-const Zona = require('../models/Zona')
-const Actividad = require('../models/Actividad')
+const Nivel = require('./Nivel')
+const Zona = require('./Zona')
+const Actividad = require('./Actividad')
 
 // Este archivo genera relaciones many to many entre tablas
 
