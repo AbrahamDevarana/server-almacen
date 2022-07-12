@@ -12,7 +12,7 @@ module.exports = {
       password: '$2b$10$X.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q',
       telefono: '1234567890',
       tipoUsuario_id: '1',
-      puesto_id: '1',
+      puesto: 'Desarrollador Web',
       status: 1,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -25,7 +25,7 @@ module.exports = {
       password: '$2b$10$X.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q.Q',
       telefono: '1234567890',
       tipoUsuario_id: '2',
-      puesto_id: '1',
+      puesto: 'Gerente de Innovación y Calidad',
       status: 1,
       createdAt: new Date(),
       updatedAt: new Date()

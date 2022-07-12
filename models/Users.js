@@ -39,8 +39,8 @@ const Users = db.define('users', {
         type: Sequelize.INTEGER,
         allowNull: false
     },
-    puesto_id: {
-        type: Sequelize.INTEGER,
+    puesto: {
+        type: Sequelize.STRING,
         allowNull: false
     },
     google_id:{

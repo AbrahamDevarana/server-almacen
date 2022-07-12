@@ -5,11 +5,13 @@ const Zona = require('../models/Zona')
 
 exports.getNiveles = async (req, res) => {
     try {
-        const niveles = await Nivel.findAll().catch(error => {
+        const niveles = await Nivel.findAll({ include: [Actividad, Zona]}).catch(error => {
             res.status(500).json({ message: 'Error al obtener los niveles', error: error.message })
         })
         if(niveles && niveles.length > 0){
             res.status(200).json({ niveles })
+        }else{
+            res.status(404).json({ message: 'Niveles no encontrados' })
         }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
@@ -89,6 +91,8 @@ exports.deleteNivel = async (req, res) => {
         if(nivel){
             nivel.destroy()
             res.status(200).json({ nivel })
+        }else{
+            res.status(404).json({ message: 'Nivel no encontrado' })
         }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
