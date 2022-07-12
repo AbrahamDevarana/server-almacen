@@ -3,6 +3,9 @@ const Nivel = require('./Nivel')
 const Zona = require('./Zona')
 const Actividad = require('./Actividad')
 
+const Personal = require('./Personal')
+const User = require('./Users')
+
 // Este archivo genera relaciones many to many entre tablas
 
 
@@ -19,10 +22,11 @@ Nivel.belongsToMany(Actividad, {  through: 'pivot_niveles_actividades', foreignK
 Actividad.belongsToMany(Nivel, {  through: 'pivot_niveles_actividades', foreignKey: 'actividadesId'  });
 
 
-
+Personal.belongsTo(User, { foreignKey: 'userId' })
 
 module.exports = {
     Obra,
     Nivel,
-    Zona
+    Zona,
+    Personal
 }

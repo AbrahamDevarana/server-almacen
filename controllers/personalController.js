@@ -1,0 +1,115 @@
+const Personal = require('../models/Personal');
+const Users = require('../models/Users');
+const moment = require('moment');
+require ("moment/locale/es-mx")
+
+exports.createPersonal = async (req, res) => {
+    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
+    try {
+        const personal = await Personal.create({
+            nombre,
+            apellidoPaterno,
+            apellidoMaterno,
+            fechaIngreso: moment(fechaIngreso, 'DD-MM-YYYY').format('YYYY-MM-DD'),
+            userId: req.user.id
+        }).catch(error => {
+            res.status(500).json({ message: 'Error al crear el personal', error: error.message });
+        });
+
+        if (personal) {
+            res.status(200).json({ personal });
+        }else{
+            res.status(500).json({ message: 'Error al crear el personal' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }   
+}
+
+exports.updatePersonal = async (req, res) => {
+    const { id } = req.params;
+    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
+
+    try {
+        const personal = await Personal.findOne({ where: { id } }).catch(error => {
+            res.status(500).json({ message: 'Error al obtener el personal', error: error.message });
+        });
+
+        if(personal.userId === req.user.id){
+            if (personal) {
+                personal.nombre = nombre ?? personal.nombre;
+                personal.apellidoPaterno = apellidoPaterno ?? personal.apellidoPaterno;
+                personal.apellidoMaterno = apellidoMaterno ?? personal.apellidoMaterno;
+                personal.fechaIngreso = moment(fechaIngreso, 'DD-MM-YYYY').format('YYYY-MM-DD') ?? personal.fechaIngreso;
+
+                await personal.save().catch(error => {
+                    res.status(500).json({ message: 'Error al actualizar el personal', error: error.message });
+                });
+
+                res.status(200).json({ personal });
+            }else{
+                res.status(500).json({ message: 'Error al actualizar el personal' });
+            }
+        }else{
+            res.status(500).json({ message: 'No tienes permisos para actualizar este personal' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }   
+}
+
+exports.getPersonal = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const personal = await Personal.findOne({ where: { id } }).catch(error => {
+            res.status(500).json({ message: 'Error al obtener el personal', error: error.message });
+        });
+
+        if (personal) {
+            res.status(200).json({ personal });
+        }else{
+            res.status(500).json({ message: 'Error al obtener el personal' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }   
+}
+
+exports.getAllPersonal = async (req, res) => {
+    try {
+        const personal = await Personal.findAll({include: Users}).catch(error => {
+            res.status(500).json({ message: 'Error al obtener los personales', error: error.message });
+        });
+
+        if (personal) {
+            res.status(200).json({ personal });
+        }else{
+            res.status(500).json({ message: 'Error al obtener los personales' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }   
+}
+
+exports.deletePersonal = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const personal = await Personal.findOne({ where: { id } }).catch(error => {
+            res.status(500).json({ message: 'Error al obtener el personal', error: error.message });
+        });
+
+        if (personal) {
+            await personal.destroy().catch(error => {
+                res.status(500).json({ message: 'Error al eliminar el personal', error: error.message });
+            });
+
+            res.status(200).json({ personal });
+        }else{
+            res.status(500).json({ message: 'Error al eliminar el personal' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message });
+    }   
+}
