@@ -74,7 +74,7 @@ exports.deleteZona = async (req, res) => {
         })
         if(zona){
             await zona.destroy()
-            res.status(200).json({message: 'Zona eliminada'})
+            res.status(200).json({zona})
         }
     }catch(error){
         res.status(500).json({message: 'Error del servidor', error: error.message})

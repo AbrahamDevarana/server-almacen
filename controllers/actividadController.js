@@ -72,6 +72,7 @@ exports.deleteActividad = async (req, res) => {
         })
         if(actividad){
             await actividad.destroy()
+            res.status(200).json({actividad})
         }
     }
     catch (error) {
