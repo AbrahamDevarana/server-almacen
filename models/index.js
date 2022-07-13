@@ -5,9 +5,12 @@ const Actividad = require('./Actividad')
 
 const Personal = require('./Personal')
 const User = require('./Users')
+const ValeSalida = require('./ValeSalida')
+const DetalleSalida = require('./DetalleSalida')
 
-// Este archivo genera relaciones many to many entre tablas
+// Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
+// En esta parte solo son relaciones many to many, y genera automaticamente las tablas que se necesitan mediante el valor through.
 
 // Relaciones many to many entre Centro Costo y Niveles 
 Obra.belongsToMany(Nivel, {  through: 'pivot_niveles_obras', foreignKey: 'obraId' })
@@ -22,11 +25,26 @@ Nivel.belongsToMany(Actividad, {  through: 'pivot_niveles_actividades', foreignK
 Actividad.belongsToMany(Nivel, {  through: 'pivot_niveles_actividades', foreignKey: 'actividadesId'  });
 
 
+// En esta parte solo son relaciones one to many o many to one entre tablas
 Personal.belongsTo(User, { foreignKey: 'userId' })
+
+//Vales
+ValeSalida.belongsTo(User, { foreignKey: 'userId' })
+ValeSalida.belongsTo(Obra, { foreignKey: 'obraId' })
+ValeSalida.belongsTo(Nivel, { foreignKey: 'nivelId' })
+ValeSalida.belongsTo(Zona, { foreignKey: 'zonaId' })
+ValeSalida.belongsTo(Actividad, { foreignKey: 'actividadId' })
+ValeSalida.belongsTo(Personal, { foreignKey: 'personalId' })
+
+ValeSalida.hasMany(DetalleSalida, { foreignKey: 'valeSalidaId' })
+
+DetalleSalida.belongsTo(ValeSalida, { foreignKey: 'valeSalidaId' })
 
 module.exports = {
     Obra,
     Nivel,
     Zona,
-    Personal
+    Personal,
+    ValeSalida,
+    DetalleSalida
 }

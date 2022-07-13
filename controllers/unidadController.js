@@ -71,6 +71,7 @@ exports.deleteUnidad = async (req, res) => {
         })
         if(unidad){
             await unidad.destroy()
+            res.status(200).json({ unidad })
         }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })

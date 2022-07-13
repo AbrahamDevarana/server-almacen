@@ -7,6 +7,8 @@ const zonaRoute = require('./apiRoutes/zonaRoute')
 const unidadRoute = require('./apiRoutes/unidadRoute')
 const obraRoute = require('./apiRoutes/obraRoute')
 const personalRoute = require('./apiRoutes/personalRoute')
+const insumoRoute = require('./apiRoutes/insumoRoute')
+const valeRoute = require('./apiRoutes/valeRoute')
 
 router.use('/usuarios', userRoute)
 router.use('/roles', roleRoute)
@@ -16,6 +18,8 @@ router.use('/zonas', zonaRoute)
 router.use('/unidades', unidadRoute)
 router.use('/obras', obraRoute)
 router.use('/personal', personalRoute)
+router.use('/insumos', insumoRoute)
+router.use('/vales', valeRoute)
 
 
 module.exports = router
