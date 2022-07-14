@@ -51,8 +51,6 @@ exports.createUser = async (req, res) => {
         }).catch(error => {
             res.status(500).json({ message: 'Error al crear el usuario', error: error.message })
         })
-        
-        console.log(usuario);
         if(usuario){
             delete usuario.dataValues.password
             

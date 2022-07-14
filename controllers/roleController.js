@@ -32,6 +32,7 @@ exports.getRoles = async (req, res) => {
 
 exports.createRole = async (req, res) => {
     const { nombre, descripcion, status } = req.body
+
     try {
         const role = await Role.create({
             nombre,
@@ -75,7 +76,7 @@ exports.deleteRole = async (req, res) => {
     })
         if(role){
             await role.destroy()
-            res.status(200).json({ message: 'Rol eliminado' })
+            res.status(200).json({ role })
         }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })

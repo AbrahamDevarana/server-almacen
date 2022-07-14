@@ -29,12 +29,12 @@ Actividad.belongsToMany(Nivel, {  through: 'pivot_niveles_actividades', foreignK
 Personal.belongsTo(User, { foreignKey: 'userId' })
 
 //Vales
-ValeSalida.belongsTo(User, { foreignKey: 'userId' })
-ValeSalida.belongsTo(Obra, { foreignKey: 'obraId' })
-ValeSalida.belongsTo(Nivel, { foreignKey: 'nivelId' })
-ValeSalida.belongsTo(Zona, { foreignKey: 'zonaId' })
-ValeSalida.belongsTo(Actividad, { foreignKey: 'actividadId' })
-ValeSalida.belongsTo(Personal, { foreignKey: 'personalId' })
+ValeSalida.belongsTo(User, { foreignKey: 'userId', as: 'user' })
+ValeSalida.belongsTo(Obra, { foreignKey: 'obraId', as: 'obra' })
+ValeSalida.belongsTo(Nivel, { foreignKey: 'nivelId', as: 'nivel' })
+ValeSalida.belongsTo(Zona, { foreignKey: 'zonaId', as: 'zona' })
+ValeSalida.belongsTo(Actividad, { foreignKey: 'actividadId', as: 'actividad' })
+ValeSalida.belongsTo(Personal, { foreignKey: 'personalId', as: 'personal' })
 
 ValeSalida.hasMany(DetalleSalida, { foreignKey: 'valeSalidaId' })
 

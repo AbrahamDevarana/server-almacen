@@ -3,7 +3,7 @@ const DetalleSalida = require('../models/DetalleSalida')
 
 exports.getAllValeSalida = async (req, res) => {
     try {
-        const valeSalida = await ValeSalida.findAll({ include: DetalleSalida }).catch(error => {
+        const valeSalida = await ValeSalida.findAll({ include: [ DetalleSalida, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
         })
         if(valeSalida && valeSalida.length > 0){
@@ -49,7 +49,6 @@ exports.createValeSalida = async (req, res) => {
             userId,
         }).catch(error => {
             res.status(500).json({ message: 'Error al crear el vale de salida', error: error.message })
-            console.log(error);
         })
         if(valeSalida){
             const detalleSalida = await DetalleSalida.bulkCreate(listaInsumos.map(insumo => ({
@@ -65,7 +64,6 @@ exports.createValeSalida = async (req, res) => {
         }
     }
     catch (error) {
-        console.log(error);
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
