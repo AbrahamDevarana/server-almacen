@@ -48,6 +48,7 @@ exports.createRole = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
+
 exports.updateRole = async (req, res) => {
     const { id } = req.params
     const { nombre, descripcion, status } = req.body
@@ -67,6 +68,7 @@ exports.updateRole = async (req, res) => {
     }
 
 }
+
 exports.deleteRole = async (req, res) => {
 
     const { id } = req.params

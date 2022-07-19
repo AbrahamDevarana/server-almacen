@@ -27,7 +27,7 @@ const Insumo = db.define('insumos', {
     },
     status: {
         type: Sequelize.BOOLEAN,
-        allowNull: false,
+        defaultValue: 1
     },
     createdAt: {
         type: Sequelize.DATE,

@@ -7,7 +7,6 @@ require('dotenv').config()
 
 router.get(
     '/logout', 
-    isUserAuthenticated,
     (req, res) => {
         res.clearCookie('express')
         req.session.destroy(null)

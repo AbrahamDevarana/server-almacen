@@ -30,6 +30,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.0",
     "sequelize": "^6.21.0",
-    "slugify": "^1.6.5"
+    "slugify": "^1.6.5",
+    "socket.io": "^4.5.1"
   }
 }

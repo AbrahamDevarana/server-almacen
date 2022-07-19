@@ -7,6 +7,7 @@ const Personal = require('./Personal')
 const User = require('./Users')
 const ValeSalida = require('./ValeSalida')
 const DetalleSalida = require('./DetalleSalida')
+const Insumo = require('./Insumos')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -39,6 +40,7 @@ ValeSalida.belongsTo(Personal, { foreignKey: 'personalId', as: 'personal' })
 ValeSalida.hasMany(DetalleSalida, { foreignKey: 'valeSalidaId' })
 
 DetalleSalida.belongsTo(ValeSalida, { foreignKey: 'valeSalidaId' })
+DetalleSalida.belongsTo(Insumo, { foreignKey: 'insumoId' })
 
 module.exports = {
     Obra,

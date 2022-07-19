@@ -6,6 +6,7 @@ const app = express()
 const dbConfig = require('./config/db')
 const cookieSession = require('express-session');
 const router = require('./routes')
+
 require('dotenv').config()
 require('./services/googleStrategy')
 require('./services/jwtStrategy')
@@ -39,9 +40,17 @@ dbConfig.sync()
     .then( () => console.log('Conectado al servidor'))
     .catch( error => console.log(error))
 
+const io = require('./services/socketIo')
+
+
+
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "0.0.0.0"
 
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
     console.log(`Server running on port ${process.env.PORT}`);
+    console.log(server.address())
 });
+
+
+io.attach(server)

@@ -1,9 +1,10 @@
 const ValeSalida = require('../models/ValeSalida')
 const DetalleSalida = require('../models/DetalleSalida')
+const Insumo = require('../models/Insumos')
 
 exports.getAllValeSalida = async (req, res) => {
     try {
-        const valeSalida = await ValeSalida.findAll({ include: [ DetalleSalida, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
+        const valeSalida = await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
         })
         if(valeSalida && valeSalida.length > 0){
