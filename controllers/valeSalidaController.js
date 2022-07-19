@@ -7,7 +7,7 @@ exports.getAllValeSalida = async (req, res) => {
         const valeSalida = await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
         })
-        if(valeSalida && valeSalida.length > 0){
+        if(valeSalida){
             res.status(200).json({ valeSalida })
         }else{
             res.status(404).json({ message: 'No hay vale de salida' })

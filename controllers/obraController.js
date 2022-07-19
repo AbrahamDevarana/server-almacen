@@ -6,7 +6,7 @@ exports.getObras = async (req, res) => {
         const obra = await Obra.findAll({ include: Nivel }).catch(error => {
             res.status(500).json({ message: 'Error al obtener las obras', error: error.message })
         })
-        if(obra && obra.length > 0){
+        if(obra){
             res.status(200).json({ obra })
         }else{
             res.status(404).json({ message: 'No hay obras' })

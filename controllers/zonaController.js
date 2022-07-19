@@ -6,7 +6,7 @@ exports.getZonas = async (req, res) => {
         const zonas = await Zona.findAll().catch(error => {
             res.status(500).json({ message: 'Error al obtener las zonas', error: error.message })
         })
-        if(zonas && zonas.length > 0){
+        if(zonas){
             res.status(200).json({ zonas })
         }
     } catch (error) {

@@ -23,4 +23,6 @@ router.put('/:id', [
 
 router.delete('/:id', insumoController.deleteInsumo )
 
+router.post('/massiveUpload', insumoController.massiveUpload)
+
 module.exports = router

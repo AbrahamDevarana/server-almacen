@@ -20,7 +20,7 @@ exports.getRoles = async (req, res) => {
         const roles = await Role.findAll().catch(error => {
             res.status(500).json({ message: 'Error al obtener los roles', error: error.message })
         })
-        if(roles && roles.length > 0){
+        if(roles){
             res.status(200).json({ roles })
         }else {
             res.status(404).json({ message: 'No hay roles registrados' })

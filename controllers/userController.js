@@ -24,7 +24,7 @@ exports.getUsers = async (req, res) => {
         const usuarios = await Users.findAll({ where: { status: true }, include: Role }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los usuarios', error: error.message })
         })
-        if(usuarios && usuarios.length > 0){
+        if(usuarios){
             res.status(200).json({ usuarios })
         }else{
             res.status(404).json({ message: 'No hay usuarios registrados' })

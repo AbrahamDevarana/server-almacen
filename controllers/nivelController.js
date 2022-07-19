@@ -8,7 +8,7 @@ exports.getNiveles = async (req, res) => {
         const niveles = await Nivel.findAll({ include: [Actividad, Zona]}).catch(error => {
             res.status(500).json({ message: 'Error al obtener los niveles', error: error.message })
         })
-        if(niveles && niveles.length > 0){
+        if(niveles){
             res.status(200).json({ niveles })
         }else{
             res.status(404).json({ message: 'Niveles no encontrados' })

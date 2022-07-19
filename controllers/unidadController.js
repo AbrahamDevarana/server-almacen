@@ -5,7 +5,7 @@ exports.getUnidades = async (req, res) => {
         const unidades = await Unidad.findAll().catch(error => {
             res.status(500).json({ message: 'Error al obtener las unidades', error: error.message })
         })
-        if(unidades && unidades.length > 0){
+        if(unidades){
             res.status(200).json({ unidades })
         }
     } catch (error) {
