@@ -20,5 +20,7 @@ router.post('/',
 
 router.put('/:id', valeController.updateValeSalida )
 
+router.post('/deliver', valeController.deliverValeSalida)
+
 
 module.exports = router

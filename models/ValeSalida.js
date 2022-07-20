@@ -42,9 +42,10 @@ const ValeSalida = db.define('vale_salida', {
         allowNull: false,
         defaultValue: Sequelize.NOW
     },
-    statusVale: {
+    statusVale: { // 1: Sin Entregar 2: Parcialmente Entregado Abierto 3: Parcialmente Entregado Cerrado 4: Entregado
         type: Sequelize.SMALLINT,
         allowNull: false,        
+        defaultValue: 1
     },
     createdAt: {
         type: Sequelize.DATE,

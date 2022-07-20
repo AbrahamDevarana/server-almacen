@@ -17,7 +17,7 @@ const DetalleSalida = db.define('detalle_salida', {
         type: Sequelize.INTEGER,
         allowNull: false,
     },
-    cantidad: {
+    cantidadSolicitada: {
         type: Sequelize.DECIMAL(10,2),
         allowNull: false,
     },
@@ -25,6 +25,15 @@ const DetalleSalida = db.define('detalle_salida', {
         type: Sequelize.DECIMAL(10,2),
         allowNull: false,
         defaultValue: 0
+    },
+    status:{ /// 1: Sin Entregar 2: Parcialmente Entregado Abierto 3: Parcialmente Entregado Cerrado 4: Entregado 4: Sin Insumos
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 1
+    },
+    comentarios:{
+        type: Sequelize.TEXT,
+        allowNull: true,
     },
     createdAt: {
         type: Sequelize.DATE,
