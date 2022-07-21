@@ -147,7 +147,10 @@ exports.deliverValeSalida = async (req, res) => {
         if(insumo){
 
             // validar si la cantidad entregada es mayor a la cantidad solicitada
-            if(insumo.cantidadEntregada + cantidadEntregada > insumo.cantidadSolicitada){
+            if(Number(insumo.cantidadEntregada) + Number(cantidadEntregada) > Number(insumo.cantidadSolicitada)){
+                console.log(cantidadEntregada)
+                console.log(insumo.cantidadEntregada)
+                console.log(insumo.cantidadSolicitada)
                 res.status(400).json({ message: 'La cantidad a entregar es mayor a la cantidad del insumo' })
             }
 
@@ -182,21 +185,18 @@ exports.deliverValeSalida = async (req, res) => {
     }
 }
 
-// Valida todos los insumos, si ya fueron entregados, entonces cambia el estatus a 6
+// Valida todos los insumos, si ya fueron entregados, entonces cambia el estatus del vale a 6 sino a 3
 async function validateVale(valeSalida) {
     const insumos = valeSalida.detalle_salidas
-    if(insumos.length > 0){
-        const some = insumos.some(insumo => insumo.cantidadEntregada === insumo.cantidadSolicitada )
-        const every = insumos.every(insumo => insumo.cantidadEntregada === insumo.cantidadSolicitada )      
-        
-        if ( some ){
+    if (insumos.length > 0) {
+        const insumosEntregados = insumos.filter(insumo => insumo.status !== 6)
+        if (insumosEntregados.length === insumos.length) {
             valeSalida.statusVale = 2
-        } else if(every){
+        } else {
             valeSalida.statusVale = 6
         }
-        
-
     }
+
     await valeSalida.save()
 }
 
