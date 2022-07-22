@@ -1,6 +1,7 @@
 const Actividad = require('../models/Actividad')
 const Nivel = require('../models/Nivel')
 const Zona = require('../models/Zona')
+const { validationResult } = require('express-validator')
 
 
 exports.getNiveles = async (req, res) => {
@@ -36,6 +37,13 @@ exports.getNivel = async ( req, res ) => {
     }
 }
 exports.createNivel = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+
     const { nombre, status, zonas, actividades } = req.body
     try {
         const nivel = await Nivel.create({
@@ -58,6 +66,13 @@ exports.createNivel = async (req, res) => {
     }
 }
 exports.updateNivel = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+    
     const { id } = req.params
     const { nombre, status, zonas, actividades } = req.body
     try {

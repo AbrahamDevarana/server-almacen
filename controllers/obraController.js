@@ -35,6 +35,10 @@ exports.getObra = async (req, res) => {
 }
 
 exports.createObra = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
 
     const { nombre, clave, status, niveles} = req.body;
     try {
@@ -60,6 +64,11 @@ exports.createObra = async (req, res) => {
 }
 
 exports.updateObra = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
    const {id} = req.params;
     const { nombre, clave, status, niveles} = req.body;
     try{

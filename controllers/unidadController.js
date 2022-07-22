@@ -1,4 +1,5 @@
 const Unidad = require('../models/Unidad');
+const validationResult = require('express-validator');
 
 exports.getUnidades = async (req, res) => {
     try {
@@ -28,6 +29,12 @@ exports.getUnidad = async (req, res) => {
 }
 
 exports.createUnidad = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
     const { nombre, nombreCorto, status } = req.body
     try {
         const unidad = await Unidad.create({
@@ -46,6 +53,12 @@ exports.createUnidad = async (req, res) => {
 }
 
 exports.updateUnidad = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+
     const {id} = req.params
     const {nombre, nombreCorto, status} = req.body
     try{

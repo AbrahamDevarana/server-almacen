@@ -8,6 +8,8 @@ const User = require('./Users')
 const ValeSalida = require('./ValeSalida')
 const DetalleSalida = require('./DetalleSalida')
 const Insumo = require('./Insumos')
+const Role = require('./Role')
+const Permisos = require('./Permisos')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -25,6 +27,9 @@ Zona.belongsToMany(Nivel, {  through: 'pivot_niveles_zonas', foreignKey: 'zonasI
 Nivel.belongsToMany(Actividad, {  through: 'pivot_niveles_actividades', foreignKey: 'nivelesId'  });
 Actividad.belongsToMany(Nivel, {  through: 'pivot_niveles_actividades', foreignKey: 'actividadesId'  });
 
+Role.belongsToMany(Permisos, {  through: 'pivot_roles_permisos', foreignKey: 'roleId'  });
+Permisos.belongsToMany(Role, {  through: 'pivot_roles_permisos', foreignKey: 'permisoId'  });
+
 
 // En esta parte solo son relaciones one to many o many to one entre tablas
 Personal.belongsTo(User, { foreignKey: 'userId' })
@@ -41,6 +46,10 @@ ValeSalida.hasMany(DetalleSalida, { foreignKey: 'valeSalidaId' })
 
 DetalleSalida.belongsTo(ValeSalida, { foreignKey: 'valeSalidaId' })
 DetalleSalida.belongsTo(Insumo, { foreignKey: 'insumoId' })
+
+
+// ROles
+Role.hasMany(User, { foreignKey: 'tipoUsuario_id' })
 
 module.exports = {
     Obra,

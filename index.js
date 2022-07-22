@@ -6,6 +6,7 @@ const app = express()
 const dbConfig = require('./config/db')
 const cookieSession = require('express-session');
 const router = require('./routes')
+const fs = require('fs')
 
 require('dotenv').config()
 require('./services/googleStrategy')
@@ -43,6 +44,14 @@ dbConfig.sync()
 const io = require('./services/socketIo')
 
 
+
+process.on('uncaughtException', (err, origin) => {
+    console.error('Vaya ha habido un error tipo: uncaughtException')
+})
+
+process.on('unhandledRejection', (err, origin) => {
+    console.error('Vaya ha habido un error tipo:  unhandledRejection')
+})
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "0.0.0.0"

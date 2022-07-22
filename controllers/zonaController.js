@@ -1,5 +1,5 @@
 const Zona = require('../models/Zona')
-
+const { validationResult } = require('express-validator')
 
 exports.getZonas = async (req, res) => {
     try {
@@ -29,6 +29,12 @@ exports.getZona = async (req, res) => {
 }
 
 exports.createZona = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
    const { nombre, status } = req.body
     try {
         const zona = await Zona.create({
@@ -47,6 +53,11 @@ exports.createZona = async (req, res) => {
 }
 
 exports.updateZona = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
     const {id} = req.params
     const {nombre, status} = req.body
 

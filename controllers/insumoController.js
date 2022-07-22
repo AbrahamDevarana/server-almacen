@@ -2,6 +2,7 @@ const Insumo = require('../models/Insumos')
 const multer = require('multer')
 const fs = require('fs');
 const csv = require('fast-csv');
+const { validationResult } = require('express-validator')
 
 exports.getInsumos = async (req, res) => {
     try {
@@ -35,6 +36,11 @@ exports.getInsumo = async (req, res) => {
 }
 
 exports.createInsumo = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
     const { claveEnk, centroCosto, nombre, unidadMedida, status } = req.body
     try {
         const insumo = await Insumo.create({
@@ -56,6 +62,12 @@ exports.createInsumo = async (req, res) => {
 }
 
 exports.updateInsumo = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
     const {id} = req.params
     const {claveEnk, centroCosto, nombre, unidadMedida, status} = req.body
     try{

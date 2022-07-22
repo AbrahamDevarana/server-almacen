@@ -1,4 +1,5 @@
 const Role = require('../models/Role')
+const validationResult = require('express-validator')
 
 
 exports.getRole = async (req, res) => {
@@ -31,6 +32,10 @@ exports.getRoles = async (req, res) => {
 }
 
 exports.createRole = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
     const { nombre, descripcion, status } = req.body
 
     try {
@@ -50,6 +55,13 @@ exports.createRole = async (req, res) => {
 }
 
 exports.updateRole = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+
     const { id } = req.params
     const { nombre, descripcion, status } = req.body
     try {

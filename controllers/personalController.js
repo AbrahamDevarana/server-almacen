@@ -1,9 +1,16 @@
 const Personal = require('../models/Personal');
 const Users = require('../models/Users');
 const moment = require('moment');
+const validationResult = require('express-validator')
 require ("moment/locale/es-mx")
 
+
 exports.createPersonal = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
     const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
     try {
         const personal = await Personal.create({
@@ -27,6 +34,11 @@ exports.createPersonal = async (req, res) => {
 }
 
 exports.updatePersonal = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.array() });
+    }
+
     const { id } = req.params;
     const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
 

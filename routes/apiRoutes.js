@@ -9,6 +9,7 @@ const obraRoute = require('./apiRoutes/obraRoute')
 const personalRoute = require('./apiRoutes/personalRoute')
 const insumoRoute = require('./apiRoutes/insumoRoute')
 const valeRoute = require('./apiRoutes/valeRoute')
+const permisoRoute = require('./apiRoutes/permisoRoute')
 
 router.use('/usuarios', userRoute)
 router.use('/roles', roleRoute)
@@ -20,6 +21,7 @@ router.use('/obras', obraRoute)
 router.use('/personal', personalRoute)
 router.use('/insumos', insumoRoute)
 router.use('/vales', valeRoute)
+router.use('/permisos', permisoRoute)
 
 
 module.exports = router

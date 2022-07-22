@@ -1,6 +1,8 @@
 const ValeSalida = require('../models/ValeSalida')
 const DetalleSalida = require('../models/DetalleSalida')
 const Insumo = require('../models/Insumos')
+const { validationResult } = require('express-validator')
+
 
 exports.getAllValeSalida = async (req, res) => {
     try {
@@ -34,6 +36,13 @@ exports.getValeSalida = async (req, res) => {
 }
 
 exports.createValeSalida = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+
     const { almacenId, obraId, nivelId, zonaId, actividadId, personalId, statusVale, listaInsumos } = req.body
 
     const userId = req.user.id
@@ -70,6 +79,13 @@ exports.createValeSalida = async (req, res) => {
 }
 
 exports.updateValeSalida = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+
     const { id } = req.params
     const { almacenId, obraId, nivelId, zonaId, actividadId, personalId, statusVale, listaInsumos } = req.body
     const userId = req.user.id
@@ -131,6 +147,11 @@ exports.updateValeSalida = async (req, res) => {
 }
 
 exports.deliverValeSalida = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
 
     const { id, valeSalidaId, insumoId, cantidadEntregada, comentarios } = req.body
 

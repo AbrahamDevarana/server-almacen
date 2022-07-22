@@ -1,5 +1,8 @@
 const Role = require('../models/Role')
 const Users = require('../models/Users')
+const { validationResult } = require('express-validator')
+const {mailSender} = require('../utils/sendMail')
+
 
 exports.getUser = async (req, res) => {
     const {id} = req.params
@@ -36,35 +39,64 @@ exports.getUsers = async (req, res) => {
 }
 
 exports.createUser = async (req, res) => {
-    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto_id } = req.body
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto } = req.body
+    
 
     try {
-        const usuario = await Users.create({
-            nombre,
-            apellidoPaterno,
-            apellidoMaterno,
-            email: email ?? '',
-            password: '123456',
-            telefono,
-            tipoUsuario_id,
-            puesto_id
-        }).catch(error => {
-            res.status(500).json({ message: 'Error al crear el usuario', error: error.message })
+
+        const existsUser = await Users.findOne({ where: { email } }).catch(error => {
+            res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
         })
-        if(usuario){
-            delete usuario.dataValues.password
-            
-            res.status(200).json({ usuario })
+    
+        if(existsUser){
+            res.status(400).json({ message: 'El usuario ya existe' })
+        }else{
+            const usuario = await Users.create({
+                nombre,
+                apellidoPaterno,
+                apellidoMaterno,
+                email,
+                password: '123456',
+                telefono: telefono ?? '',
+                tipoUsuario_id,
+                puesto
+            }).catch(error => {
+                res.status(500).json({ message: 'Error al crear el usuario', error: error.message })
+            })
+            if(usuario){
+                delete usuario.dataValues.password
+                usuario.getDataValue('Role', await usuario.getRole())
+                const html = `
+                    <h1>Bienvenido a la Sistema de Gestión de Obra </h1>
+                    <p>Hola ${usuario.nombre} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}</p>
+                    <p>Para poder ingresar al sistema, deberás usar tu email</p>
+                    <p>${usuario.email}</p>
+                    <p> En el siguiente enlace <a href="http://erp-devarana.mx/login">Ingresar</a> </p>
+                `
+                mailSender(usuario.email, 'Bienvenido a la plataforma de almacén', html)
+                res.status(200).json({ usuario })
+            }
         }
-        
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }   
 }
 
 exports.updateUser = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
     const { id } = req.params
-    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto_id, status } = req.body
+    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, status } = req.body
 
     try {
 
@@ -79,7 +111,7 @@ exports.updateUser = async (req, res) => {
             usuario.email = email ?? usuario.email
             usuario.telefono = telefono ?? usuario.telefono
             usuario.tipoUsuario_id = tipoUsuario_id ?? usuario.tipoUsuario_id
-            usuario.puesto_id = puesto_id ?? usuario.puesto_id
+            usuario.puesto = puesto ?? usuario.puesto
             usuario.status = status ?? usuario.status
 
             await usuario.save().catch(error => {

@@ -1,4 +1,5 @@
 const Actividad = require('../models/Actividad');
+const { validationResult } = require('express-validator')
 
 exports.getActividades = async (req, res) => {
     try {
@@ -28,6 +29,12 @@ exports.getActividad = async (req, res) => {
 }
 
 exports.createActividad = async (req, res) => {
+    
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
     const { nombre, descripcion } = req.body
     try {
         const actividad = await Actividad.create({
@@ -46,6 +53,13 @@ exports.createActividad = async (req, res) => {
 }
 
 exports.updateActividad = async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+    }
+
+
     const {id} = req.params
     const {nombre, descripcion} = req.body
 
