@@ -1,11 +1,12 @@
 const Role = require('../models/Role')
-const validationResult = require('express-validator')
+const { validationResult } = require('express-validator')
+const Permisos = require('../models/Permisos')
 
 
 exports.getRole = async (req, res) => {
     const {id} = req.params
     try {
-        const role = await Role.findOne({ where: { id } }).catch(error => {
+        const role = await Role.findOne({ where: { id }, include: Permisos }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el rol', error: error.message })
         })
         if(role){
@@ -17,8 +18,9 @@ exports.getRole = async (req, res) => {
 }
 
 exports.getRoles = async (req, res) => {
+
     try {
-        const roles = await Role.findAll().catch(error => {
+        const roles = await Role.findAll({include:Permisos}).catch(error => {
             res.status(500).json({ message: 'Error al obtener los roles', error: error.message })
         })
         if(roles){
@@ -36,7 +38,7 @@ exports.createRole = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
     }
-    const { nombre, descripcion, status } = req.body
+    const { nombre, descripcion, status, permisos} = req.body
 
     try {
         const role = await Role.create({
@@ -47,6 +49,7 @@ exports.createRole = async (req, res) => {
             res.status(500).json({ message: 'Error al crear el rol', error: error.message })
         })
         if(role){
+            await role.setPermisos(permisos)
             res.status(200).json({ role })
         }
     } catch (error) {
@@ -63,7 +66,7 @@ exports.updateRole = async (req, res) => {
 
 
     const { id } = req.params
-    const { nombre, descripcion, status } = req.body
+    const { nombre, descripcion, status, permisos } = req.body
     try {
         const role = await Role.findOne({ where: { id } }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el rol', error: error.message })
@@ -73,6 +76,9 @@ exports.updateRole = async (req, res) => {
             role.descripcion = descripcion ?? role.descripcion
             role.status = status ?? role.status
             await role.save()
+
+            await role.setPermisos(permisos)
+
             res.status(200).json({ role })
         }
     } catch (error) {

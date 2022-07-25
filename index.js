@@ -46,11 +46,11 @@ const io = require('./services/socketIo')
 
 
 process.on('uncaughtException', (err, origin) => {
-    console.error('Vaya ha habido un error tipo: uncaughtException')
+    console.error('Vaya ha habido un error tipo: uncaughtException', err)
 })
 
 process.on('unhandledRejection', (err, origin) => {
-    console.error('Vaya ha habido un error tipo:  unhandledRejection')
+    console.error('Vaya ha habido un error tipo:  unhandledRejection', err)
 })
 
 const PORT = process.env.PORT || 5000;

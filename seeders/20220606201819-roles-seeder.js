@@ -19,6 +19,13 @@ module.exports = {
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
+		{
+			nombre: 'Test',
+			descripcion: 'Rol de prueba, no eliminar',
+			status: 1,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		},
 
 
 	], {});

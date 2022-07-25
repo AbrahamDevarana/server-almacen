@@ -1,7 +1,7 @@
 const Personal = require('../models/Personal');
 const Users = require('../models/Users');
 const moment = require('moment');
-const validationResult = require('express-validator')
+const { validationResult } = require('express-validator')
 require ("moment/locale/es-mx")
 
 

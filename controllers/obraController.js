@@ -50,9 +50,7 @@ exports.createObra = async (req, res) => {
             res.status(500).json({ message: 'Error al crear la obra', error: error.message })
         })
         if(obra){
-            if(niveles && niveles.length > 0){
-                await obra.setNiveles(niveles)
-            }
+            await obra.setNiveles(niveles)
             res.status(200).json({ obra })
         }else{ 
             res.status(500).json({ message: 'Error al crear la obra' })
@@ -81,9 +79,7 @@ exports.updateObra = async (req, res) => {
             obra.status = status ?? obra.status
             await obra.save()
             
-            if(niveles && niveles.length > 0){
-                await obra.setNiveles(niveles)
-            }
+            await obra.setNiveles(niveles)
 
             res.status(200).json({obra})
         }else{

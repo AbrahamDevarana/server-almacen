@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const { check } = require('express-validator')
 const roleController = require('../../controllers/roleController')
+const hasPermission = require('../../middleware/hasPermission')
 
 router.get('/', roleController.getRoles)
 router.get('/:id', roleController.getRole)

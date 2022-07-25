@@ -53,12 +53,8 @@ exports.createNivel = async (req, res) => {
             res.status(500).json({ message: 'Error al crear el nivel', error: error.message })
         })
         if(nivel){
-            if(zonas && zonas.length > 0){
-                await nivel.setZonas(zonas)
-            }
-            if(actividades && actividades.length > 0){
-                await nivel.setActividades(actividades)
-            }
+            await nivel.setZonas(zonas)
+            await nivel.setActividades(actividades)
             res.status(200).json({ nivel })
         }
     } catch (error) {
@@ -84,12 +80,9 @@ exports.updateNivel = async (req, res) => {
             nivel.status = status ?? nivel.status
             nivel.save()
 
-            if(zonas && zonas.length > 0){
-                await nivel.setZonas(zonas)
-            }
-            if(actividades && actividades.length > 0){
-                await nivel.setActividades(actividades)
-            }
+            
+            await nivel.setZonas(zonas)
+            await nivel.setActividades(actividades)
 
             res.status(200).json({ nivel })
         }

@@ -51,6 +51,10 @@ const Users = db.define('users', {
         type: Sequelize.BOOLEAN,
         defaultValue: true
     },
+    suAdmin: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: 0
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW

@@ -1,5 +1,5 @@
 const Unidad = require('../models/Unidad');
-const validationResult = require('express-validator');
+const { validationResult } = require('express-validator');
 
 exports.getUnidades = async (req, res) => {
     try {
