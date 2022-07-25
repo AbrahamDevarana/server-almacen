@@ -46,10 +46,8 @@ exports.createUser = async (req, res) => {
     }
 
     const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto } = req.body
-    
 
     try {
-
         const existsUser = await Users.findOne({ where: { email } }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
         })
@@ -80,7 +78,11 @@ exports.createUser = async (req, res) => {
                     <p> En el siguiente enlace <a href="http://erp-devarana.mx/login">Ingresar</a> </p>
                 `
                 mailSender(usuario.email, 'Bienvenido a la plataforma de almacén', html)
-                res.status(200).json({ usuario })
+
+                const userLoaded = await Users.findOne({ where: { id: usuario.id }, include: Role }).catch(error => {
+                    res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+                })
+                res.status(200).json({ usuario:userLoaded })
             }
         }
     } catch (error) {
@@ -100,7 +102,7 @@ exports.updateUser = async (req, res) => {
 
     try {
 
-        const usuario = await Users.findOne({ where: { id } }).catch(error => {
+        const usuario = await Users.findOne({ where: { id }, include: Role }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
         })
         
@@ -117,7 +119,8 @@ exports.updateUser = async (req, res) => {
             await usuario.save().catch(error => {
                 res.status(500).json({ message: 'Error al actualizar el usuario', error: error.message })
             })
-
+            
+            console.log(usuario)
             res.status(200).json({ usuario })
         }
     } catch (error) {

@@ -5,8 +5,23 @@ const { validationResult } = require('express-validator')
 
 
 exports.getAllValeSalida = async (req, res) => {
-    try {
-        const valeSalida = await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
+    try {    
+        // Obtener roles de usuario
+        const {rolUsuario, id} = req.user
+
+        const where = {}
+
+        if (rolUsuario === 3)  {
+            delete where.userId
+            where.statusVale = !6
+        }else{
+            delete where.statusVale
+            where.userId = id
+        }
+
+
+
+        const valeSalida = await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }, where).catch(error => {
             res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
         })
         if(valeSalida){
@@ -39,7 +54,7 @@ exports.createValeSalida = async (req, res) => {
 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.mapped() });
     }
 
 
@@ -68,7 +83,11 @@ exports.createValeSalida = async (req, res) => {
                 costo: insumo.costo,
                 total: insumo.total,
             })))
-            res.status(200).json({ valeSalida, detalleSalida })
+
+            const valeSalidaLoaded = await ValeSalida.findOne({ where: { id: valeSalida.id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
+                res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+            })
+            res.status(200).json({ valeSalida: valeSalidaLoaded, detalleSalida })
         }else{
             res.status(404).json({ message: 'No hay vale de salida o no se creo correctamente' })
         }
@@ -93,7 +112,7 @@ exports.updateValeSalida = async (req, res) => {
     const { listadoActualizar } = req.body
     
     try {
-        const valeSalida = await ValeSalida.findOne({ where: { id } }).catch(error => {
+        const valeSalida = await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
         })
 

@@ -18,7 +18,7 @@ module.exports = {
             createdAt: new Date(),
             updatedAt: new Date()
 		},
-{
+        {
 			nombre: 'Fátima',
             apellidoPaterno: 'Benitez',
             apellidoMaterno: 'Ortiz',

@@ -24,7 +24,12 @@ exports.createPersonal = async (req, res) => {
         });
 
         if (personal) {
-            res.status(200).json({ personal });
+
+            const userLoaded = await Users.findOne({ where: { id: req.user.id }, include: Users }).catch(error => {
+                res.status(500).json({ message: 'Error al obtener el usuario', error: error.message });
+            })
+            
+            res.status(200).json({ personal:userLoaded });
         }else{
             res.status(500).json({ message: 'Error al crear el personal' });
         }
@@ -43,7 +48,7 @@ exports.updatePersonal = async (req, res) => {
     const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
 
     try {
-        const personal = await Personal.findOne({ where: { id } }).catch(error => {
+        const personal = await Personal.findOne({ where: { id }, include: Users }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el personal', error: error.message });
         });
 

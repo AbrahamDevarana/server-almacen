@@ -57,5 +57,6 @@ module.exports = {
     Zona,
     Personal,
     ValeSalida,
-    DetalleSalida
+    DetalleSalida,
+    Role
 }
