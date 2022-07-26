@@ -2,6 +2,7 @@ const ValeSalida = require('../models/ValeSalida')
 const DetalleSalida = require('../models/DetalleSalida')
 const Insumo = require('../models/Insumos')
 const { validationResult } = require('express-validator')
+const {validarTiempoEntrega} = require("../utils/validateDelivery")
 
 
 exports.getAllValeSalida = async (req, res) => {
@@ -175,7 +176,7 @@ exports.deliverValeSalida = async (req, res) => {
     const { id, valeSalidaId, insumoId, cantidadEntregada, comentarios } = req.body
 
     try {
-        const insumo = await DetalleSalida.findOne({ where: { id, insumoId, valeSalidaId } }).catch(error => {
+        const detalleSalida = await DetalleSalida.findOne({ where: { id, insumoId, valeSalidaId } }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el insumo', error: error.message })
         })
 
@@ -183,71 +184,84 @@ exports.deliverValeSalida = async (req, res) => {
         const valeSalida = await ValeSalida.findOne({ where: { id: valeSalidaId }, include: DetalleSalida }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
         })
+
         
-        if(insumo){
 
-            // validar si la cantidad entregada es mayor a la cantidad solicitada
-            if(Number(insumo.cantidadEntregada) + Number(cantidadEntregada) > Number(insumo.cantidadSolicitada)){
-                console.log(cantidadEntregada)
-                console.log(insumo.cantidadEntregada)
-                console.log(insumo.cantidadSolicitada)
-                res.status(400).json({ message: 'La cantidad a entregar es mayor a la cantidad del insumo' })
+        
+        if(valeSalida.statusVale !== 7 ){ // Si el vale de salida no esta cerrado
+            if(validarTiempoEntrega(valeSalida)){ // validar cuanto tiempo se demora en entregar el insumo (24h)
+                if(detalleSalida){
+                    if(Number(detalleSalida.cantidadEntregada) + Number(cantidadEntregada) > Number(detalleSalida.cantidadSolicitada)){ // validar si la cantidad entregada es mayor a la cantidad solicitada
+                        res.status(400).json({ message: 'La cantidad a entregar es mayor a la cantidad del insumo' })
+                    }else{
+                        detalleSalida.cantidadEntregada = Number(detalleSalida.cantidadEntregada) + Number(cantidadEntregada)
+                        // si la cantidad entregada es menor que la cantidad solicitada se agrega comentario
+                        if(comentarios){
+                            detalleSalida.comentarios = comentarios
+                            detalleSalida.status = 4 // Cancelado
+                        }else{
+                            if(Number(detalleSalida.cantidadSolicitada > 0 && Number(detalleSalida.cantidadSolicitada) > Number(detalleSalida.cantidadEntregada))){
+                                detalleSalida.status = 2 // Parcialmente Entregado
+                            }else{
+                                // si la cantidad entregada es igual a la cantidad solicitada se cambia el estatus del insumo a 6
+                                if(Number(detalleSalida.cantidadSolicitada) === Number(detalleSalida.cantidadEntregada)){
+                                    detalleSalida.status = 3 // Entregado
+                                }
+                            }
+                        }
+                        
+                        await detalleSalida.save()
+
+                        // Vale Salida
+                        const updatedValeSalida = await ValeSalida.findOne({ where: { id: valeSalidaId }, include: DetalleSalida }).catch(error => {
+                            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                        })
+
+                        console.log('Estatus Vale Salida 1: Sin Entregar | 2: Parcialmente Entregado Abierto | 3: Parcialmente Entregado Cerrado | 4: Entregado | 5: Cancelado | 6: Borrador | 7: Cerrado ');
+                        console.log('Estatus detalleSalida 1: Sin Entregar | 2: Parcialmente Entregado | 3: Entregado | 4: Cancelado');
+
+                        
+                        updatedValeSalida.detalle_salidas.map( item => ( console.log('Item Detalle Salida Status', item.status) ))
+                        updatedValeSalida.detalle_salidas.map( item => {( console.log('Item Detalle Salida Status', item.status) )})
+                        console.log('Entregado 4? ', updatedValeSalida.detalle_salidas.every( item => item.status === 3 )) // Entregados 
+                        console.log('Parcialmente 2? ', updatedValeSalida.detalle_salidas.some( item => item.status !== 1 )) // Parcialmente Abierto 
+                        console.log('Sin entregar 1? ', updatedValeSalida.detalle_salidas.every( item => item.status === 1 )) // Sin Entregar
+                        console.log('Parcialmente 2? ', updatedValeSalida.detalle_salidas.some( item => item.status === 4 )) // Parcialmente Entregado Cerrado
+
+
+                        if (updatedValeSalida.detalle_salidas.every( item => item.status === 3 )) {
+                            updatedValeSalida.statusVale = 4
+                        } else if (updatedValeSalida.detalle_salidas.every( item => item.status === 1 )) {
+                            updatedValeSalida.statusVale = 1
+                        } else if (updatedValeSalida.detalle_salidas.some( item => item.status !== 1 )) {
+                            updatedValeSalida.statusVale = 2
+                        } else if (updatedValeSalida.detalle_salidas.some( item => item.status === 4 )) {
+                            updatedValeSalida.statusVale = 2
+                        }
+
+                        await updatedValeSalida.save()
+
+                        res.status(200).json({ insumo:detalleSalida, valeSalida:updatedValeSalida })
+                    }
+                    
+                } else {
+                    res.status(400).json({ message: "No se encontro el detalle del vale de salida"})
+                }
+            } else {
+
+                if(valeSalida.statusVale === 2 ){
+                    valeSalida.statusVale = 3 // Parcialmente Entregado Cerrado
+                } else {
+                    valeSalida.statusVale = 7 // Cerrado
+                }
+                await valeSalida.save()
+                res.status(400).json({ message: 'El insumo fue solicitado hace más de 24h, se cierra el vale', valeSalida })
             }
-
-            // validar cuanto tiempo se demora en entregar el insumo, si es mayor a 24 horas, se cambia el estatus del insumo a 3
-            if(!validarTiempoEntrega(insumo)){
-                insumo.status = 3
-                valeSalida.statusVale = 3
-                res.status(400).json({ message: 'El insumo se demora en entregarse, se cierra el vale' })
-            }
-          
-            insumo.cantidadEntregada = Number(insumo.cantidadEntregada) + Number(cantidadEntregada)
-
-            // si la cantidad entregada es menor que la cantidad solicitada se agrega comentario
-            if(Number(insumo.cantidadEntregada) < Number(insumo.cantidadSolicitada)){
-                insumo.comentarios = comentarios
-                insumo.status = 2
-            }
-
-
-            // si la cantidad entregada es igual a la cantidad solicitada se cambia el estatus del insumo a 6
-            if(Number(insumo.cantidadSolicitada) === Number(insumo.cantidadEntregada) || Number(cantidadEntregada) === Number(insumo.cantidadSolicitada)){
-                insumo.status = 6
-            }
-
-            await insumo.save()
-            await validateVale(valeSalida);
-            res.status(200).json({ insumo, valeSalida })
+        } else {
+            res.status(400).json({ message: "El vale se ha cerrado"})
         }
-
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
 
-// Valida todos los insumos, si ya fueron entregados, entonces cambia el estatus del vale a 6 sino a 3
-async function validateVale(valeSalida) {
-    const insumos = valeSalida.detalle_salidas
-    if (insumos.length > 0) {
-        const insumosEntregados = insumos.filter(insumo => insumo.status !== 6)
-        if (insumosEntregados.length === insumos.length) {
-            valeSalida.statusVale = 2
-        } else {
-            valeSalida.statusVale = 6
-        }
-    }
-
-    await valeSalida.save()
-}
-
-// Valida si el tiempo de entrega del insumo es mayor a 24 horas 
-function validarTiempoEntrega (insumo) {
-    const fechaEntrega = new Date()
-    const fechaSolicitud = new Date(insumo.createdAt)
-    const diferencia = fechaEntrega.getTime() - fechaSolicitud.getTime()
-    const dias = Math.floor(diferencia / (1000 * 60 * 60 * 24))
-    if(dias > 1){
-        return false // no se entrega el insumo
-    }
-    return true // se entrega el insumo
-}
