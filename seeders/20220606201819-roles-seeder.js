@@ -6,6 +6,7 @@ module.exports = {
 	await queryInterface.bulkInsert('roles', [
 		{
             // id: 1,
+            id: 1,
 			nombre: 'Administrador',
 			descripcion: 'Administrador del sistema',
 			status: 1,
@@ -14,7 +15,7 @@ module.exports = {
 
 		},
 		{
-            // id: 2,
+            id: 2,
 			nombre: 'Compras',
 			descripcion: 'Usuario de compras',
 			status: 1,
@@ -22,7 +23,7 @@ module.exports = {
 			updatedAt: new Date()
 		},
 		{
-            // id: 3,
+            id: 3,
 			nombre: 'Almacén',
 			descripcion: 'Usuario de almacén',
 			status: 1,
@@ -30,7 +31,7 @@ module.exports = {
 			updatedAt: new Date()
 		},
 		{
-            // id: 4,
+            id: 4,
 			nombre: 'Test',
 			descripcion: 'Rol de prueba, no eliminar',
 			status: 1,

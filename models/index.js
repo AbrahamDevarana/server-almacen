@@ -10,6 +10,7 @@ const DetalleSalida = require('./DetalleSalida')
 const Insumo = require('./Insumos')
 const Role = require('./Role')
 const Permisos = require('./Permisos')
+const Notificaciones = require('./Notificaciones')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -47,6 +48,7 @@ ValeSalida.hasMany(DetalleSalida, { foreignKey: 'valeSalidaId' })
 DetalleSalida.belongsTo(ValeSalida, { foreignKey: 'valeSalidaId' })
 DetalleSalida.belongsTo(Insumo, { foreignKey: 'insumoId' })
 
+User.hasMany(Notificaciones, { foreignKey: 'userId' })
 
 // ROles
 Role.hasMany(User, { foreignKey: 'tipoUsuario_id' })
