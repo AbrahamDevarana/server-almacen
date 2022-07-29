@@ -13,12 +13,11 @@ exports.getAllValeSalida = async (req, res) => {
 
         // Obtener roles de usuario
         const {id} = req.user
-        let valeSalida = []
 
         loggedUser = await Users.findOne({ where: { id } })
         .then( async user => {
             if (user.tipoUsuario_id === 3)  {
-                valeSalida = await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
                     statusVale: {[Op.ne]: 6}
                 }}).then(valeSalida => {
                     res.status(200).json({ valeSalida })
@@ -27,7 +26,7 @@ exports.getAllValeSalida = async (req, res) => {
                     res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
                 })
             }else{
-                valeSalida = await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id}})
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id}})
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -46,16 +45,35 @@ exports.getAllValeSalida = async (req, res) => {
 }
 
 exports.getValeSalida = async (req, res) => {
-    const { id } = req.params
     try {
-        const valeSalida = await ValeSalida.findOne({ where: { id }, include: DetalleSalida }).catch(error => {
-            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+        const { statusVale } = req.query
+        const {id} = req.user
+
+        loggedUser = await Users.findOne({ where: { id } })
+        .then( async user => {
+            if (user.tipoUsuario_id === 3)  {
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
+                    statusVale: {[Op.and]: [{[Op.ne]: 6},  statusVale? { [Op.eq]: statusVale  } : {[Op.ne]: 6} ]}                     
+                }}).then(valeSalida => {
+                    res.status(200).json({ valeSalida })
+                })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+                })
+            }else{
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
+                    statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }})
+                .then(valeSalida => {
+                    res.status(200).json({ valeSalida })
+                })            
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+                })
+            }
         })
-        if(valeSalida){
-            res.status(200).json({ valeSalida })
-        }else{
-            res.status(404).json({ message: 'No hay vale de salida' })
-        }
+        .catch(error => {
+            res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+        })
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
@@ -67,12 +85,8 @@ exports.createValeSalida = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.mapped() });
     }
-
-
     const { almacenId, obraId, nivelId, zonaId, actividadId, personalId, statusVale, listaInsumos } = req.body
-
     const userId = req.user.id
-
     try {
         await ValeSalida.create({
             almacenId,
@@ -200,12 +214,7 @@ exports.updateValeSalida = async (req, res) => {
 
 exports.deliverValeSalida = async (req, res) => {
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
-    }
-
-    const { id, valeSalidaId, insumoId, cantidadEntregada, comentarios } = req.body
+    const { id, valeSalidaId, insumoId, cantidadEntregada } = req.body
 
     try {
         const detalleSalida = await DetalleSalida.findOne({ where: { id, insumoId, valeSalidaId } }).catch(error => {
@@ -213,75 +222,176 @@ exports.deliverValeSalida = async (req, res) => {
         })
 
         // obtener vales de salida incluir insumos
-        const valeSalida = await ValeSalida.findOne({ where: { id: valeSalidaId }, include: DetalleSalida }).catch(error => {
+        const valeSalida = await ValeSalida.findOne({ where: { id: valeSalidaId }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
         })
 
-        
-
-        
-        if(valeSalida.statusVale !== 7 ){ // Si el vale de salida no esta cerrado
-            if(validarTiempoEntrega(valeSalida)){ // validar cuanto tiempo se demora en entregar el insumo (24h)
-                if(detalleSalida){
-                    if(Number(detalleSalida.cantidadEntregada) + Number(cantidadEntregada) > Number(detalleSalida.cantidadSolicitada)){ // validar si la cantidad entregada es mayor a la cantidad solicitada
-                        res.status(400).json({ message: 'La cantidad a entregar es mayor a la cantidad del insumo' })
-                    }else{
-                        detalleSalida.cantidadEntregada = Number(detalleSalida.cantidadEntregada) + Number(cantidadEntregada)
-                        // si la cantidad entregada es menor que la cantidad solicitada se agrega comentario
-                        if(comentarios){
-                            detalleSalida.comentarios = comentarios
-                            detalleSalida.status = 4 // Cancelado
+        if(valeSalida.statusVale !== 7 && valeSalida.statusVale !== 5 ){ // Si el vale de salida no se ha subido a enk o esta cancelado
+            if(detalleSalida){ // Si hay detalle salida en el vale
+                if(Number(detalleSalida.cantidadEntregada) + Number(cantidadEntregada) > Number(detalleSalida.cantidadSolicitada)){ // validar si la cantidad entregada es mayor a la cantidad solicitada
+                    res.status(400).json({ message: 'La cantidad a entregar es mayor a la cantidad del insumo' })
+                }else{
+                    detalleSalida.cantidadEntregada = Number(detalleSalida.cantidadEntregada) + Number(cantidadEntregada)
+                        if(Number(detalleSalida.cantidadSolicitada > 0 && Number(detalleSalida.cantidadSolicitada) > Number(detalleSalida.cantidadEntregada))){
+                            detalleSalida.status = 2 // Parcialmente Entregado
                         }else{
-                            if(Number(detalleSalida.cantidadSolicitada > 0 && Number(detalleSalida.cantidadSolicitada) > Number(detalleSalida.cantidadEntregada))){
-                                detalleSalida.status = 2 // Parcialmente Entregado
-                            }else{
-                                // si la cantidad entregada es igual a la cantidad solicitada se cambia el estatus del insumo a 6
-                                if(Number(detalleSalida.cantidadSolicitada) === Number(detalleSalida.cantidadEntregada)){
-                                    detalleSalida.status = 3 // Entregado
-                                }
+                            // si la cantidad entregada es igual a la cantidad solicitada se ha entregado
+                            if(Number(detalleSalida.cantidadSolicitada) === Number(detalleSalida.cantidadEntregada)){
+                                detalleSalida.status = 3 // Entregado
                             }
                         }
-                        
-                        await detalleSalida.save()
+                    await detalleSalida.save()
 
-                        // Vale Salida
-                        const updatedValeSalida = await ValeSalida.findOne({ where: { id: valeSalidaId }, include: DetalleSalida }).catch(error => {
-                            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
-                        })
-
-                        if (updatedValeSalida.detalle_salidas.every( item => item.status === 3 )) {
-                            updatedValeSalida.statusVale = 4
-                        } else if (updatedValeSalida.detalle_salidas.every( item => item.status === 1 )) {
-                            updatedValeSalida.statusVale = 1
-                        } else if (updatedValeSalida.detalle_salidas.some( item => item.status !== 1 )) {
-                            updatedValeSalida.statusVale = 2
-                        } else if (updatedValeSalida.detalle_salidas.some( item => item.status === 4 )) {
-                            updatedValeSalida.statusVale = 2
-                        }
-
-                        await updatedValeSalida.save()
-
-                        res.status(200).json({ insumo:detalleSalida, valeSalida:updatedValeSalida })
-                    }
-                    
-                } else {
-                    res.status(400).json({ message: "No se encontro el detalle del vale de salida"})
-                }
+                    // Vale Salida
+                    await ValeSalida.findOne({ where: { id: valeSalidaId }, include: DetalleSalida })
+                    .then( async valeSalida => {
+                        if (valeSalida.detalle_salidas.every( item => item.status === 3 )) { // si todos los detalles estan entregados
+                            valeSalida.statusVale = 4
+                        } else if (valeSalida.detalle_salidas.every( item => item.status === 1 )) { // si todos los detalles no se han entregado 
+                            valeSalida.statusVale = 1
+                        } else if (valeSalida.detalle_salidas.some( item => item.status !== 1 )) { // si alguno de los detalles se ha entregado
+                            valeSalida.statusVale = 2
+                        } else if (valeSalida.detalle_salidas.some( item => item.status === 4 )) { // si alguno de los detalles se ha cancelado
+                            valeSalida.statusVale = 2
+                        } 
+                        await valeSalida.save()
+                        res.status(200).json({ detalleSalida, valeSalida })
+                    })
+                    .catch(error => {
+                        res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                    })
+                }         
             } else {
-
-                if(valeSalida.statusVale === 2 ){
-                    valeSalida.statusVale = 3 // Parcialmente Entregado Cerrado
-                } else {
-                    valeSalida.statusVale = 7 // Cerrado
-                }
-                await valeSalida.save()
-                res.status(400).json({ message: 'El insumo fue solicitado hace más de 24h, se cierra el vale', valeSalida })
+                res.status(400).json({ message: "No se encontro el detalle del vale de salida"})
             }
+          
         } else {
-            res.status(400).json({ message: "El vale se ha cerrado"})
+            res.status(400).json({ message: "El vale se ha cerrado o ya se canceló."})
         }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
 
+exports.closeValeSalida = async (req, res) => {
+    const { id, salidaEnkontrol } = req.body
+    try {
+        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+        .then( async valeSalida => {
+            if(valeSalida.statusVale === 4 || valeSalida.statusVale === 3){
+                valeSalida.statusVale = 7
+                valeSalida.salidaEnkontrol = salidaEnkontrol
+                await valeSalida.save()
+                res.status(200).json({ valeSalida })
+            }else {
+                res.status(400).json({ message: "El vale debe ser entregado completamente o paracialmente."})
+            }            
+        }).catch(error => {
+            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+        })    
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message })
+    }
+}
+
+exports.cancelValeSalida = async (req, res) => {
+    const { id, comentarios } = req.body
+    try {
+        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+        .then( async valeSalida => {
+            if(valeSalida.statusVale === 1 || valeSalida.statusVale === 2){
+                valeSalida.statusVale = 5
+                valeSalida.comentarios = comentarios
+
+                // cancelar detalles de salida
+                await DetalleSalida.update({ status: 4 }, { where: { valeSalidaId: id } })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al cancelar el vale de salida', error: error.message })
+                })
+
+                await valeSalida.save()
+                res.status(200).json({ valeSalida })
+            }else {
+                res.status(400).json({ message: "El vale debe estar en estatus 1 o 2."})
+            }            
+        }).catch(error => {
+            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+        })    
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message })
+    }
+}
+
+exports.cancelDetalleSalida = async (req, res) => {
+    const { id, comentarios } = req.body
+    try {
+        await DetalleSalida.findOne({ where: { id } })
+        .then( async detalleSalida => {
+            if(detalleSalida.status === 1){
+                detalleSalida.status = 4
+                detalleSalida.comentarios = comentarios
+                await detalleSalida.save()
+
+                // Vale Salida
+                await ValeSalida.findOne({ where: { id: detalleSalida.valeSalidaId }, include: DetalleSalida, include:Insumo })
+                .then( async valeSalida => {
+                    if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
+                        valeSalida.statusVale = 5
+                        await valeSalida.save()
+                    }
+                    
+                    res.status(200).json({ detalleSalida })
+                }).catch(error => {
+                    res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                })
+            }else {
+                res.status(400).json({ message: "No se debe haber entregado ningún insumo para cancelar."})
+            }            
+        }).catch(error => {
+            res.status(500).json({ message: 'Error al obtener el detalle de salida', error: error.message })
+        })    
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message })
+    }
+}
+
+
+exports.completeValeSalida = async (req, res) => {
+    const { id } = req.body
+    try {
+        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+        .then( async valeSalida => {
+            if(valeSalida.statusVale === 1 || valeSalida.statusVale === 2 || valeSalida.statusVale === 3){
+                valeSalida.statusVale = 4
+                await valeSalida.save()
+                // completar detalles de salida
+                await DetalleSalida.findAll({ where: { valeSalidaId: id } })
+                .then( async detalleSalida => {
+                    detalleSalida.forEach( async item => {
+                        item.status = 3
+                        item.cantidadEntregada = item.cantidadSolicitada
+                        await item.save()
+                    })
+                })
+                .then( async () => {
+                    await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+                    .then( async valeSalida => {
+                        res.status(200).json({ valeSalida })
+                    }).catch(error => {
+                        res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                    })
+                })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al completar el vale de salida', error: error.message })
+                })               
+            } else {
+                res.status(400).json({ message: "El vale no debe estar cancelado o completado"})
+            }            
+        })
+        .catch(error => {
+            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message })
+    }
+}

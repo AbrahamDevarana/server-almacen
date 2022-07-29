@@ -3,7 +3,7 @@ const { check } = require('express-validator')
 const valeController = require('../../controllers/valeSalidaController')
 
 router.get('/', valeController.getAllValeSalida)
-router.get('/:id', valeController.getValeSalida)
+router.get('/search', valeController.getValeSalida)
 router.post('/',
     [
         check('almacenId').not().isEmpty(),
@@ -20,5 +20,10 @@ router.put('/:id', valeController.updateValeSalida )
 
 router.post('/deliver', valeController.deliverValeSalida)
 
+
+router.post('/cancelVale', valeController.cancelValeSalida)
+router.post('/cancelDetalle', valeController.cancelDetalleSalida)
+router.post('/closeVale', valeController.closeValeSalida)
+router.post('/completeVale', valeController.completeValeSalida)
 
 module.exports = router
