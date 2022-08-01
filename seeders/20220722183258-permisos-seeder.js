@@ -208,14 +208,8 @@ module.exports = {
             updatedAt: new Date()
         },
         {
-            nombre: 'Editar Vales',
+            nombre: 'Acciones Vales',
             permiso: '/editar-vales',
-            createdAt: new Date(),
-            updatedAt: new Date()
-        },
-        {
-            nombre: 'Eliminar Vales',
-            permiso: '/eliminar-vales',
             createdAt: new Date(),
             updatedAt: new Date()
         }

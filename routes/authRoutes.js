@@ -8,7 +8,7 @@ require('dotenv').config()
 router.get(
     '/logout', 
     (req, res) => {
-        res.clearCookie('express')
+        res.clearCookie('dev-session')
         req.session.destroy(null)
         req.session = ''
         res.status(200).json({ message: 'Has cerrado sesión correctamente'})

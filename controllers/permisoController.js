@@ -1,3 +1,4 @@
+const { Role } = require('../models')
 const Permiso = require('../models/Permisos')
 
 exports.getPermisos = async (req, res) => {
@@ -18,18 +19,27 @@ exports.getPermisos = async (req, res) => {
 exports.getPermiso = async ( req, res ) => {
     
     const {id} = req.params
-    try {
+    const {tipoUsuario_id} = req.user
+    
+    try{
         
-        const permiso = await Permiso.findOne({ where: { id } }).catch(error => {
-            res.status(500).json({ message: 'Error al obtener el permiso', error: error.message })
+        // obtener permisos por roles de la tabla pivote
+        await Permiso.findAll({ include: { model: Role, where: { id:tipoUsuario_id } } })
+        .then(permisos => {
+            if(permisos){
+                res.status(200).json({ permisos })
+            }
         })
-        if(permiso){
-            res.status(200).json({ permiso })
-        }else{
-            res.status(404).json({ message: 'Permiso no encontrado' })
-        }
+        .catch(error => {
+            res.status(500).json({ message: 'Error al obtener los permisos', error: error.message })
+        })
 
-    } catch (error) {
+
+
+
+    } catch ( error ) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
+
+
 }

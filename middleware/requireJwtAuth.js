@@ -16,7 +16,7 @@ module.exports = (req, res, next) => {
     try {
         jwt.verify(token, process.env.JWT_SECRET, async (error, decoded) => {
             if (error) {
-              return res.status(401).json({ message: 'Token no valido' });
+              return res.status(401).json({ message: 'Token no valido', error});
             } else {
                 req.user = decoded;
                 const user = await Users.findOne({ where: { id: req.user.id } })
@@ -25,7 +25,7 @@ module.exports = (req, res, next) => {
             }
         })
     } catch (error) {
-        res.status(400).json({ error: {message: 'Token no valido' } })
+        res.status(400).json({ error: {message: 'Token no valido', error} })
     }
 }
 
