@@ -13,26 +13,26 @@ exports.createPersonal = async (req, res) => {
 
     const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
     try {
-        const personal = await Personal.create({
+        await Personal.create({
             nombre,
             apellidoPaterno,
             apellidoMaterno,
             fechaIngreso: moment(fechaIngreso, 'DD-MM-YYYY').format('YYYY-MM-DD'),
             userId: req.user.id
-        }).catch(error => {
+        })
+        .then( async personal => {
+            await Personal.findOne({ where: { id: personal.id }, include: Users })
+            .then( personal => {
+                res.status(200).json({ personal });
+            })
+            .catch(error => {
+                res.status(500).json({ message: 'Error al obtener el usuario', error: error.message });
+            })
+        })
+        .catch(error => {
             res.status(500).json({ message: 'Error al crear el personal', error: error.message });
         });
 
-        if (personal) {
-
-            const userLoaded = await Users.findOne({ where: { id: req.user.id }, include: Users }).catch(error => {
-                res.status(500).json({ message: 'Error al obtener el usuario', error: error.message });
-            })
-            
-            res.status(200).json({ personal:userLoaded });
-        }else{
-            res.status(500).json({ message: 'Error al crear el personal' });
-        }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message });
     }   

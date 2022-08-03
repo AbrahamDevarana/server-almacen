@@ -355,7 +355,6 @@ exports.cancelDetalleSalida = async (req, res) => {
     }
 }
 
-
 exports.completeValeSalida = async (req, res) => {
     const { id } = req.body
     try {
