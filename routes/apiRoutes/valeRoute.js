@@ -25,5 +25,6 @@ router.post('/cancelVale', valeController.cancelValeSalida)
 router.post('/cancelDetalle', valeController.cancelDetalleSalida)
 router.post('/closeVale', valeController.closeValeSalida)
 router.post('/completeVale', valeController.completeValeSalida)
+router.get('/countVales', valeController.getCountValeSalida)
 
 module.exports = router

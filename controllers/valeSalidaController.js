@@ -79,6 +79,51 @@ exports.getValeSalida = async (req, res) => {
     }
 }
 
+exports.getCountValeSalida = async (req, res) => {
+
+    const { tipoUsuario_id } = req.user
+    let where = {}
+    if( tipoUsuario_id === 3 ){
+        where = {}
+    }else{
+        where = {
+            userId: req.user.id
+        }
+    }
+    try {
+        await ValeSalida.findAll({where}).then(valeSalida => {
+            // contar vale de salida por estatus
+            const countValeSalida = valeSalida.reduce((acc, valeSalida) => {
+                if (valeSalida.statusVale === 1) {
+                    acc.nuevo = acc.nuevo + 1
+                } else if (valeSalida.statusVale === 2) {
+                    acc.parcialAbierto = acc.parcialAbierto + 1
+                } else if (valeSalida.statusVale === 3) {
+                    acc.parcialCerrado = acc.parcialCerrado + 1
+                } else if (valeSalida.statusVale === 4) {
+                    acc.entregado = acc.entregado + 1
+                } else if (valeSalida.statusVale === 5) {
+                    acc.cancelado = acc.cancelado + 1
+                } else if (valeSalida.statusVale === 7) {
+                    acc.cerrado = acc.cerrado + 1
+                }
+                return acc
+            }, { nuevo: 0, parcialAbierto: 0, parcialCerrado: 0, entregado: 0, cancelado: 0, cerrado: 0 })
+
+            countValeSalida.todos = valeSalida.length
+            res.status(200).json({ countValeSalida })
+        })
+        .catch(error => {
+            res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+        })
+
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message })
+    }
+}
+
+
 exports.createValeSalida = async (req, res) => {
 
     const errors = validationResult(req);
@@ -273,16 +318,42 @@ exports.deliverValeSalida = async (req, res) => {
     }
 }
 
+// Se Cierra el vale de salida = Se ha subido a Enkontrol
 exports.closeValeSalida = async (req, res) => {
     const { id, salidaEnkontrol } = req.body
     try {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
-            if(valeSalida.statusVale === 4 || valeSalida.statusVale === 3){
+            if(valeSalida.statusVale === 4 || valeSalida.statusVale === 3 || valeSalida.statusVale === 2){
                 valeSalida.statusVale = 7
                 valeSalida.salidaEnkontrol = salidaEnkontrol
                 await valeSalida.save()
-                res.status(200).json({ valeSalida })
+                await DetalleSalida.findAll({ where: { valeSalidaId: id } })
+                .then( async detalleSalida => {
+                    detalleSalida.forEach( async item => {
+
+                        if(item.status === 2){
+                            item.status = 5 // Cerrado
+                            item.comentarios = 'Cerrado automaticamente por haber subido a Enkontrol'
+                        }else if(item.status === 1){
+                            item.status = 4 // Cancelado
+                            item.comentarios = 'Cancelado automaticamente por haber subido a Enkontrol'
+                        }
+                        
+                        await item.save()
+                    })
+                })
+                .then( async (detalleSalida) => {
+                    await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+                    .then( async valeSalida => {
+                        res.status(200).json({ valeSalida, detalleSalida })
+                    }).catch(error => {
+                        res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                    })
+                })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al completar el vale de salida', error: error.message })
+                }) 
             }else {
                 res.status(400).json({ message: "El vale debe ser entregado completamente o paracialmente."})
             }            
