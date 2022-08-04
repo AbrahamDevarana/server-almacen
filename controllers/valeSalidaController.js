@@ -2,7 +2,7 @@ const ValeSalida = require('../models/ValeSalida')
 const DetalleSalida = require('../models/DetalleSalida')
 const Insumo = require('../models/Insumos')
 const { validationResult } = require('express-validator')
-const {validarTiempoEntrega} = require("../utils/validateDelivery")
+const moment = require('moment')
 const { Op } = require("sequelize");
 const Users = require('../models/Users')
 const {createNotification} = require('../utils/createNotification.js')
@@ -14,12 +14,10 @@ exports.getAllValeSalida = async (req, res) => {
         // Obtener roles de usuario
         const {id} = req.user
 
-        loggedUser = await Users.findOne({ where: { id } })
+        await Users.findOne({ where: { id } })
         .then( async user => {
             if (user.tipoUsuario_id === 3)  {
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: {[Op.ne]: 6}
-                }}).then(valeSalida => {
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
@@ -49,11 +47,11 @@ exports.getValeSalida = async (req, res) => {
         const { statusVale } = req.query
         const {id} = req.user
 
-        loggedUser = await Users.findOne({ where: { id } })
+        await Users.findOne({ where: { id } })
         .then( async user => {
             if (user.tipoUsuario_id === 3)  {
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: {[Op.and]: [{[Op.ne]: 6},  statusVale? { [Op.eq]: statusVale  } : {[Op.ne]: 6} ]}                     
+                    statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} 
                 }}).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
@@ -122,7 +120,6 @@ exports.getCountValeSalida = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
-
 
 exports.createValeSalida = async (req, res) => {
 
@@ -325,7 +322,11 @@ exports.closeValeSalida = async (req, res) => {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
             if(valeSalida.statusVale === 4 || valeSalida.statusVale === 3 || valeSalida.statusVale === 2){
-                valeSalida.statusVale = 7
+                if(valeSalida.statusVale === 3){
+                    valeSalida.statusVale = 6
+                }else {
+                    valeSalida.statusVale = 7
+                } 
                 valeSalida.salidaEnkontrol = salidaEnkontrol
                 await valeSalida.save()
                 await DetalleSalida.findAll({ where: { valeSalidaId: id } })
@@ -365,6 +366,7 @@ exports.closeValeSalida = async (req, res) => {
     }
 }
 
+// Cancelar vale de salida y se cancelan los detalles del vale de salida
 exports.cancelValeSalida = async (req, res) => {
     const { id, comentarios } = req.body
     try {
@@ -393,6 +395,7 @@ exports.cancelValeSalida = async (req, res) => {
     }
 }
 
+// Cancelar detalle de salida
 exports.cancelDetalleSalida = async (req, res) => {
     const { id, comentarios } = req.body
     try {
@@ -426,6 +429,7 @@ exports.cancelDetalleSalida = async (req, res) => {
     }
 }
 
+// Entregar vale de salida sin subir a enkontrol
 exports.completeValeSalida = async (req, res) => {
     const { id } = req.body
     try {
@@ -462,6 +466,47 @@ exports.completeValeSalida = async (req, res) => {
             res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
         })
     } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message })
+    }
+}
+
+exports.validateVale = async (req, res) => {
+
+    try { 
+        // Validar todos los vales abiertos y si fueron creados un dia antes, cerrarlos
+    await ValeSalida.findAll({ where: { 
+        [Op.or]: [
+            { statusVale: 1 },
+            { statusVale: 2 },
+        ]
+     }}).then( async valeSalida => {
+        valeSalida.forEach( async item => {
+            if(item.createdAt < moment().subtract(1, 'days')){
+                // Si es nuevo, se cancela y todos los detalles se cancelan
+                if( item.statusVale === 1){
+                    item.statusVale = 5
+                    await DetalleSalida.update({ status: 4, comentarios: "Cancelado, se agoto el tiempo de espera, por el sistema" }, { where: { valeSalidaId: item.id } })
+                    await item.save()
+
+                // Si es parcialmente abierto 
+                } else if ( item.statusVale === 2){
+                    item.statusVale = 3 // Parcialmente Cerrado
+
+                    // si detalle de salida esta en estatus 1, cancelarlo
+                    await DetalleSalida.update({ status: 5, comentarios: "Cancelado, se agoto el tiempo de espera, por el sistema"},{ where: { valeSalidaId: item.id, status: 1 } })
+
+                    // Si el detalle de salida esta en estatus 2, cambiarlo a estatus 6
+                    await DetalleSalida.update({ status: 6, comentarios: "Cancelado, se agoto el tiempo de espera, por el sistema"},{ where: { valeSalidaId: item.id, status: 2 } })
+                    await item.save()
+
+                }
+            }
+        })
+    }).catch(error => {
+        res.status(500).json({ message: 'Error al obtener los vales', error: error.message })
+    })
+    }
+    catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }

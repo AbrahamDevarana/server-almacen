@@ -6,6 +6,8 @@ const app = express()
 const dbConfig = require('./config/db')
 const cookieSession = require('express-session');
 const router = require('./routes')
+const io = require('./services/socketIo')
+// require('./utils/cronSchedule')
 const fs = require('fs')
 
 require('dotenv').config()
@@ -41,7 +43,7 @@ dbConfig.sync()
     .then( () => console.log('Conectado al servidor'))
     .catch( error => console.log(error))
 
-const io = require('./services/socketIo')
+
 
 
 
@@ -52,6 +54,7 @@ process.on('uncaughtException', (err, origin) => {
 process.on('unhandledRejection', (err, origin) => {
     console.error('Vaya ha habido un error tipo:  unhandledRejection', err)
 })
+
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "0.0.0.0"
