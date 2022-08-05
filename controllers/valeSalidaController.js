@@ -24,7 +24,7 @@ exports.getAllValeSalida = async (req, res) => {
                     res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
                 })
             }else{
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id},  order: [['id', 'DESC']]})
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id}})
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -49,6 +49,7 @@ exports.getValeSalida = async (req, res) => {
 
         await Users.findOne({ where: { id } })
         .then( async user => {
+            // Almacenista
             if (user.tipoUsuario_id === 3)  {
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
                     statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} 
@@ -58,9 +59,10 @@ exports.getValeSalida = async (req, res) => {
                 .catch(error => {
                     res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
                 })
+            // Usuario regular
             }else{
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }})
+                    statusVale: statusVale ? statusVale === '1' ?  { [Op.or]:  [1, 2] }  : statusVale : {[Op.ne]: ''}, userId: user.id }})
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
