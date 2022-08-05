@@ -51,6 +51,10 @@ const Users = db.define('users', {
         type: Sequelize.BOOLEAN,
         defaultValue: true
     },
+    picture: {
+        type: Sequelize.STRING,
+        allowNull: true
+    },
     suAdmin: {
         type: Sequelize.BOOLEAN,
         defaultValue: 0

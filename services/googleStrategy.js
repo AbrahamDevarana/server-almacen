@@ -21,6 +21,7 @@ const googleLogin = new GoogleStrategy({
         if( user ) {
             await user.update({
                 google_id: profile.id,
+                picture: profile.photos[0].value,
                 password: 'Devarana#1234*'
             })
             await user.save()
