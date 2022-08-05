@@ -24,7 +24,7 @@ exports.getAllValeSalida = async (req, res) => {
                     res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
                 })
             }else{
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id}})
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id},  order: [['id', 'DESC']]})
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
