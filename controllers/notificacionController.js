@@ -7,7 +7,7 @@ exports.getNotificaciones = async (req, res) => {
 
     const { id } = req.user;
     try {
-        await Notificaciones.findAll({ where: { userId:id } })
+        await Notificaciones.findAll({ where: { userId:id, status: 1 } })
         .then( notificaciones => {
             if(notificaciones){
                 res.status(200).json({ notificaciones })
@@ -34,7 +34,7 @@ exports.updateNotificacion = async (req, res) => {
     const { id } = req.user;
 
     try {
-        await Notificaciones.findAll({ where: { userId:id } })
+        await Notificaciones.findAll({ where: { userId:id, status: 1 } })
         .then( notificaciones => {
 
             notificaciones.forEach(notificacion => {
