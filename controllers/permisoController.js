@@ -19,7 +19,7 @@ exports.getPermisos = async (req, res) => {
 
 exports.getPermiso = async ( req, res ) => {
     
-    const {id} = req.params
+    const {id} = req.user
     
     try{
         
