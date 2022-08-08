@@ -6,7 +6,7 @@ const moment = require('moment')
 const { Op } = require("sequelize");
 const Users = require('../models/Users')
 const {createNotification} = require('../utils/createNotification.js')
-
+const { cancelarVale, completarVale } = require('../email/Notificaciones')
 
 exports.getAllValeSalida = async (req, res) => {
     try {    
@@ -17,14 +17,16 @@ exports.getAllValeSalida = async (req, res) => {
         await Users.findOne({ where: { id } })
         .then( async user => {
             if (user.tipoUsuario_id === 3)  {
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] }).then(valeSalida => {
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], 
+                order: [['createdAt', 'DESC']] }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
                     res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
                 })
             }else{
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id}})
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id},
+                order: [['createdAt', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -52,8 +54,8 @@ exports.getValeSalida = async (req, res) => {
             // Almacenista
             if (user.tipoUsuario_id === 3)  {
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} 
-                }}).then(valeSalida => {
+                    statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, order: [['createdAt', 'DESC']] 
+                }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
@@ -62,7 +64,7 @@ exports.getValeSalida = async (req, res) => {
             // Usuario regular
             }else{
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: statusVale ? statusVale === '1' ?  { [Op.or]:  [1, 2] }  : statusVale : {[Op.ne]: ''}, userId: user.id }})
+                    statusVale: statusVale ? statusVale === '1' ?  { [Op.or]:  [1, 2] }  : statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['createdAt', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -82,7 +84,10 @@ exports.getValeSalida = async (req, res) => {
 exports.getCountValeSalida = async (req, res) => {
 
     const { tipoUsuario_id } = req.user
+    const { type } = req.query
+    
     let where = {}
+
     if( tipoUsuario_id === 3 ){
         where = {}
     }else{
@@ -90,6 +95,37 @@ exports.getCountValeSalida = async (req, res) => {
             userId: req.user.id
         }
     }
+    switch (type) {
+        case "hoy":
+            where = {
+                ...where,
+                createdAt: {
+                    [Op.between]: [moment().startOf('day').toDate(), moment().endOf('day').toDate()]
+                }
+            }
+        break;
+        case "semana":
+            where = {
+                ...where,
+                createdAt: {
+                    [Op.between]: [moment().startOf('week').toDate(), moment().endOf('week').toDate()]
+                }
+            }
+        break;
+        case "mes":
+            where = {
+                ...where,
+                createdAt: {
+                    [Op.between]: [moment().startOf('month').toDate(), moment().endOf('month').toDate()]
+                }
+            }
+        break;
+        default:
+            where = { ...where }
+        break;
+    }
+
+
     try {
         await ValeSalida.findAll({where}).then(valeSalida => {
             // contar vale de salida por estatus
@@ -287,7 +323,7 @@ exports.deliverValeSalida = async (req, res) => {
                     await detalleSalida.save()
 
                     // Vale Salida
-                    await ValeSalida.findOne({ where: { id: valeSalidaId }, include: DetalleSalida })
+                    await ValeSalida.findOne({ where: { id: valeSalidaId }, include: [{model: DetalleSalida}, 'actividad'] })
                     .then( async valeSalida => {
                         if (valeSalida.detalle_salidas.every( item => item.status === 3 )) { // si todos los detalles estan entregados
                             valeSalida.statusVale = 4
@@ -299,7 +335,18 @@ exports.deliverValeSalida = async (req, res) => {
                             valeSalida.statusVale = 2
                         } 
                         await valeSalida.save()
-                        res.status(200).json({ detalleSalida, valeSalida })
+                        if (valeSalida.statusVale === 4) {
+                            await Users.findOne({ where: { id: valeSalida.userId } })
+                            .then( async usuario => {
+                                await completarVale(usuario, valeSalida)
+                                res.status(200).json({ detalleSalida, valeSalida })
+                            }).catch(error => {
+                                res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+                            })
+                        }else {
+                            res.status(200).json({ detalleSalida, valeSalida })
+                        }
+
                     })
                     .catch(error => {
                         res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
@@ -377,13 +424,20 @@ exports.cancelValeSalida = async (req, res) => {
             if(valeSalida.statusVale === 1 || valeSalida.statusVale === 2){
                 valeSalida.statusVale = 5
                 valeSalida.comentarios = comentarios
-
                 // cancelar detalles de salida
                 await DetalleSalida.update({ status: 4 }, { where: { valeSalidaId: id } })
                 .catch(error => {
                     res.status(500).json({ message: 'Error al cancelar el vale de salida', error: error.message })
                 })
-
+                
+                await Users.findOne({ where: { id: valeSalida.userId } })
+                .then( async usuario => {
+                    await cancelarVale(usuario, valeSalida, req.user ) 
+                })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+                })
+               
                 await valeSalida.save()
                 res.status(200).json({ valeSalida })
             }else {
@@ -452,6 +506,14 @@ exports.completeValeSalida = async (req, res) => {
                 .then( async () => {
                     await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
                     .then( async valeSalida => {
+
+                        await Users.findOne({ where: { id: valeSalida.userId } })
+                        .then( async usuario => {
+                            await completarVale(usuario, valeSalida)
+                        }).catch(error => {
+                            res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+                        })
+
                         res.status(200).json({ valeSalida })
                     }).catch(error => {
                         res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })

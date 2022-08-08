@@ -1,7 +1,7 @@
 const Role = require('../models/Role')
 const Users = require('../models/Users')
 const { validationResult } = require('express-validator')
-const {mailSender} = require('../utils/sendMail')
+const { mailNewUser } = require('../email/Users')
 
 
 exports.getUser = async (req, res) => {
@@ -70,14 +70,8 @@ exports.createUser = async (req, res) => {
             if(usuario){
                 delete usuario.dataValues.password
                 usuario.getDataValue('Role', await usuario.getRole())
-                const html = `
-                    <h1>Bienvenido a la Sistema de Gestión de Obra </h1>
-                    <p>Hola ${usuario.nombre} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}</p>
-                    <p>Para poder ingresar al sistema, deberás usar tu email</p>
-                    <p>${usuario.email}</p>
-                    <p> En el siguiente enlace <a href="http://erp-devarana.mx/login">Ingresar</a> </p>
-                `
-                mailSender(usuario.email, 'Bienvenido a la plataforma de almacén', html)
+                
+                mailNewUser(usuario)
 
                 const userLoaded = await Users.findOne({ where: { id: usuario.id }, include: Role }).catch(error => {
                     res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })

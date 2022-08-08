@@ -7,7 +7,7 @@ require ('dotenv').config();
 exports.createAccessToken = (user) => {
     const payload = {
         id: user.id,
-        nnombre: user.nombre,
+        nombre: user.nombre,
         apellidoPaterno: user.apellidoPaterno,
         apellidoMaterno: user.apellidoMaterno,
         email: user.email,

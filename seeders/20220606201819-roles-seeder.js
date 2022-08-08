@@ -38,6 +38,14 @@ module.exports = {
 			createdAt: new Date(),
 			updatedAt: new Date()
 		},
+		{
+            id: 5,
+			nombre: 'Residente',
+			descripcion: 'Usuario de residente',
+			status: 1,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		},
 
 
 	], {});

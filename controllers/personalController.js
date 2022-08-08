@@ -113,19 +113,24 @@ exports.deletePersonal = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const personal = await Personal.findOne({ where: { id } }).catch(error => {
+        await Personal.findOne({ where: { id } })
+        .then( async personal => {
+            if(personal.userId === req.user.id || req.user.suAdmin === true){
+                await personal.destroy()
+                .then( () => {
+                    res.status(200).json({ personal });
+                })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al eliminar el personal', error: error.message });
+                });
+            }else{
+                res.status(500).json({ message: 'No tienes permisos para eliminar este personal' });
+            }
+        })
+        .catch(error => {
             res.status(500).json({ message: 'Error al obtener el personal', error: error.message });
         });
 
-        if (personal) {
-            await personal.destroy().catch(error => {
-                res.status(500).json({ message: 'Error al eliminar el personal', error: error.message });
-            });
-
-            res.status(200).json({ personal });
-        }else{
-            res.status(500).json({ message: 'Error al eliminar el personal' });
-        }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message });
     }   
