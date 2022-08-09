@@ -64,7 +64,7 @@ exports.getValeSalida = async (req, res) => {
             // Usuario regular
             }else{
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: statusVale ? statusVale === '1' ?  { [Op.or]:  [1, 2] }  : statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['createdAt', 'DESC']] })
+                    statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['createdAt', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -292,6 +292,7 @@ exports.updateValeSalida = async (req, res) => {
     }
 }
 
+
 exports.deliverValeSalida = async (req, res) => {
 
     const { id, valeSalidaId, insumoId, cantidadEntregada } = req.body
@@ -335,6 +336,9 @@ exports.deliverValeSalida = async (req, res) => {
                             valeSalida.statusVale = 2
                         } 
                         await valeSalida.save()
+
+
+
                         if (valeSalida.statusVale === 4) {
                             await Users.findOne({ where: { id: valeSalida.userId } })
                             .then( async usuario => {
@@ -365,7 +369,7 @@ exports.deliverValeSalida = async (req, res) => {
 }
 
 // Se Cierra el vale de salida = Se ha subido a Enkontrol
-exports.closeValeSalida = async (req, res) => {
+exports.registrarValeSalida = async (req, res) => {
     const { id, salidaEnkontrol } = req.body
     try {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
@@ -534,6 +538,7 @@ exports.completeValeSalida = async (req, res) => {
     }
 }
 
+// Sino se entrego el vale se cierra 
 exports.validateVale = async (req, res) => {
 
     try { 

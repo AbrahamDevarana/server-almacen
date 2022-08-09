@@ -23,7 +23,7 @@ router.post('/deliver', valeController.deliverValeSalida)
 
 router.post('/cancelVale', valeController.cancelValeSalida)
 router.post('/cancelDetalle', valeController.cancelDetalleSalida)
-router.post('/closeVale', valeController.closeValeSalida)
+router.post('/registrarVale', valeController.registrarValeSalida)
 router.post('/completeVale', valeController.completeValeSalida)
 router.get('/countVales', valeController.getCountValeSalida)
 
