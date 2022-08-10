@@ -3,8 +3,6 @@ const User = require('../models/Users')
 
 const hasPermission = async (req, res, next) => {
     
-
-    
     const { id } = req.user    
     
     const user = await User.findOne({ where: { id: id }}).catch(error => {
@@ -14,8 +12,7 @@ const hasPermission = async (req, res, next) => {
     // if(false){
     if(user.suAdmin){
         next()
-    }
-    else{
+    } else{
         const route = definirRuta(req)
             //obtener la ruta del request
         await Role.findOne({ where: { id: user.tipoUsuario_id } }).then(role => {

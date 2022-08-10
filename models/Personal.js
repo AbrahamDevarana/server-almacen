@@ -28,6 +28,10 @@ const Personal = db.define('personal', {
         type: Sequelize.INTEGER,
         allowNull: false
     },
+    especialidad:{
+        type: Sequelize.STRING,
+        allowNull: false
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW

@@ -25,7 +25,7 @@ exports.getPermiso = async ( req, res ) => {
         
         await Users.findOne({ where: { id }}).then( async user => {
             // obtener permisos por roles de la tabla pivote
-            await Permiso.findAll({ include: { model: Role, where: { id:user.tipoUsuario_id } } })
+            await Permiso.findAll({ include: { model: Role, where: { id: user.tipoUsuario_id } } })
             .then(permisos => {
                 if(permisos){
                     res.status(200).json({ permisos })

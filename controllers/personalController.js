@@ -11,14 +11,15 @@ exports.createPersonal = async (req, res) => {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
     }
 
-    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
+    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso, especialidad } = req.body;
     try {
         await Personal.create({
             nombre,
             apellidoPaterno,
             apellidoMaterno,
             fechaIngreso: moment(fechaIngreso, 'DD-MM-YYYY').format('YYYY-MM-DD'),
-            userId: req.user.id
+            userId: req.user.id,
+            especialidad
         })
         .then( async personal => {
             await Personal.findOne({ where: { id: personal.id }, include: Users })
@@ -45,7 +46,7 @@ exports.updatePersonal = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso } = req.body;
+    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso, especialidad } = req.body;
 
     try {
         const personal = await Personal.findOne({ where: { id }, include: Users }).catch(error => {
@@ -57,6 +58,7 @@ exports.updatePersonal = async (req, res) => {
                 personal.nombre = nombre ?? personal.nombre;
                 personal.apellidoPaterno = apellidoPaterno ?? personal.apellidoPaterno;
                 personal.apellidoMaterno = apellidoMaterno ?? personal.apellidoMaterno;
+                personal.especialidad = especialidad ?? personal.especialidad;
                 personal.fechaIngreso = moment(fechaIngreso, 'DD-MM-YYYY').format('YYYY-MM-DD') ?? personal.fechaIngreso;
 
                 await personal.save().catch(error => {

@@ -7,14 +7,15 @@ router.post('/', [
     check('nombre').not().isEmpty().withMessage('El nombre es requerido'),
     check('apellidoPaterno').not().isEmpty().withMessage('El apellido paterno es requerido'),
     check('apellidoMaterno').not().isEmpty().withMessage('El apellido materno es requerido'),
-    check('fechaIngreso').not().isEmpty().withMessage('La fecha de ingreso es requerida')
+    check('fechaIngreso').not().isEmpty().withMessage('La fecha de ingreso es requerida'),
+    check('especialidad').not().isEmpty().withMessage('La especialidad es requerida')
 ], personalController.createPersonal)
 
 router.put('/:id', [
     check('nombre').not().isEmpty().withMessage('El nombre es requerido'),
     check('apellidoPaterno').not().isEmpty().withMessage('El apellido paterno es requerido'),
     check('apellidoMaterno').not().isEmpty().withMessage('El apellido materno es requerido'),
-    check('fechaIngreso').not().isEmpty().withMessage('La fecha de ingreso es requerida')
+    check('especialidad').not().isEmpty().withMessage('La especialidad es requerida')
 ], personalController.updatePersonal)
 
 router.get('/:id', personalController.getPersonal)
