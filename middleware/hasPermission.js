@@ -9,11 +9,12 @@ const hasPermission = async (req, res, next) => {
         res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
     })
 
-    // if(false){
+
     if(user.suAdmin){
         next()
-    } else{
+    } else {
         const route = definirRuta(req)
+        console.log(route);
             //obtener la ruta del request
         await Role.findOne({ where: { id: user.tipoUsuario_id } }).then(role => {
             return role.getPermisos()
@@ -22,7 +23,7 @@ const hasPermission = async (req, res, next) => {
                 return permiso.permiso
             })
         }).then( permisos => {
-            if(permisos.includes(route)){
+            if(permisos.includes(route) || route === 'ver' ){
                 next()
             }
             else{
@@ -38,12 +39,15 @@ const hasPermission = async (req, res, next) => {
 const definirRuta = (req) => {
     const { originalUrl } = req
     const { method } = req
+
+    console.log(originalUrl);
+    console.log(method);
     let route = originalUrl.replace('/api', '')
     route = route.replace(/\/$/, '').replace(/\/\d+$/, '')
     switch (method) {
         case 'GET':
             // agregar "ver" entre la / y el nombre de la ruta
-            route = route.replace('/', '/ver-')
+            route = 'ver'
             break;
         case 'POST':
             route = route.replace('/', '/crear')
