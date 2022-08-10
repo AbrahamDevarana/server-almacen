@@ -39,9 +39,6 @@ const hasPermission = async (req, res, next) => {
 const definirRuta = (req) => {
     const { originalUrl } = req
     const { method } = req
-
-    console.log(originalUrl);
-    console.log(method);
     let route = originalUrl.replace('/api', '')
     route = route.replace(/\/$/, '').replace(/\/\d+$/, '')
     switch (method) {
