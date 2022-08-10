@@ -1,14 +1,9 @@
-const cron = require('node-cron');
+const CronJob = require('cron').CronJob;
 const valeSalidaController = require("../controllers/valeSalidaController")
-
-cron.schedule('* * * * *', function() {
-    valeSalidaController.validateVale()
+//     valeSalidaController.validateVale()
+const job = new CronJob('00 00 00 * * *', function() {
+    console.log('running at midnight');
+	valeSalidaController.validateVale()
 });
 
-
-// const cron = require('node-cron');
-// const cronSchedule = cron.schedule('1,2,4,5 * * * *', () => {
-//     console.log('running every minute 1, 2, 4 and 5');
-// }).start();
-//
-// module.exports = cronSchedule;
+job.start();

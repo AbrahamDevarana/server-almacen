@@ -374,41 +374,43 @@ exports.registrarValeSalida = async (req, res) => {
     try {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
-            if(valeSalida.statusVale === 4 || valeSalida.statusVale === 3 || valeSalida.statusVale === 2){
-                if(valeSalida.statusVale === 3){
-                    valeSalida.statusVale = 6
-                }else {
-                    valeSalida.statusVale = 7
-                } 
-                valeSalida.salidaEnkontrol = salidaEnkontrol
-                await valeSalida.save()
-                await DetalleSalida.findAll({ where: { valeSalidaId: id } })
-                .then( async detalleSalida => {
-                    detalleSalida.forEach( async item => {
 
-                        if(item.status === 2){
-                            item.status = 5 // Cerrado
-                            item.comentarios = 'Cerrado automaticamente por haber subido a Enkontrol'
-                        }else if(item.status === 1){
-                            item.status = 4 // Cancelado
-                            item.comentarios = 'Cancelado automaticamente por haber subido a Enkontrol'
-                        }
-                        
-                        await item.save()
+            if(valeSalida.statusVale === 2 || valeSalida.statusVale === 3  || valeSalida.statusVale === 4){
+                // 4 Entregado // 3 Parcial Cerrado // 2 Parcial Abierto
+                if (valeSalida.detalle_salidas.some( item => item.status === 6 )) { // si todos los detalles estan entregados
+                    valeSalida.statusVale = 6
+                } else {
+                    valeSalida.statusVale = 7
+                }
+                valeSalida.salidaEnkontrol = salidaEnkontrol
+
+                await valeSalida.save()
+
+                    await DetalleSalida.findAll({ where: { valeSalidaId: id } })
+                    .then( async detalleSalida => {
+                        detalleSalida.forEach( async item => {
+                            if(item.status === 2){
+                                item.status = 5 // Cerrado
+                                item.comentarios = 'Cerrado automaticamente por haber subido a Enkontrol'
+                            }else if(item.status === 1){
+                                item.status = 4 // Cancelado
+                                item.comentarios = 'Cancelado automaticamente por haber subido a Enkontrol'
+                            }
+                            await item.save()
+                        })
                     })
-                })
-                .then( async (detalleSalida) => {
-                    await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
-                    .then( async valeSalida => {
-                        res.status(200).json({ valeSalida, detalleSalida })
-                    }).catch(error => {
-                        res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                    .then( async (detalleSalida) => {
+                        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+                        .then( async valeSalida => {
+                            res.status(200).json({ valeSalida, detalleSalida })
+                        }).catch(error => {
+                            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                        })
                     })
-                })
-                .catch(error => {
-                    res.status(500).json({ message: 'Error al completar el vale de salida', error: error.message })
-                }) 
-            }else {
+                    .catch(error => {
+                        res.status(500).json({ message: 'Error al completar el vale de salida', error: error.message })
+                    }) 
+            } else {
                 res.status(400).json({ message: "El vale debe ser entregado completamente o paracialmente."})
             }            
         }).catch(error => {
@@ -423,7 +425,7 @@ exports.registrarValeSalida = async (req, res) => {
 exports.cancelValeSalida = async (req, res) => {
     const { id, comentarios } = req.body
     try {
-        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
             if(valeSalida.statusVale === 1 || valeSalida.statusVale === 2){
                 valeSalida.statusVale = 5
@@ -466,21 +468,27 @@ exports.cancelDetalleSalida = async (req, res) => {
                 detalleSalida.comentarios = comentarios
                 await detalleSalida.save()
 
-                // Vale Salida
-                await ValeSalida.findOne({ where: { id: detalleSalida.valeSalidaId }, include: DetalleSalida, include:Insumo })
-                .then( async valeSalida => {
-                    if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
-                        valeSalida.statusVale = 5
-                        await valeSalida.save()
-                    }
-                    
-                    res.status(200).json({ detalleSalida })
-                }).catch(error => {
-                    res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
-                })
-            }else {
+            } else if (detalleSalida.status === 2){
+                detalleSalida.status = 6
+                detalleSalida.comentarios = comentarios
+                await detalleSalida.save()
+            }
+            else {
                 res.status(400).json({ message: "No se debe haber entregado ningún insumo para cancelar."})
-            }            
+            }     
+            
+            // Valida si todos los insumos se han cancelado entonces cancela el vale de salida
+            await ValeSalida.findOne({ where: { id: detalleSalida.valeSalidaId }, include: [ { model: DetalleSalida, include:Insumo }] })
+            .then( async valeSalida => {
+                if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
+                    valeSalida.statusVale = 5
+                    await valeSalida.save()
+                }
+                
+                res.status(200).json({ detalleSalida, valeSalida })
+            }).catch(error => {
+                res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+            })
         }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el detalle de salida', error: error.message })
         })    

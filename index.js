@@ -7,7 +7,7 @@ const dbConfig = require('./config/db')
 const cookieSession = require('express-session');
 const router = require('./routes')
 const io = require('./services/socketIo')
-// require('./utils/cronSchedule')
+require('./utils/cronSchedule')
 const fs = require('fs')
 
 require('dotenv').config()
