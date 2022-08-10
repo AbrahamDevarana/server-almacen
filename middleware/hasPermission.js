@@ -50,7 +50,7 @@ const definirRuta = (req) => {
             route = 'ver'
             break;
         case 'POST':
-            route = route.replace('/', '/crear')
+            route = route.replace('/', '/crear-')
             break;
         case 'PUT':
             route = route.replace('/', '/editar-')
