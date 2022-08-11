@@ -6,7 +6,7 @@ const app = express()
 const dbConfig = require('./config/db')
 const cookieSession = require('express-session');
 const router = require('./routes')
-const io = require('./services/socketIo')
+const sockets = require('./services/socketIo')
 require('./utils/cronSchedule')
 const fs = require('fs')
 
@@ -43,10 +43,6 @@ dbConfig.sync()
     .then( () => console.log('Conectado al servidor'))
     .catch( error => console.log(error))
 
-
-
-
-
 process.on('uncaughtException', (err, origin) => {
     console.error('Vaya ha habido un error tipo: uncaughtException', err)
 })
@@ -64,5 +60,7 @@ const server = app.listen(PORT, HOST, () => {
     console.log(server.address())
 });
 
-
-io.attach(server)
+sockets.connect(server)
+sockets.on("user", (user) => {
+    console.log("Se ha conectado ", user)
+})

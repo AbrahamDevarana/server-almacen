@@ -18,7 +18,7 @@ exports.getAllValeSalida = async (req, res) => {
         .then( async user => {
             if (user.tipoUsuario_id === 3)  {
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], 
-                order: [['createdAt', 'DESC']] }).then(valeSalida => {
+                order: [['id', 'DESC']] }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
@@ -26,7 +26,7 @@ exports.getAllValeSalida = async (req, res) => {
                 })
             }else{
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id},
-                order: [['createdAt', 'DESC']] })
+                order: [['id', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -54,7 +54,7 @@ exports.getValeSalida = async (req, res) => {
             // Almacenista
             if (user.tipoUsuario_id === 3)  {
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, order: [['createdAt', 'DESC']] 
+                    statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, order: [['id', 'DESC']] 
                 }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
@@ -64,7 +64,7 @@ exports.getValeSalida = async (req, res) => {
             // Usuario regular
             }else{
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
-                    statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['createdAt', 'DESC']] })
+                    statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['id', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -159,6 +159,7 @@ exports.getCountValeSalida = async (req, res) => {
     }
 }
 
+
 exports.createValeSalida = async (req, res) => {
 
     const errors = validationResult(req);
@@ -198,7 +199,7 @@ exports.createValeSalida = async (req, res) => {
                             almacenistasArray.push(almacenista.dataValues.id)
                             
                         })
-                        createNotification(almacenistasArray, 'Vale de salida', `El usuario ${valeSalida.user.nombre} ha creado un vale de salida`)
+                        createNotification(almacenistasArray, 'Vale de salida', `El usuario ${valeSalida.user.nombre} ha creado un vale de salida`, 1)
                     })
                     .catch(error => {
                         console.log(error.message);

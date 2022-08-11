@@ -30,6 +30,10 @@ const Notificaciones = db.define('notificaciones', {
         allowNull: false,
         unique: true
     },
+    type: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW

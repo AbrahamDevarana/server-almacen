@@ -91,13 +91,18 @@ exports.deleteRole = async (req, res) => {
 
     const { id } = req.params
     try {
-        const role = await Role.findOne({ where: { id } }).catch(error => {
+        await Role.findOne({ where: { id } }).then(role => {
+            if(role.id !== 3){
+                role.destroy()
+                res.status(200).json({ role })
+            } else {
+                res.status(404).json({ message: 'Este rol no se puede borrar' })
+            }
+    })
+        .catch(error => {
             res.status(500).json({ message: 'Error al obtener el rol', error: error.message })
     })
-        if(role){
-            await role.destroy()
-            res.status(200).json({ role })
-        }
+
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }

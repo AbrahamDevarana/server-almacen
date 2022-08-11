@@ -4,6 +4,10 @@ const valeSalidaController = require("../controllers/valeSalidaController")
 const job = new CronJob('00 00 00 * * *', function() {
     console.log('running at midnight');
 	valeSalidaController.validateVale()
-});
+},
+null,
+true,
+'America/Mexico_City'
+);
 
 job.start();

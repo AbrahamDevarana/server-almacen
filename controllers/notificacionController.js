@@ -5,9 +5,19 @@ const { Op } = require('sequelize')
 
 exports.getNotificaciones = async (req, res) => {
 
-    const { id } = req.user;
+    const { id, tipoUsuario_id } = req.user;
+
+    const where = {}
+    where.status = 1
+
+    if (tipoUsuario_id === 3) {
+        where.type = 1
+    } else {
+        where.userId = id
+    }
+
     try {
-        await Notificaciones.findAll({ where: { userId:id, status: 1 } })
+        await Notificaciones.findAll({ where })
         .then( notificaciones => {
             if(notificaciones){
                 res.status(200).json({ notificaciones })

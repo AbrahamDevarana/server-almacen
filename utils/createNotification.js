@@ -1,7 +1,8 @@
 const Notificaciones = require('../models/Notificaciones')
 const { v4: uuid } = require('uuid');
+const sockets = require('../services/socketIo');
 
-exports.createNotification = async (almacenistasArray, titulo, mensaje) => {
+exports.createNotification = async (almacenistasArray, titulo, mensaje, type) => {
     try {
         
         Notificaciones.bulkCreate(
@@ -10,9 +11,12 @@ exports.createNotification = async (almacenistasArray, titulo, mensaje) => {
                 mensaje,
                 status: 1,
                 userId: item,
+                type,
                 uuid: uuid()
             })
-        )).then( () => {
+        )).then( ( notificacion ) => {
+                sockets.emit("notificacion", [{ key: uuid(), label: mensaje }] )
+                // sockets.emit("notificacion", "Test" )
             return true
         }
         ).catch(error => {
