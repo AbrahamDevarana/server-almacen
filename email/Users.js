@@ -1,8 +1,7 @@
 const { mailSender } = require("../utils/sendMail")
 
 function mailNewUser (usuario) {
-    const html = `
-    <!DOCTYPE html>
+    const html = `<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -10,52 +9,83 @@ function mailNewUser (usuario) {
         <meta http-equiv="Content-Type" content="text/html charset=UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Document</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     </head>
     <style type="text/css">
-        * {
-            font-family: 'Roboto', sans-serif;
+        *, ::before, ::after {
+            
+            box-sizing: border-box;
+            border-width: 0;
+            margin: 0;
+            padding: 0;        
+        }
+        
+        .table {
+            border-collapse: collapse;
+            border-spacing: 0;
         }
     </style>
-    <body style="background-color: #dbdbea;">
-     
-        <table style="max-width: 600px; margin:auto; background-color: #f9f9f9; padding: 20px 10px;">
+    <body style="background-color: #f9f9f9;">
+    
+        <!-- Mailing de bienvenida en js-->
+        
+        <table style="width:100%; max-width: 600px; margin:auto; background-color: #fff;" cellspacing="0" cellpadding="0">
             <tr>
-                <td> <img src="cid:logo" alt="Logo" style="max-width: 200px;margin: auto;display: block;"></td>
+                <td style="background-color:#56739B;padding: 25px 0;"> <img src="cid:logo" alt="Logo" style="max-width: 200px;margin: auto;display: block;"> </td>
             </tr>
-    
-        <tr>
-                <td> <h1 style="color: #646375; text-align: center; font-size: 24px;">Bienvenido a la Sistema de Gestión de Vales de Almacén </h1> </td>
-        </tr>
-    
             <tr>
-                <td style="color: #646375;text-align: center;">
-                    <p>Hola <span style="color: #56739B;">${usuario.nombre} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno}</span> </p>
-                    <p>Bienvenido a la Sistema de Gestión de Vales de Almacén</p>
-                    <p> Para poder ingresar al sistema deberás usar tu email corporativo </p>
-                    <p style="color: #56739B;">${usuario.email}</p>
+                <td>
+    
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div style="padding: 25px 50px 0px">
+                        <h1 style="color:#646375;text-align: center;">Bienvenido al Software de Gestión de Vales de Almacén</h1>
+    
+                        <p style="font-weight: bold;color:#646375;padding: 15px 0 15px; font-size: 18px;">
+                            ${usuario.nombre} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno},
+                        </p>
+    
+                        <p style="color:#646375;padding: 15px 0;font-size: 16px;">
+                            Bienvenida al Software de Gestión de Construcción, en este momento tenemos listo tu usuario para hacer uso del módulo de Vales de Almacén.
+                        </p>
+                        <p style="color:#646375;padding: 15px 0;font-size: 16px;">
+                            Para acceder al sistema ingresa a través del siguiente link:
+                        </p>
+                    </div>
                 </td>
             </tr>
     
             <tr>
-                <td style="text-align: center;color: #646375;">
-                    <p> En el siguiente enlace </p>
+                <td>
+                    <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/login">Ingresa Aquí</a>
                 </td>
             </tr>
     
-            <tr>
+            <tr style="background-color: #fff;"> 
+                <td>
+                    <p style="font-size: 14px; color: #646375;text-align: center; padding: 35px 0;"> Podrás acceder a través de tu computadora de escritorio y/o dispositivos móviles: </p>
+                </td>
+            </tr>
+            <tr style="background-color: #fff;">
                 <td style="text-align: center;">
-                    <a href="http://erp-devarana.mx/login" style="color: white; background: #646375; border-radius: 5px; padding: 5px 10px; text-decoration: none;">Ingresar</a>
+                    <img src="cid:pc" alt="" style="width:120px;">                
+                    <img src="cid:tablet" alt="" style="width:100px;">                
+                    <img src="cid:phone" alt="" style="width:100px;">                
                 </td>
             </tr>
+    
+            <tr style="background-color:#56739B;">
+                <td>
+                    <p style="color:#f9f9f9;text-align: center; padding: 30px 50px; font-size: 14px;"> Para cualquier duda o aclaración favor de ponerse en contacto con 
+                    <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia.">Abraham Alvarado</a> del Departamento de Tecnología. </p>
+                </td>
+            </tr>
+    
         </table>
         
     </body>
-    </html>
-                    
-                `
+    </html>`
 
     mailSender(usuario.email, 'Bienvenido a la plataforma de almacén', html)    
 }

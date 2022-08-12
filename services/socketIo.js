@@ -3,18 +3,21 @@ var io = null
 module.exports = {
     connect: (server) => {
         io = new Server(server, {
-            
             cors: {
                 origin: '*',
             }
         });
+         
     },
     emit: (event, values) => {
-        if ( io ) {
+        if(event === 'join'){
+            console.log('join', room);
+            this.join(event, values)
+        }else if ( io ) {
             io.emit(event, values);
         }
     },
-    to: (event, values) => {
+    to: (event, values, room) => {
         if ( io ) {
             io.to(event).emit(event, values);
         }
@@ -22,6 +25,12 @@ module.exports = {
     on: (event, callback) => {
         if ( io ) {
             io.on(event, callback);
+        }
+    },
+    join: (room, user) => {
+        
+        if ( io ) {
+            io.join(room);
         }
     }
     

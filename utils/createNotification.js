@@ -14,9 +14,8 @@ exports.createNotification = async (almacenistasArray, titulo, mensaje, type) =>
                 type,
                 uuid: uuid()
             })
-        )).then( ( notificacion ) => {
-                sockets.emit("notificacion", [{ key: uuid(), label: mensaje }] )
-                // sockets.emit("notificacion", "Test" )
+        )).then( ( notificacion ) => {               
+                sockets.to("almacen", "notificacion", [{ key: uuid(), label: mensaje }] )
             return true
         }
         ).catch(error => {

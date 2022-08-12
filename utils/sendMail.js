@@ -14,7 +14,7 @@ exports.mailSender = (to, subject, html) => {
     const mailOptions = {
         from: `Devarana <${process.env.EMAIL_USERNAME}>`,
         to: ` <${to}>`,
-        cco: `<abrahamalvarado+sgo@devarana.mx>`,
+        bcc: `<abrahamalvarado+sgo@devarana.mx>`,
         subject: 'No Reply', subject,
         html: html,
         attachments: [
@@ -22,7 +22,23 @@ exports.mailSender = (to, subject, html) => {
                 filename: 'LogoDevarana.png',
                 path: './static/img/LogoDevarana.png',
                 cid: 'logo'
-            }]
+            },
+            {
+                filename: 'pc.png',
+                path: './static/img/pc.png',
+                cid: 'pc'
+            },
+            {
+                filename: 'phone.png',
+                path: './static/img/phone.png',
+                cid: 'phone'
+            },
+            {
+                filename: 'tablet.png',
+                path: './static/img/tablet.png',
+                cid: 'tablet'
+            }
+        ]
     };
 
     transporter.verify(function (error, success) {

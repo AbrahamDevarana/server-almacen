@@ -83,18 +83,13 @@ exports.getValeSalida = async (req, res) => {
 
 exports.getCountValeSalida = async (req, res) => {
 
-    const { tipoUsuario_id } = req.user
-    const { type } = req.query
-    
+    const { id } = req.user
     let where = {}
 
-    if( tipoUsuario_id === 3 ){
-        where = {}
-    }else{
-        where = {
-            userId: req.user.id
-        }
-    }
+
+    const { type } = req.query
+    
+  
     switch (type) {
         case "hoy":
             where = {
@@ -127,32 +122,42 @@ exports.getCountValeSalida = async (req, res) => {
 
 
     try {
-        await ValeSalida.findAll({where}).then(valeSalida => {
-            // contar vale de salida por estatus
-            const countValeSalida = valeSalida.reduce((acc, valeSalida) => {
-                if (valeSalida.statusVale === 1) {
-                    acc.nuevo = acc.nuevo + 1
-                } else if (valeSalida.statusVale === 2) {
-                    acc.parcialAbierto = acc.parcialAbierto + 1
-                } else if (valeSalida.statusVale === 3) {
-                    acc.parcialCerrado = acc.parcialCerrado + 1
-                } else if (valeSalida.statusVale === 4) {
-                    acc.entregado = acc.entregado + 1
-                } else if (valeSalida.statusVale === 5) {
-                    acc.cancelado = acc.cancelado + 1
-                } else if (valeSalida.statusVale === 7) {
-                    acc.cerrado = acc.cerrado + 1
+        await Users.findOne({ where: { id } })
+        .then( async user => {
+            
+            if( user.tipoUsuario_id === 3 ){
+                where = {}
+            }else{
+                where = {
+                    userId: user.id
                 }
-                return acc
-            }, { nuevo: 0, parcialAbierto: 0, parcialCerrado: 0, entregado: 0, cancelado: 0, cerrado: 0 })
-
-            countValeSalida.todos = valeSalida.length
-            res.status(200).json({ countValeSalida })
+            }
+            await ValeSalida.findAll({where}).then(valeSalida => {
+                // contar vale de salida por estatus
+                const countValeSalida = valeSalida.reduce((acc, valeSalida) => {
+                    if (valeSalida.statusVale === 1) {
+                        acc.nuevo = acc.nuevo + 1
+                    } else if (valeSalida.statusVale === 2) {
+                        acc.parcialAbierto = acc.parcialAbierto + 1
+                    } else if (valeSalida.statusVale === 3) {
+                        acc.parcialCerrado = acc.parcialCerrado + 1
+                    } else if (valeSalida.statusVale === 4) {
+                        acc.entregado = acc.entregado + 1
+                    } else if (valeSalida.statusVale === 5) {
+                        acc.cancelado = acc.cancelado + 1
+                    } else if (valeSalida.statusVale === 7) {
+                        acc.cerrado = acc.cerrado + 1
+                    }
+                    return acc
+                }, { nuevo: 0, parcialAbierto: 0, parcialCerrado: 0, entregado: 0, cancelado: 0, cerrado: 0 })
+    
+                countValeSalida.todos = valeSalida.length
+                res.status(200).json({ countValeSalida })
+            })
+            .catch(error => {
+                res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+            })
         })
-        .catch(error => {
-            res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
-        })
-
     }
     catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
@@ -515,26 +520,24 @@ exports.completeValeSalida = async (req, res) => {
                         item.cantidadEntregada = item.cantidadSolicitada
                         await item.save()
                     })
+                }).catch(error => {
+                    res.status(500).json({ message: 'Error al obtener los detalles de salida', error: error.message })
                 })
-                .then( async () => {
-                    await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
-                    .then( async valeSalida => {
 
-                        await Users.findOne({ where: { id: valeSalida.userId } })
-                        .then( async usuario => {
-                            await completarVale(usuario, valeSalida)
-                        }).catch(error => {
-                            res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
-                        })
+                await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+                .then( async vale => {
 
-                        res.status(200).json({ valeSalida })
-                    }).catch(error => {
-                        res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
-                    })
-                })
-                .catch(error => {
-                    res.status(500).json({ message: 'Error al completar el vale de salida', error: error.message })
-                })               
+                    // await Users.findOne({ where: { id: valeSalida.userId } })
+                    // .then( async usuario => {
+                    //     await completarVale(usuario, valeSalida)
+                    // }).catch(error => {
+                    //     res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+                    // })
+
+                    res.status(200).json({ valeSalida:vale })
+                }).catch(error => {
+                    res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                })             
             } else {
                 res.status(400).json({ message: "El vale no debe estar cancelado o completado"})
             }            
