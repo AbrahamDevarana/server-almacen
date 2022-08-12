@@ -10,7 +10,7 @@ function cancelarVale( usuario, valeSalida, responsable){
                     ${valeSalida.comentarios ? `<p> Han Añadido los siguientes comentarios ${valeSalida.comentarios}</p>` : ''}
                     <p>Puedes ingresar a la plataforma aquí <a href="http://erp-devarana.mx/login">Ingresar</a> </p>
                 `
-    mailSender(usuario.email, 'Cancelación de Vale de Salida', html)
+    // mailSender(usuario.email, 'Cancelación de Vale de Salida', html)
 
 }
 
@@ -21,7 +21,7 @@ function completarVale( usuario, valeSalida ){
                     <p>El Vale de salida para la siguiente actividad: ${valeSalida.actividad.nombre} ha sido entregado</p>
                     <p>Puedes ingresar a la plataforma aquí <a href="http://erp-devarana.mx/login">Ingresar</a> </p>
                 `
-    mailSender(usuario.email, 'Completado de Vale de Salida', html)
+    // mailSender(usuario.email, 'Completado de Vale de Salida', html)
 }
 
 

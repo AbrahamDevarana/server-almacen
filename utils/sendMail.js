@@ -4,6 +4,7 @@ exports.mailSender = (to, subject, html) => {
     const transporter = mailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: process.env.EMAIL_PORT,
+        // service: 'gmail',
         auth: {
             user: process.env.EMAIL_USERNAME,
             pass: process.env.EMAIL_PASSWORD
@@ -13,8 +14,15 @@ exports.mailSender = (to, subject, html) => {
     const mailOptions = {
         from: `Devarana <${process.env.EMAIL_USERNAME}>`,
         to: ` <${to}>`,
+        cco: `<abrahamalvarado+sgo@devarana.mx>`,
         subject: 'No Reply', subject,
-        html: html
+        html: html,
+        attachments: [
+            {
+                filename: 'LogoDevarana.png',
+                path: './static/img/LogoDevarana.png',
+                cid: 'logo'
+            }]
     };
 
     transporter.verify(function (error, success) {

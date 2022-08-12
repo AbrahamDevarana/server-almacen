@@ -42,7 +42,6 @@ app.use('/api', router)
 dbConfig.sync()
     .then( () => console.log('Conectado al servidor'))
     .catch( error => console.log(error))
-
 process.on('uncaughtException', (err, origin) => {
     console.error('Vaya ha habido un error tipo: uncaughtException', err)
 })
@@ -53,7 +52,7 @@ process.on('unhandledRejection', (err, origin) => {
 
 
 const PORT = process.env.PORT || 5000;
-const HOST = process.env.HOST || "0.0.0.0"
+const HOST = process.env.HOST || "127.0.0.1"
 
 const server = app.listen(PORT, HOST, () => {
     console.log(`Server running on port ${process.env.PORT}`);
@@ -64,3 +63,4 @@ sockets.connect(server)
 sockets.on("user", (user) => {
     console.log("Se ha conectado ", user)
 })
+
