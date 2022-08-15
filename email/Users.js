@@ -25,9 +25,7 @@ function mailNewUser (usuario) {
         }
     </style>
     <body style="background-color: #f9f9f9;">
-    
-        <!-- Mailing de bienvenida en js-->
-        
+            
         <table style="width:100%; max-width: 600px; margin:auto; background-color: #fff;" cellspacing="0" cellpadding="0">
             <tr>
                 <td style="background-color:#56739B;padding: 25px 0;"> <img src="cid:logo" alt="Logo" style="max-width: 200px;margin: auto;display: block;"> </td>
@@ -40,14 +38,14 @@ function mailNewUser (usuario) {
             <tr>
                 <td>
                     <div style="padding: 25px 50px 0px">
-                        <h1 style="color:#646375;text-align: center;">Bienvenido al Software de Gestión de Vales de Almacén</h1>
+                        <h1 style="color:#646375;text-align: center;">Bienvenid@ al Software de Gestión de Vales de Almacén</h1>
     
                         <p style="font-weight: bold;color:#646375;padding: 15px 0 15px; font-size: 18px;">
                             ${usuario.nombre} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno},
                         </p>
     
                         <p style="color:#646375;padding: 15px 0;font-size: 16px;">
-                            Bienvenida al Software de Gestión de Construcción, en este momento tenemos listo tu usuario para hacer uso del módulo de Vales de Almacén.
+                            Bienvenid@ al Software de Gestión de Construcción, en este momento tenemos listo tu usuario para hacer uso del módulo de Vales de Almacén.
                         </p>
                         <p style="color:#646375;padding: 15px 0;font-size: 16px;">
                             Para acceder al sistema ingresa a través del siguiente link:
@@ -87,7 +85,7 @@ function mailNewUser (usuario) {
     </body>
     </html>`
 
-    mailSender(usuario.email, 'Bienvenido a la plataforma de almacén', html)    
+    mailSender(usuario.email, 'Bienvenid@ al Software de Gestión de Almacén', html)    
 }
 
 

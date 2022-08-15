@@ -39,9 +39,13 @@ app.set("trust proxy", 1);
 
 app.use('/api', router)
 
+
+
 dbConfig.sync()
     .then( () => console.log('Conectado al servidor'))
     .catch( error => console.log(error))
+
+    
 process.on('uncaughtException', (err, origin) => {
     console.error('Vaya ha habido un error tipo: uncaughtException', err)
 })

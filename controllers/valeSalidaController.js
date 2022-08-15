@@ -298,10 +298,9 @@ exports.updateValeSalida = async (req, res) => {
     }
 }
 
-
 exports.deliverValeSalida = async (req, res) => {
 
-    const { id, valeSalidaId, insumoId, cantidadEntregada } = req.body
+    const { id, valeSalidaId, insumoId, cantidadEntregada, comentarios } = req.body
 
     try {
         const detalleSalida = await DetalleSalida.findOne({ where: { id, insumoId, valeSalidaId } }).catch(error => {
@@ -327,6 +326,8 @@ exports.deliverValeSalida = async (req, res) => {
                                 detalleSalida.status = 3 // Entregado
                             }
                         }
+
+                    detalleSalida.comentarios = comentarios ?? ""
                     await detalleSalida.save()
 
                     // Vale Salida
@@ -343,20 +344,7 @@ exports.deliverValeSalida = async (req, res) => {
                         } 
                         await valeSalida.save()
 
-
-
-                        if (valeSalida.statusVale === 4) {
-                            await Users.findOne({ where: { id: valeSalida.userId } })
-                            .then( async usuario => {
-                                await completarVale(usuario, valeSalida)
-                                res.status(200).json({ detalleSalida, valeSalida })
-                            }).catch(error => {
-                                res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
-                            })
-                        }else {
-                            res.status(200).json({ detalleSalida, valeSalida })
-                        }
-
+                        res.status(200).json({ detalleSalida, valeSalida })
                     })
                     .catch(error => {
                         res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
@@ -374,7 +362,7 @@ exports.deliverValeSalida = async (req, res) => {
     }
 }
 
-// Se Cierra el vale de salida = Se ha subido a Enkontrol
+// Registrar Enkontrol
 exports.registrarValeSalida = async (req, res) => {
     const { id, salidaEnkontrol } = req.body
     try {
@@ -489,6 +477,9 @@ exports.cancelDetalleSalida = async (req, res) => {
                 if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
                     valeSalida.statusVale = 5
                     await valeSalida.save()
+                }else if (valeSalida.detalle_salidas.every( item => item.status !== 1 )){
+                    valeSalida.statusVale = 7
+                    await valeSalida.save()
                 }
                 
                 res.status(200).json({ detalleSalida, valeSalida })
@@ -550,7 +541,7 @@ exports.completeValeSalida = async (req, res) => {
     }
 }
 
-// Sino se entrego el vale se cierra 
+// Cerrar Vale
 exports.validateVale = async (req, res) => {
 
     try { 
@@ -591,3 +582,30 @@ exports.validateVale = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
+
+
+
+async function comprobarVale (valeSalida){
+    await ValeSalida.findOne({id: valeSalida.id})
+    .then( async vale => {
+        if(vale.detalle_salidas.every( item => item.status === 1 )){
+            vale.statusVale = 1 // Vale Nuevo
+        } else if (vale.detalle_salidas.some( item => item.status === 2 )){
+            vale.statusVale = 2 // Vale parcialmente [abierto] = 2
+        } else if (vale.detalle_salidas.every( item => item.status === 3  || item.status === 5  )){
+            vale.statusVale = 3 /// Vale parcialmente [cerrado] = 3
+        } else if (vale.detalle_salidas.every( item => item.status === 4 )){
+            vale.statusVale = 4 // Vale entregado = 4
+        }else if (vale.detalle_salidas.every( item => item.status === 5 )){
+            vale.statusVale = 5 // Vale cancelado = 5
+        }
+
+        await vale.save()
+        return vale     
+        
+    }).catch(error => {
+        res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+    })
+
+}
+

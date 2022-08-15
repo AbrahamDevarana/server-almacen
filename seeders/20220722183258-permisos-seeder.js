@@ -212,6 +212,12 @@ module.exports = {
             permiso: '/editar-vales',
             createdAt: new Date(),
             updatedAt: new Date()
+        },
+        {
+            nombre: 'Cancelar Vales Vales',
+            permiso: '/eliminar-vales',
+            createdAt: new Date(),
+            updatedAt: new Date()
         }
 	], {});
   },

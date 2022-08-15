@@ -32,6 +32,9 @@ module.exports = {
         if ( io ) {
             io.join(room);
         }
+        // mostrar miembros de la sala
+        io.to(room).emit('members', io.sockets.adapter.rooms[room]);
+
     }
     
 }
