@@ -1,8 +1,6 @@
 const Personal = require('../models/Personal');
 const Users = require('../models/Users');
-const moment = require('moment');
 const { validationResult } = require('express-validator')
-require ("moment/locale/es-mx")
 
 
 exports.createPersonal = async (req, res) => {
@@ -11,13 +9,12 @@ exports.createPersonal = async (req, res) => {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
     }
 
-    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso, especialidad } = req.body;
+    const { nombre, apellidoPaterno, apellidoMaterno, especialidad } = req.body;
     try {
         await Personal.create({
             nombre,
             apellidoPaterno,
             apellidoMaterno,
-            fechaIngreso: moment(fechaIngreso, 'DD-MM-YYYY').format('YYYY-MM-DD'),
             userId: req.user.id,
             especialidad
         })
@@ -46,7 +43,7 @@ exports.updatePersonal = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { nombre, apellidoPaterno, apellidoMaterno, fechaIngreso, especialidad } = req.body;
+    const { nombre, apellidoPaterno, apellidoMaterno, especialidad } = req.body;
 
     try {
         const personal = await Personal.findOne({ where: { id }, include: Users }).catch(error => {
@@ -59,7 +56,6 @@ exports.updatePersonal = async (req, res) => {
                 personal.apellidoPaterno = apellidoPaterno ?? personal.apellidoPaterno;
                 personal.apellidoMaterno = apellidoMaterno ?? personal.apellidoMaterno;
                 personal.especialidad = especialidad ?? personal.especialidad;
-                personal.fechaIngreso = moment(fechaIngreso, 'DD-MM-YYYY').format('YYYY-MM-DD') ?? personal.fechaIngreso;
 
                 await personal.save().catch(error => {
                     res.status(500).json({ message: 'Error al actualizar el personal', error: error.message });

@@ -20,10 +20,6 @@ const Personal = db.define('personal', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    fechaIngreso: {
-        type: Sequelize.DATE,
-        allowNull: false
-    },
     userId: {
         type: Sequelize.INTEGER,
         allowNull: false
