@@ -17,7 +17,7 @@ exports.getAllValeSalida = async (req, res) => {
         await Users.findOne({ where: { id } })
         .then( async user => {
             if (user.tipoUsuario_id === 3)  {
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], 
+                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], 
                 order: [['id', 'DESC']] }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
@@ -163,7 +163,6 @@ exports.getCountValeSalida = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
-
 
 exports.createValeSalida = async (req, res) => {
 
@@ -327,7 +326,7 @@ exports.deliverValeSalida = async (req, res) => {
                             }
                         }
 
-                    detalleSalida.comentarios = comentarios ?? ""
+                    detalleSalida.comentarios = comentarios ?? null
                     await detalleSalida.save()
 
                     // Vale Salida
@@ -425,21 +424,16 @@ exports.cancelValeSalida = async (req, res) => {
                 valeSalida.statusVale = 5
                 valeSalida.comentarios = comentarios
                 // cancelar detalles de salida
-                await DetalleSalida.update({ status: 4 }, { where: { valeSalidaId: id } })
+                await DetalleSalida.update({ status: 4 , comentarios , salidaEnkontrol: null}, { where: { valeSalidaId: id } })
+                .then( async () => {
+                    await valeSalida.save()
+                    valeSalida.detalle_salidas.map (item => item.status = 4)
+                    res.status(200).json({ valeSalida })
+                })
                 .catch(error => {
                     res.status(500).json({ message: 'Error al cancelar el vale de salida', error: error.message })
-                })
-                
-                await Users.findOne({ where: { id: valeSalida.userId } })
-                .then( async usuario => {
-                    await cancelarVale(usuario, valeSalida, req.user ) 
-                })
-                .catch(error => {
-                    res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
-                })
-               
-                await valeSalida.save()
-                res.status(200).json({ valeSalida })
+                })      
+
             }else {
                 res.status(400).json({ message: "El vale debe estar en estatus 1 o 2."})
             }            
@@ -511,24 +505,20 @@ exports.completeValeSalida = async (req, res) => {
                         item.cantidadEntregada = item.cantidadSolicitada
                         await item.save()
                     })
+
+                    await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+                        .then( async valeSalida => {
+
+                            valeSalida.detalle_salidas.map (item => item.status = 3)
+                            res.status(200).json({ valeSalida })
+                        }).catch(error => {
+                            res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
+                        })     
                 }).catch(error => {
                     res.status(500).json({ message: 'Error al obtener los detalles de salida', error: error.message })
                 })
 
-                await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
-                .then( async vale => {
-
-                    // await Users.findOne({ where: { id: valeSalida.userId } })
-                    // .then( async usuario => {
-                    //     await completarVale(usuario, valeSalida)
-                    // }).catch(error => {
-                    //     res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
-                    // })
-
-                    res.status(200).json({ valeSalida:vale })
-                }).catch(error => {
-                    res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
-                })             
+                        
             } else {
                 res.status(400).json({ message: "El vale no debe estar cancelado o completado"})
             }            
