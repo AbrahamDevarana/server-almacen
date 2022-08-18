@@ -7,6 +7,8 @@ const { Op } = require("sequelize");
 const Users = require('../models/Users')
 const {createNotification} = require('../utils/createNotification.js')
 const { cancelarVale, completarVale } = require('../email/Notificaciones')
+const Permisos = require('../models/Permisos')
+const Role = require('../models/Role')
 
 exports.getAllValeSalida = async (req, res) => {
     try {    
@@ -14,9 +16,10 @@ exports.getAllValeSalida = async (req, res) => {
         // Obtener roles de usuario
         const {id} = req.user
 
-        await Users.findOne({ where: { id } })
+        await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos }] })
         .then( async user => {
-            if (user.tipoUsuario_id === 3)  {
+            // Validar permisos
+            if (user.role.permisos.some( item => item.permisos === 'ver vales'))  {
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], 
                 order: [['id', 'DESC']] }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
@@ -49,10 +52,10 @@ exports.getValeSalida = async (req, res) => {
         const { statusVale } = req.query
         const {id} = req.user
 
-        await Users.findOne({ where: { id } })
+        await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos}] })
         .then( async user => {
             // Almacenista
-            if (user.tipoUsuario_id === 3)  {
+            if (user.role.permisos.some( item => item.permisos === 'ver vales' ))  {
                 await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
                     statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, order: [['id', 'DESC']] 
                 }).then(valeSalida => {
@@ -122,10 +125,10 @@ exports.getCountValeSalida = async (req, res) => {
 
 
     try {
-        await Users.findOne({ where: { id } })
+        await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos}]})
         .then( async user => {
             
-            if( user.tipoUsuario_id === 3 ){
+            if( user.role.permisos.some( item => item.permisos === 'ver vales' ) ){
                 where = {}
             }else{
                 where = {

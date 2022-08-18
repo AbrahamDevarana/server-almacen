@@ -1,10 +1,15 @@
 const router = require('express').Router()
 const { check } = require('express-validator')
 const valeController = require('../../controllers/valeSalidaController')
+const checkAccess = require('../../middleware/checkAccess')
 
 router.get('/', valeController.getAllValeSalida)
 router.get('/search', valeController.getValeSalida)
-router.post('/',
+router.get('/countVales', valeController.getCountValeSalida)
+
+
+
+router.post('/', checkAccess('crear vales'),
     [
         check('almacenId').not().isEmpty(),
         check('obraId').not().isEmpty(),
@@ -18,13 +23,13 @@ router.post('/',
 
 router.put('/:id', valeController.updateValeSalida )
 
-router.post('/deliver', valeController.deliverValeSalida)
 
+// Entregas 
+router.post('/deliver', checkAccess('entregar vales'), valeController.deliverValeSalida)
+router.post('/registrarVale', checkAccess('registrar vales'), valeController.registrarValeSalida)
+router.post('/completeVale', checkAccess('entregar vales'), valeController.completeValeSalida)
 
-router.post('/cancelVale', valeController.cancelValeSalida)
-router.post('/cancelDetalle', valeController.cancelDetalleSalida)
-router.post('/registrarVale', valeController.registrarValeSalida)
-router.post('/completeVale', valeController.completeValeSalida)
-router.get('/countVales', valeController.getCountValeSalida)
+router.post('/cancelVale', checkAccess('eliminar vales'), valeController.cancelValeSalida)
+router.post('/cancelDetalle', checkAccess('eliminar vales'), valeController.cancelDetalleSalida)
 
 module.exports = router

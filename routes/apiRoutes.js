@@ -13,20 +13,19 @@ const permisoRoute = require('./apiRoutes/permisoRoute')
 const notificacionRoute = require('./apiRoutes/notificacionRoute')
 
 //Middleware para verificar que el usuario tenga permisos para realizar la acción
-const hasPermission = require('../middleware/hasPermission')
 
-router.use('/usuarios', hasPermission, userRoute)
-router.use('/roles', hasPermission, roleRoute)
-router.use('/actividades', hasPermission, actividadRoute)
-router.use('/niveles', hasPermission, nivelRoute)
-router.use('/zonas', hasPermission, zonaRoute)
-router.use('/unidades', hasPermission, unidadRoute)
-router.use('/obras', hasPermission, obraRoute)
-router.use('/personal', hasPermission, personalRoute)
-router.use('/insumos', hasPermission, insumoRoute)
-router.use('/vales', hasPermission, valeRoute)
+router.use('/usuarios', userRoute)
+router.use('/roles', roleRoute)
+router.use('/actividades', actividadRoute)
+router.use('/niveles', nivelRoute)
+router.use('/zonas', zonaRoute)
+router.use('/unidades', unidadRoute)
+router.use('/obras', obraRoute)
+router.use('/personal', personalRoute)
+router.use('/insumos', insumoRoute)
+router.use('/vales', valeRoute)
 router.use('/permisos', permisoRoute)
-router.use('/notificaciones', hasPermission, notificacionRoute)
+router.use('/notificaciones', notificacionRoute)
 
 
 module.exports = router

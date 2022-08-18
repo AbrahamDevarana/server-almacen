@@ -15,6 +15,10 @@ const Permisos = db.define('permisos', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    permisos: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
     createdAt: {
         type: Sequelize.DATE,
         allowNull: false
