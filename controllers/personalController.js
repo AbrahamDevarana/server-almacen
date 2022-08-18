@@ -50,7 +50,7 @@ exports.updatePersonal = async (req, res) => {
             res.status(500).json({ message: 'Error al obtener el personal', error: error.message });
         });
 
-        if(personal.userId === req.user.id){
+        if(personal.userId === req.user.id || req.user.suAdmin === true){
             if (personal) {
                 personal.nombre = nombre ?? personal.nombre;
                 personal.apellidoPaterno = apellidoPaterno ?? personal.apellidoPaterno;

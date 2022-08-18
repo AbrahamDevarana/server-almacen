@@ -96,7 +96,8 @@ exports.deleteInsumo = async (req, res) => {
             res.status(500).json({message: 'Error al obtener el insumo', error: error.message})
         })
         if(insumo){
-            await insumo.destroy()
+            insumo.status = !insumo.status
+            await insumo.save()
             res.status(200).json({insumo})
         }
     }
