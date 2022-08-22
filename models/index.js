@@ -12,6 +12,8 @@ const Role = require('./Role')
 const Permisos = require('./Permisos')
 const Notificaciones = require('./Notificaciones')
 
+const Prestamos = require('./Prestamos')
+
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
 // En esta parte solo son relaciones many to many, y genera automaticamente las tablas que se necesitan mediante el valor through.
@@ -52,6 +54,10 @@ User.hasMany(Notificaciones, { foreignKey: 'userId' })
 
 // ROles
 Role.hasMany(User, { foreignKey: 'tipoUsuario_id' })
+
+Prestamos.belongsTo(User, { foreignKey: 'deliverTo', as: 'residente' })
+Prestamos.belongsTo(User, { foreignKey: 'belongsTo', as: 'owner' })
+Prestamos.belongsTo(DetalleSalida, { foreignKey: 'detalleSalidaId'  })
 
 module.exports = {
     Obra,

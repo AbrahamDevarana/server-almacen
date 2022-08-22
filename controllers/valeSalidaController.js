@@ -9,6 +9,8 @@ const {createNotification} = require('../utils/createNotification.js')
 const { cancelarVale, completarVale } = require('../email/Notificaciones')
 const Permisos = require('../models/Permisos')
 const Role = require('../models/Role')
+const Prestamos = require('../models/Prestamos')
+const { createPrestamo } = require('./prestamoController')
 
 exports.getAllValeSalida = async (req, res) => {
     try {    
@@ -194,7 +196,32 @@ exports.createValeSalida = async (req, res) => {
                     cantidadSolicitada: insumo.cantidadSolicitada,
                     costo: insumo.costo,
                     total: insumo.total,
-                })))    
+                }), { returning: true, individualHooks: true } 
+                )).then( async detalle => {
+                    const [detalle_salida] = detalle
+                    console.log(detalle_salida.dataValues)
+
+                    await listaInsumos.map( async (item) => {
+                        if(item.insumoId === detalle.insumoId){
+                            if(item.residentePrestamo !== null ){
+                                await Prestamos.create({
+                                    belongsTo: userId,
+                                    deliverTo: item.residentePrestamo,
+                                    detalleSalidaId: detalle_salida.dataValues.id
+                                }).catch(error => {
+                                    res.status(500).json({ message: "Error en el servidor", error: error.message })
+                                })
+                            }
+                        }
+                    })
+                    
+                        
+                })
+
+
+                
+                
+
                 await ValeSalida.findOne({ where: { id: valeSalida.id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
                 .then( valeSalida => {
 
@@ -574,31 +601,5 @@ exports.validateVale = async (req, res) => {
     catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
-}
-
-
-
-async function comprobarVale (valeSalida){
-    await ValeSalida.findOne({id: valeSalida.id})
-    .then( async vale => {
-        if(vale.detalle_salidas.every( item => item.status === 1 )){
-            vale.statusVale = 1 // Vale Nuevo
-        } else if (vale.detalle_salidas.some( item => item.status === 2 )){
-            vale.statusVale = 2 // Vale parcialmente [abierto] = 2
-        } else if (vale.detalle_salidas.every( item => item.status === 3  || item.status === 5  )){
-            vale.statusVale = 3 /// Vale parcialmente [cerrado] = 3
-        } else if (vale.detalle_salidas.every( item => item.status === 4 )){
-            vale.statusVale = 4 // Vale entregado = 4
-        }else if (vale.detalle_salidas.every( item => item.status === 5 )){
-            vale.statusVale = 5 // Vale cancelado = 5
-        }
-
-        await vale.save()
-        return vale     
-        
-    }).catch(error => {
-        res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
-    })
-
 }
 

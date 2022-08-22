@@ -11,6 +11,7 @@ const insumoRoute = require('./apiRoutes/insumoRoute')
 const valeRoute = require('./apiRoutes/valeRoute')
 const permisoRoute = require('./apiRoutes/permisoRoute')
 const notificacionRoute = require('./apiRoutes/notificacionRoute')
+const prestamoRoute = require('./apiRoutes/prestamoRoute')
 
 //Middleware para verificar que el usuario tenga permisos para realizar la acción
 
@@ -26,6 +27,7 @@ router.use('/insumos', insumoRoute)
 router.use('/vales', valeRoute)
 router.use('/permisos', permisoRoute)
 router.use('/notificaciones', notificacionRoute)
+router.use('/prestamos', prestamoRoute)
 
 
 module.exports = router

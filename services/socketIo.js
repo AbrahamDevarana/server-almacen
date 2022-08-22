@@ -1,4 +1,5 @@
 const {Server} = require('socket.io');
+const { decodeToken } = require('./jwtStrategy');
 var io = null 
 module.exports = {
     connect: (server) => {
@@ -7,11 +8,11 @@ module.exports = {
                 origin: '*',
             }
         });
-         
+        
     },
     emit: (event, values) => {
+        
         if(event === 'join'){
-            console.log('join', room);
             this.join(event, values)
         }else if ( io ) {
             io.emit(event, values);
@@ -27,14 +28,11 @@ module.exports = {
             io.on(event, callback);
         }
     },
-    join: (room, user) => {
+    join: (event, values) => {
         
         if ( io ) {
-            io.join(room);
+            io.join(event);
         }
-        // mostrar miembros de la sala
-        io.to(room).emit('members', io.sockets.adapter.rooms[room]);
-
     }
     
 }
