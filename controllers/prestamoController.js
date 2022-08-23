@@ -1,4 +1,4 @@
-const Prestamo = require('../models/Prestamos');
+const Prestamos = require('../models/Prestamos');
 const { validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const { DetalleSalida } = require('../models');
@@ -10,7 +10,7 @@ exports.getAllPrestamos = async (req, res) => {
     const { id } = req.user;
     try {
          
-        await Prestamo.findAll({ 
+        await Prestamos.findAll({ 
             include: [{ 
                 model: DetalleSalida, 
                 attributes: ['id', 'cantidadSolicitada'],
@@ -35,11 +35,11 @@ exports.getAllPrestamos = async (req, res) => {
             
 
             
-            where : {[Op.or]: [{ 'belongsTo': id }, { 'deliverTo': id }],
-            
-
-                
-        }})
+            where : {
+                [Op.or]: [{ 'belongsTo': id }, { 'deliverTo': id }],
+                [Op.not]: {'$detalle_salida.id$' : null }
+            }
+        })
         .then( prestamos => {
             res.status(200).json({ prestamos });
         })

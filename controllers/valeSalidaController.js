@@ -11,6 +11,7 @@ const Permisos = require('../models/Permisos')
 const Role = require('../models/Role')
 const Prestamos = require('../models/Prestamos')
 const { createPrestamo } = require('./prestamoController')
+const db = require('../config/db')
 
 exports.getAllValeSalida = async (req, res) => {
     try {    
@@ -22,8 +23,23 @@ exports.getAllValeSalida = async (req, res) => {
         .then( async user => {
             // Validar permisos
             if (user.role.permisos.some( item => item.permisos === 'ver vales'))  {
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], 
-                order: [['id', 'DESC']] }).then(valeSalida => {
+
+                // where: { 'status': { [Op.not] : 1 } }
+                await ValeSalida.findAll({ 
+                    include: [ 
+                        {
+                            model: DetalleSalida, 
+                            include:[ 
+                                { model: Insumo },
+                                { model: Prestamos }
+                            ] 
+                        } 
+                        , 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal' 
+                    ], 
+                order: [['id', 'DESC']],
+                where: { [Op.or] : [{ '$detalle_salidas.prestamoId$' : null }, { [Op.not]: {'$detalle_salidas.prestamo.status$': 1} } ] }
+                })
+                .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
@@ -177,6 +193,7 @@ exports.createValeSalida = async (req, res) => {
     }
     const { almacenId, obraId, nivelId, zonaId, actividadId, personalId, statusVale, listaInsumos } = req.body
     const userId = req.user.id
+    const t = await db.transaction();
     try {
         await ValeSalida.create({
             almacenId,
@@ -189,39 +206,40 @@ exports.createValeSalida = async (req, res) => {
             userId,
         })
         .then( async valeSalida => {
-            if(valeSalida){
-                const detalleSalida = await DetalleSalida.bulkCreate(listaInsumos.map(insumo => ({
-                    valeSalidaId: valeSalida.id,
-                    insumoId: insumo.id,
-                    cantidadSolicitada: insumo.cantidadSolicitada,
-                    costo: insumo.costo,
-                    total: insumo.total,
-                }), { returning: true, individualHooks: true } 
-                )).then( async detalle => {
-                    const [detalle_salida] = detalle
-                    console.log(detalle_salida.dataValues)
-
-                    await listaInsumos.map( async (item) => {
-                        if(item.insumoId === detalle.insumoId){
-                            if(item.residentePrestamo !== null ){
-                                await Prestamos.create({
-                                    belongsTo: userId,
-                                    deliverTo: item.residentePrestamo,
-                                    detalleSalidaId: detalle_salida.dataValues.id
-                                }).catch(error => {
-                                    res.status(500).json({ message: "Error en el servidor", error: error.message })
-                                })
-                            }
-                        }
-                    })
-                    
-                        
-                })
-
-
+            if(valeSalida){                    
+                listaInsumos.map( async insumo => {
+                    if (insumo.residentePrestamo){
+                        await Prestamos.create({
+                            belongsTo: userId,
+                            deliverTo: insumo.residentePrestamo,
+                        })
+                        .then( async prestamo => {
+                            await DetalleSalida.create({
+                                valeSalidaId: valeSalida.id,
+                                insumoId: insumo.id,
+                                cantidadSolicitada: insumo.cantidadSolicitada,
+                                costo: insumo.costo,
+                                total: insumo.total,
+                                prestamoId: prestamo.id
+                            })
+                        })
+                        .catch( error => {
+                            res.status(500).json({ message: "Error al generar el prestamo", error: error.message })
+                        })
+                    }else{
+                        await DetalleSalida.create({
+                            valeSalidaId: valeSalida.id,
+                            insumoId: insumo.id,
+                            cantidadSolicitada: insumo.cantidadSolicitada,
+                            costo: insumo.costo,
+                            total: insumo.total,
+                        })
+                        .catch( ( error ) => {
+                            res.status(500).json({ message: 'Error al agregar insumo al vale', error: error.message })
+                        })
+                    }
+            })
                 
-                
-
                 await ValeSalida.findOne({ where: { id: valeSalida.id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
                 .then( valeSalida => {
 
@@ -240,7 +258,7 @@ exports.createValeSalida = async (req, res) => {
                     })
 
                     //TODO relacionar vale de salida con notificacion
-                    res.status(200).json({ valeSalida, detalleSalida })
+                    res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
                     res.status(500).json({ message: 'Error al crear el vale de salida', error: error.message })

@@ -21,9 +21,10 @@ const Prestamos = db.define('prestamos', {
         type: Sequelize.INTEGER,
         allowNull: false,
     },
-    detalleSalidaId: {
+    status:{
         type: Sequelize.INTEGER,
-        allowNull: false,
+        defaultValue: 1,
+        comment: '1: Nuevo, 2: Autorizado, 3: Rechazado, 4: Devuelto, 5: Verificado'
     },
     createdAt: {
         type: Sequelize.DATE,

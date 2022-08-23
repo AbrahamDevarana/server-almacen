@@ -35,6 +35,10 @@ const DetalleSalida = db.define('detalle_salida', {
         type: Sequelize.TEXT,
         allowNull: true,
     },
+    prestamoId:{
+        type: Sequelize.INTEGER,
+        allowNull: true
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW

@@ -57,7 +57,11 @@ Role.hasMany(User, { foreignKey: 'tipoUsuario_id' })
 
 Prestamos.belongsTo(User, { foreignKey: 'deliverTo', as: 'residente' })
 Prestamos.belongsTo(User, { foreignKey: 'belongsTo', as: 'owner' })
-Prestamos.belongsTo(DetalleSalida, { foreignKey: 'detalleSalidaId'  })
+
+
+// Prestamos
+Prestamos.hasOne( DetalleSalida, {foreignKey: 'prestamoId'} )
+DetalleSalida.belongsTo( Prestamos, {foreignKey: 'prestamoId'} )
 
 module.exports = {
     Obra,
