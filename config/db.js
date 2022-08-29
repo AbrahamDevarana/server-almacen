@@ -1,6 +1,18 @@
 const { Sequelize } = require('sequelize')
 require('dotenv').config()
 
+if(process.env.NODE_ENV === 'local'){
+
+}
+
+if(process.env.NODE_ENV === 'development'){
+
+}
+
+if(process.env.NODE_ENV === 'production'){
+    
+}
+
 const db = new Sequelize(
     process.env.DATABASE,
     process.env.DB_USER,
