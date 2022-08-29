@@ -12,6 +12,11 @@ router.get('/', prestamoController.getAllPrestamos)
 //     ], prestamoController.createPersonal)
 
 
+router.put('/', 
+[
+    check('id').not().isEmpty().withMessage('El id es requerido'),
+    check('action').not().isEmpty().withMessage('La accion es requerida')
+], prestamoController.updatePrestamo)
 
 
 module.exports = router

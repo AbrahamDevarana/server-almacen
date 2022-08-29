@@ -12,6 +12,8 @@ const Role = require('../models/Role')
 const Prestamos = require('../models/Prestamos')
 const { createPrestamo } = require('./prestamoController')
 const db = require('../config/db')
+const { Obra, Nivel, Zona, Personal } = require('../models')
+const Actividades = require('../models/Actividad')
 
 exports.getAllValeSalida = async (req, res) => {
     try {    
@@ -29,15 +31,63 @@ exports.getAllValeSalida = async (req, res) => {
                     include: [ 
                         {
                             model: DetalleSalida, 
-                            include:[ 
-                                { model: Insumo },
-                                { model: Prestamos }
-                            ] 
-                        } 
-                        , 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal' 
+                            include: [ 
+                                { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
+                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } 
+                                }
+                            ],
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                            },
+                        },
                     ], 
-                order: [['id', 'DESC']],
-                where: { [Op.or] : [{ '$detalle_salidas.prestamoId$' : null }, { [Op.not]: {'$detalle_salidas.prestamo.status$': 1} } ] }
+                    attributes: {
+                        exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                    },
+                    order: [['id', 'DESC']],
+                // where: { [Op.or] : [{ '$detalle_salidas.prestamoId$' : null }, { [Op.not]: {'$detalle_salidas.prestamo.status$': 1} } ] }
                 })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
@@ -46,8 +96,56 @@ exports.getAllValeSalida = async (req, res) => {
                     res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
                 })
             }else{
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {userId: user.id},
-                order: [['id', 'DESC']] })
+                await ValeSalida.findAll(
+                    { include: [ 
+                        {   model: DetalleSalida, 
+                            include:Insumo
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                            },
+                        }], 
+                        where: {userId: user.id},
+                        order: [['id', 'DESC']] 
+                    })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
@@ -74,7 +172,66 @@ exports.getValeSalida = async (req, res) => {
         .then( async user => {
             // Almacenista
             if (user.role.permisos.some( item => item.permisos === 'ver vales' ))  {
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
+                await ValeSalida.findAll({ 
+                    include: [ 
+                        {
+                            model: DetalleSalida, 
+                            include: [ 
+                                { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
+                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } 
+                                }
+                            ],
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                            },
+                        },
+                    ], 
+                    attributes: {
+                        exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                    }, 
+                    where: {
                     statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, order: [['id', 'DESC']] 
                 }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
@@ -84,7 +241,64 @@ exports.getValeSalida = async (req, res) => {
                 })
             // Usuario regular
             }else{
-                await ValeSalida.findAll({ include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'], where: {
+                await ValeSalida.findAll({ include: [ 
+                        {
+                            model: DetalleSalida, 
+                            include: [ 
+                                { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
+                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } 
+                                }
+                            ],
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                            },
+                        },
+                    ], 
+                    attributes: {
+                        exclude: ['createdAt', 'updatedAt', 'deletedAt']
+                    }, where: {
                     statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['id', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })

@@ -15,7 +15,7 @@ exports.createAccessToken = (user) => {
         tipoUsuario_id: user.tipoUsuario_id,
         puesto_id: user.puesto_id,
         suAdmin: user.suAdmin,
-        expiresIn: moment().add(3, 'days').unix(),
+        expiresIn: moment().add( 1 , 'day').unix(),
     }
     return jwt.sign(payload, JWT_SECRET);
 }
