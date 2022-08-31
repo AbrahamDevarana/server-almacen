@@ -49,6 +49,9 @@ const DetalleSalida = db.define('detalle_salida', {
     }
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+   },
     hooks: {
         beforeUpdate: (detalle) => {
             detalle.updatedAt = new Date()

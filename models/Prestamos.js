@@ -36,6 +36,9 @@ const Prestamos = db.define('prestamos', {
     }
 },  {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         afterUpdate(prestamos) {
             prestamos.updatedAt = new Date()

@@ -79,7 +79,7 @@ const Users = db.define('users', {
     },
     defaultScope: {
         attributes:{
-            exclude: ['password']
+            exclude: ['password', 'createdAt', 'updatedAt', 'deletedAt'] 
         }
     }
 })

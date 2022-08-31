@@ -44,6 +44,9 @@ const Notificaciones = db.define('notificaciones', {
     },
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         beforeUpdate: (notificaciones) => {
             notificaciones.updatedAt = new Date()

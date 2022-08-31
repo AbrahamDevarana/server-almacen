@@ -65,6 +65,9 @@ const ValeSalida = db.define('vale_salida', {
     }
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         beforeUpdate: (vale) => {
             vale.updatedAt = new Date()

@@ -39,11 +39,14 @@ const Insumo = db.define('insumos', {
     },
 }, {
     paranoid: true,
+    defaultScope:{
+         attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         beforeUpdate: (insumo) => {
             insumo.updatedAt = new Date()
         }
-    }}
+    }},
 )
 
 module.exports = Insumo

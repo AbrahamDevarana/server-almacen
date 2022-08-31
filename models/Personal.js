@@ -38,6 +38,9 @@ const Personal = db.define('personal', {
     }
 },  {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         beforeCreate(personal) {
             personal.createdAt = new Date()

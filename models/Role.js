@@ -30,6 +30,9 @@ const Role = db.define('roles', {
     }
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         beforeUpdate: (role) => {
             role.updatedAt = new Date()

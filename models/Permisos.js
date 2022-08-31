@@ -29,7 +29,10 @@ const Permisos = db.define('permisos', {
     }
 }, {
     timestamps: false,
-    freezeTableName: true
+    freezeTableName: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
 })
 
 module.exports = Permisos

@@ -28,6 +28,9 @@ const Zona = db.define('zonas', {
     }
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         beforeUpdate: (zona) => {
             zona.updatedAt = new Date()

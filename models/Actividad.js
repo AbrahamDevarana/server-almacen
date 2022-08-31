@@ -30,6 +30,9 @@ const Actividades = db.define('actividades', {
     }
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+   },
     hooks: {
         beforeUpdate: (actividad) => {
             actividad.updatedAt = new Date()

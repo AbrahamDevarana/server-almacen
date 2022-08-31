@@ -32,63 +32,45 @@ exports.getAllValeSalida = async (req, res) => {
                         {
                             model: DetalleSalida, 
                             include: [ 
-                                { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
-                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt']}, 
+                                { model: Insumo },
+                                { model: Prestamos, 
                                     include: [
                                         { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
                                     ]
                                 }
                             ],
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Users,
                             as: 'user',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                                exclude: ['google_id', 'password', 'email']
                             }
                         }, 
                         {
                             model: Obra,
                             as: 'obra',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Nivel,
                             as: 'nivel',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Zona,
                             as: 'zona',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Actividades,
                             as: 'actividad',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Personal,
                             as: 'personal',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                                exclude: ['especialidad']
                             },
                         },
                     ], 
-                    attributes: {
-                        exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                    },
                     order: [['id', 'DESC']],
                 // where: { [Op.or] : [{ '$detalle_salidas.prestamoId$' : null }, { [Op.not]: {'$detalle_salidas.prestamo.status$': 1} } ] }
                 })
@@ -104,57 +86,42 @@ exports.getAllValeSalida = async (req, res) => {
                         {
                             model: DetalleSalida, 
                             include: [ 
-                                { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
-                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt']}, 
+                                { model: Insumo },
+                                { model: Prestamos, 
                                     include: [
                                         { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
                                     ]
                                 }
                             ],
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Users,
                             as: 'user',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                                exclude: ['google_id', 'password', 'email']
                             }
                         }, 
                         {
                             model: Obra,
                             as: 'obra',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Nivel,
                             as: 'nivel',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Zona,
                             as: 'zona',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Actividades,
                             as: 'actividad',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Personal,
                             as: 'personal',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                                exclude: ['especialidad']
                             },
                         }], 
                         where: {userId: user.id},
@@ -191,63 +158,45 @@ exports.getValeSalida = async (req, res) => {
                         {
                             model: DetalleSalida, 
                             include: [ 
-                                { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
-                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt']}, 
+                                { model: Insumo },
+                                { model: Prestamos, 
                                     include: [
                                         { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
                                     ]
                                 }
                             ],
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Users,
                             as: 'user',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                                exclude: ['google_id', 'password', 'email']
                             }
                         }, 
                         {
                             model: Obra,
                             as: 'obra',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Nivel,
                             as: 'nivel',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Zona,
                             as: 'zona',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Actividades,
                             as: 'actividad',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Personal,
                             as: 'personal',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                                exclude: ['especialidad']
                             },
                         },
                     ], 
-                    attributes: {
-                        exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                    }, 
                     where: {
                     statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, order: [['id', 'DESC']] 
                 }).then(valeSalida => {
@@ -262,63 +211,46 @@ exports.getValeSalida = async (req, res) => {
                         {
                             model: DetalleSalida, 
                             include: [ 
-                                { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
-                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt']}, 
+                                { model: Insumo },
+                                { model: Prestamos, 
                                     include: [
                                         { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
                                     ]
                                 }
                             ],
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Users,
                             as: 'user',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'google_id', 'password', 'email']
+                                exclude: ['google_id', 'password', 'email']
                             }
                         }, 
                         {
                             model: Obra,
                             as: 'obra',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Nivel,
                             as: 'nivel',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Zona,
                             as: 'zona',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Actividades,
                             as: 'actividad',
-                            attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                            },
                         },
                         {
                             model: Personal,
                             as: 'personal',
                             attributes: {
-                                exclude: ['createdAt', 'updatedAt', 'deletedAt', 'especialidad']
+                                exclude: ['especialidad']
                             },
                         },
                     ], 
-                    attributes: {
-                        exclude: ['createdAt', 'updatedAt', 'deletedAt']
-                    }, where: {
+                    where: {
                     statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['id', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
@@ -343,6 +275,8 @@ exports.getCountValeSalida = async (req, res) => {
 
 
     const { type } = req.query
+
+
     
   
     switch (type) {
@@ -372,6 +306,7 @@ exports.getCountValeSalida = async (req, res) => {
         break;
         default:
             where = { ...where }
+            console.log('lestavaliendoverga');
         break;
     }
 
@@ -381,11 +316,11 @@ exports.getCountValeSalida = async (req, res) => {
         .then( async user => {
             
             if( user.role.permisos.some( item => item.permisos === 'ver vales' ) ){
-                where = {}
+                delete where.userId
             }else{
-                where = {
-                    userId: user.id
-                }
+                
+                where.userId =user.id
+                
             }
             await ValeSalida.findAll({where}).then(valeSalida => {
                 // contar vale de salida por estatus

@@ -26,6 +26,9 @@ const Nivel = db.define('niveles', {
     }
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+   },
     hooks: {
         beforeUpdate: (nivel) => {
             nivel.updatedAt = new Date()

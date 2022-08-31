@@ -39,6 +39,9 @@ const Obra = db.define('obra', {
     }
 }, {
     paranoid: true,
+    defaultScope:{
+        attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
+    },
     hooks: {
         beforeUpdate: (obra) => {
             obra.updatedAt = new Date()
