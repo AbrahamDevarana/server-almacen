@@ -4,6 +4,7 @@ const { Op, where } = require('sequelize');
 const  DetalleSalida  = require('../models/DetalleSalida');
 const Insumo = require('../models/Insumos');
 const Users = require('../models/Users');
+const ValeSalida  = require('../models/ValeSalida');
 
 exports.getAllPrestamos = async (req, res) => {
 
@@ -20,12 +21,12 @@ exports.getAllPrestamos = async (req, res) => {
                 }}, 
                 {
                     model: Users,
-                    attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                    attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture'],
                     as: 'residente'
                 },
                 {
                     model: Users,
-                    attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                    attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture'],
                     as: 'owner'
                 }
             ],
@@ -77,14 +78,21 @@ exports.updatePrestamo = async (req, res) => {
                     await Prestamos.update({ status: 3 }, { where: {id} })
                     .then( async () => {
                         await DetalleSalida.findOne( {where: { prestamoId: id }})
-                        .then( (detalle) => {
-                            detalle.update({ status: 4, message: 'No fue aprobado el prestamo '})
+                        .then( async detalle => {
+                            await detalle.update({ status: 4, message: 'No fue aprobado el prestamo '})
                             .catch( error => res.status(500).json({ message: 'Error al actualizar el vale', error: error.message }))
+
+                            await ValeSalida.findOne({ where: { id: detalle.valeSalidaId }, include: [ { model: DetalleSalida, include:Insumo }] })
+                            .then( async valeSalida => {
+                                if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
+                                    valeSalida.statusVale = 5
+                                    valeSalida.comemntarios = 'Cancelado, no fue aprobado el prestamo'
+                                    await valeSalida.save()
+                                }
+                            })
                         })
                         .catch( error => res.status(500).json({ message: 'No se encontro el vale relacionado', error: error.message }))
                     })
-                    
-                    
                     .catch( error => res.status(500).json({ message: 'Error al actualizar el prestamo', error: error.message }))
                 break;
                 case 'return':

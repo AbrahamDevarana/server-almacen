@@ -33,7 +33,10 @@ exports.getAllValeSalida = async (req, res) => {
                             model: DetalleSalida, 
                             include: [ 
                                 { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
-                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } 
+                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt']}, 
+                                    include: [
+                                        { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                                    ]
                                 }
                             ],
                             attributes: {
@@ -178,7 +181,10 @@ exports.getValeSalida = async (req, res) => {
                             model: DetalleSalida, 
                             include: [ 
                                 { model: Insumo, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } },
-                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] } 
+                                { model: Prestamos, attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt']}, 
+                                    include: [
+                                        { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                                    ]
                                 }
                             ],
                             attributes: {

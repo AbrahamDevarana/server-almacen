@@ -24,7 +24,7 @@ const Prestamos = db.define('prestamos', {
     status:{
         type: Sequelize.INTEGER,
         defaultValue: 1,
-        comment: '1: Nuevo, 2: Autorizado, 3: Rechazado, 4: Devuelto, 5: Verificado'
+        comment: '1: Nuevo, 2: Autorizado, 3: Rechazado, 4: Devuelto, 5: Verificado 6: Ticket Cancelado'
     },
     createdAt: {
         type: Sequelize.DATE,
