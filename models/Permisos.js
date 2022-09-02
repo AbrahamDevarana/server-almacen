@@ -11,10 +11,6 @@ const Permisos = db.define('permisos', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    permiso: {
-        type: Sequelize.STRING,
-        allowNull: false
-    },
     permisos: {
         type: Sequelize.STRING,
         allowNull: false

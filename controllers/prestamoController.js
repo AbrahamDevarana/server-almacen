@@ -50,6 +50,47 @@ exports.getAllPrestamos = async (req, res) => {
     }
 }
 
+exports.getFullPrestamos = async (req, res) => {
+    try {
+         
+        await Prestamos.findAll({ 
+            include: [{ 
+                model: DetalleSalida, 
+                attributes: ['id', 'cantidadSolicitada'],
+                include: { 
+                    model: Insumo,
+                    attributes: ['id', 'nombre']
+                }}, 
+                {
+                    model: Users,
+                    attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture'],
+                    as: 'residente'
+                },
+                {
+                    model: Users,
+                    attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture'],
+                    as: 'owner'
+                }
+            ],
+            attributes: {
+                exclude: ['createdAt', 'updatedAt', 'deletedAt']
+            },
+            where : {
+                [Op.not]: {'$detalle_salida.id$' : null }
+            },
+            order: [['id', 'DESC']] 
+        })
+        .then( prestamos => {
+            res.status(200).json({ prestamos });
+        })
+        .catch(error => {
+            res.status(500).json({ message: 'Error al obtener los prestamos', error: error.message });
+        })
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message });
+    } 
+}
+
 
 exports.createPrestamo = async (req, res) => {
     try{

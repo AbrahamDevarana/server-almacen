@@ -3,6 +3,7 @@ const { check } = require('express-validator')
 const prestamoController = require('../../controllers/prestamoController')
 
 router.get('/', prestamoController.getAllPrestamos)
+router.get('/all', prestamoController.getAllPrestamos)
 
 // router.post('/',
 //     [
