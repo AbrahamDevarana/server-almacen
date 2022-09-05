@@ -10,12 +10,13 @@ const { cancelarVale, completarVale } = require('../email/Notificaciones')
 const Permisos = require('../models/Permisos')
 const Role = require('../models/Role')
 const Prestamos = require('../models/Prestamos')
-const { createPrestamo } = require('./prestamoController')
 const db = require('../config/db')
 const { Obra, Nivel, Zona, Personal } = require('../models')
 const Actividades = require('../models/Actividad')
+const sockets = require('../services/socketIo')
 
 exports.getAllValeSalida = async (req, res) => {
+    
     try {    
 
         // Obtener roles de usuario
@@ -306,7 +307,6 @@ exports.getCountValeSalida = async (req, res) => {
         break;
         default:
             where = { ...where }
-            console.log('lestavaliendoverga');
         break;
     }
 
@@ -427,6 +427,7 @@ exports.createValeSalida = async (req, res) => {
                     })
 
                     //TODO relacionar vale de salida con notificacion
+                    sockets.to("recieve_vale", {message: 'Almacen'}, 'almacen')
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
@@ -485,6 +486,7 @@ exports.updateValeSalida = async (req, res) => {
                             insumoId: insumo.id,
                             cantidadSolicitada: insumo.cantidadSolicitada,
                         })))
+                        sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
                         res.status(200).json({ valeSalida, detalleSalida })
                     }else {
                         res.status(404).json({ message: 'Error al agregar los insumos al vale' })
@@ -559,7 +561,7 @@ exports.deliverValeSalida = async (req, res) => {
                             valeSalida.statusVale = 2
                         } 
                         await valeSalida.save()
-
+                        sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
                         res.status(200).json({ detalleSalida, valeSalida })
                     })
                     .catch(error => {
@@ -645,6 +647,7 @@ exports.cancelValeSalida = async (req, res) => {
                 .then( async () => {
                     await valeSalida.save()
                     valeSalida.detalle_salidas.map (item => item.status = 4)
+                    sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {
@@ -693,6 +696,7 @@ exports.cancelDetalleSalida = async (req, res) => {
                     await valeSalida.save()
                 }
                 
+                sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
                 res.status(200).json({ detalleSalida, valeSalida })
             }).catch(error => {
                 res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
@@ -727,6 +731,7 @@ exports.completeValeSalida = async (req, res) => {
                         .then( async valeSalida => {
 
                             valeSalida.detalle_salidas.map (item => item.status = 3)
+                            sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
                             res.status(200).json({ valeSalida })
                         }).catch(error => {
                             res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })

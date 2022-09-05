@@ -64,7 +64,7 @@ const server = app.listen(PORT, HOST, () => {
 });
 
 sockets.connect(server)
-sockets.on("user", (user) => {
-    console.log("Se ha conectado ", user)
-})
+
+
+
 

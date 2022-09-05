@@ -8,19 +8,31 @@ module.exports = {
                 origin: '*',
             }
         });
+
+        io.on("connection", (socket) => {
+            console.log(`Usuario conectado`, socket.id);
+     
+            socket.on("join_room", ({user, room}) => {
+                socket.join(room)
+                console.log('Joinned', room);
+            })          
+            
+            
+        });
         
     },
     emit: (event, values) => {
         
-        if(event === 'join'){
-            this.join(event, values)
-        }else if ( io ) {
+        if(io){
             io.emit(event, values);
         }
+        
     },
     to: (event, values, room) => {
+
         if ( io ) {
-            io.to(event).emit(event, values);
+            console.log('se envio to', event, values, room);
+            io.to(room).emit(event, values);
         }
     },
     on: (event, callback) => {
@@ -28,11 +40,5 @@ module.exports = {
             io.on(event, callback);
         }
     },
-    join: (event, values) => {
-        
-        if ( io ) {
-            io.join(event);
-        }
-    }
     
 }
