@@ -5,6 +5,7 @@ const  DetalleSalida  = require('../models/DetalleSalida');
 const Insumo = require('../models/Insumos');
 const Users = require('../models/Users');
 const ValeSalida  = require('../models/ValeSalida');
+const sockets = require('../services/socketIo')
 
 exports.getAllPrestamos = async (req, res) => {
 
@@ -177,6 +178,8 @@ exports.updatePrestamo = async (req, res) => {
             order: [['id', 'DESC']] 
         })
         .then( async prestamo => {
+            sockets.to("recieve_vale", {message: 'Almacen'}, 'almacen')
+            sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
             res.status(200).json({ prestamo }) 
         })
     } catch (error) {
