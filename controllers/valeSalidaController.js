@@ -391,6 +391,8 @@ exports.createValeSalida = async (req, res) => {
                                 total: insumo.total,
                                 prestamoId: prestamo.id
                             })
+                            
+                            sockets.to("recieve_prestamo", {message: 'Almacen'}, ['almacen', 'residente'])
                         })
                         .catch( error => {
                             res.status(500).json({ message: "Error al generar el prestamo", error: error.message })
