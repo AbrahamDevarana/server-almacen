@@ -178,8 +178,8 @@ exports.updatePrestamo = async (req, res) => {
             order: [['id', 'DESC']] 
         })
         .then( async prestamo => {
-            sockets.to("recieve_vale", {message: 'Almacen'}, 'almacen')
-            sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
+            sockets.to("recieve_vale", {message: 'Almacen'}, ['almacen', 'residente'])
+            sockets.to("recieve_prestamo", { message: 'Residente' }, ['almacen', 'residente'])
             res.status(200).json({ prestamo }) 
         })
     } catch (error) {

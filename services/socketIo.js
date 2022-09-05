@@ -31,7 +31,7 @@ module.exports = {
     to: (event, values, room) => {
 
         if ( io ) {
-            console.log('se envio to', event, values, room);
+            // console.log('se envio to', event, values, room);
             io.to(room).emit(event, values);
         }
     },
