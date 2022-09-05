@@ -2,6 +2,7 @@ const Role = require('../models/Role')
 const Users = require('../models/Users')
 const { validationResult } = require('express-validator')
 const { mailNewUser } = require('../email/Users')
+const Permisos = require('../models/Permisos')
 
 
 exports.getUser = async (req, res) => {
@@ -24,7 +25,9 @@ exports.getUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
     try {
-        const usuarios = await Users.findAll({ where: { status: true }, include: Role }).catch(error => {
+        const usuarios = await Users.findAll({ where: { status: true }, 
+            include: { model: Role, include: Permisos }
+        }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los usuarios', error: error.message })
         })
         if(usuarios){

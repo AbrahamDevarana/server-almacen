@@ -232,13 +232,13 @@ module.exports = {
             updatedAt: new Date()
         },
         {
-            nombre: 'Ver Préstamos',
+            nombre: 'Solo Ver Préstamos',
             permisos: 'ver prestamos',
             createdAt: new Date(),
             updatedAt: new Date()
         },
         {
-            nombre: 'Acciones Prestamos',
+            nombre: 'Puede Prestar/Solicitar',
             permisos: 'acciones prestamos',
             createdAt: new Date(),
             updatedAt: new Date()
