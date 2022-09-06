@@ -7,3 +7,10 @@ module.exports = {
 
 // npx sequelize-cli db:seed:undo:all
 // npx sequelize-cli db:seed:all
+
+// npx sequelize-cli db:seed:undo --seed 20220706232217-actividades-seeder.js
+
+// npx sequelize-cli db:seed --seed 20220706232217-actividades-seeder.js
+// npx sequelize-cli db:seed --seed 20220706232226-zonas-seeder.js
+// npx sequelize-cli db:seed --seed 20220706232415-niveles-seeder.js
+// npx sequelize-cli db:seed --seed 20220707040232-obras-seeder.js
