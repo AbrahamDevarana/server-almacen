@@ -1,6 +1,6 @@
 const Notificaciones = require('../models/Notificaciones')
 const { v4: uuid } = require('uuid');
-const sockets = require('../services/socketIo');
+// const sockets = require('../services/socketIo');
 
 exports.createNotification = async (almacenistasArray, titulo, mensaje, type) => {
     try {
@@ -15,7 +15,7 @@ exports.createNotification = async (almacenistasArray, titulo, mensaje, type) =>
                 uuid: uuid()
             })
         )).then( ( notificacion ) => {               
-                sockets.to("almacen", "notificacion", [{ key: uuid(), label: mensaje }] )
+                // sockets.to("almacen", "notificacion", [{ key: uuid(), label: mensaje }] )
             return true
         }
         ).catch(error => {

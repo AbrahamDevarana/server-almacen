@@ -117,7 +117,6 @@ exports.updateUser = async (req, res) => {
                 res.status(500).json({ message: 'Error al actualizar el usuario', error: error.message })
             })
             
-            console.log(usuario)
             res.status(200).json({ usuario })
         }
     } catch (error) {

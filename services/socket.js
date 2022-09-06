@@ -10,7 +10,7 @@ const SocketApp = (server) => {
     });
 
     io.on("connection", (socket) => {
-       console.log(`Usuario conectado`, socket.id);
+    //    console.log(`Usuario conectado`, socket.id);
 
        socket.on("join_room", ({user, room}) => {
         socket.join(room)

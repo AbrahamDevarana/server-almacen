@@ -1,5 +1,4 @@
 const {Server} = require('socket.io');
-const { decodeToken } = require('./jwtStrategy');
 var io = null 
 module.exports = {
     connect: (server) => {
@@ -10,11 +9,11 @@ module.exports = {
         });
 
         io.on("connection", (socket) => {
-            console.log(`Usuario conectado`, socket.id);
+            // console.log(`Usuario conectado`, socket.id);
      
             socket.on("join_room", ({user, room}) => {
                 socket.join(room)
-                console.log('Joinned', room);
+                // console.log('Joinned', room);
             })          
             
             
@@ -29,9 +28,9 @@ module.exports = {
         
     },
     to: (event, values, room) => {
-
+        
         if ( io ) {
-            // console.log('se envio to', event, values, room);
+            console.log('se envio to', event, values, room);
             io.to(room).emit(event, values);
         }
     },

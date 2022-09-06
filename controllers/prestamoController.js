@@ -92,7 +92,6 @@ exports.getFullPrestamos = async (req, res) => {
     } 
 }
 
-
 exports.createPrestamo = async (req, res) => {
     try{
         
