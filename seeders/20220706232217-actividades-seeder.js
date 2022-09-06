@@ -4,167 +4,302 @@ module.exports = {
   async up (queryInterface, Sequelize) {
    
     await queryInterface.bulkInsert('actividades', [
-		{
-			nombre: 'Albañilerias estacionamientos',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '32 - Acabados estacionamientos',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '33 - Accesorios de iluminacion estacionamientos',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '34 - Herrería estacionamientos',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '13-130 Instalación Vertical Hidraulica',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '13-131 Vertical Sanitaria',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '13-133 Vertical Pluvial',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '19-51 Escalera',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '19-52 Vestibulos ',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '101 albañilerias',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '103 Inst. Hidraulica',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '104 Inst. Sanitaria',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '105 Inst. Electrica',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '106 Inst. Voz y datos',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '107 Accesorios de iluminación',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '108 Muebles sanitarios y griferia',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '110 Mármol y granito',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '111 Pisos y azulejo',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '112 Pintura',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '113 Carpinteria',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '115 Equipamiento de cocina',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '116 Inst. Gas',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
-		{
-			nombre: '117 Inst. Extracción',
-			descripcion: '',
-			status: 1,
-			createdAt: new Date(),
-			updatedAt: new Date()
-		},
+        {
+            nombre: "Edificación albañilerias" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Instalación hidráulic" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Instalación sanitari" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Instalación electric" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Instalación voz y dato" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Accesorios de iluminació" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Muebles y griferi" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Marmol y granit" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Pisos y azulejo" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Pintura" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Carpinteri" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Equipamiento de cocin" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Instalación de ga" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Edificación Instalación extracció" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Limpieza" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Ampliación Showroo" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Portic" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Estacionamientos albañilerias" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Estacionamiento Accesorios de iluminació" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Estacionamiento  Acabado" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Estacionamiento Herrería" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Estacionamiento Señalizació" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Estacionamiento Impermeabilizació" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Muros de contenció" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Pavimento" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Basament" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Jardineri" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Fachada" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades albañilería" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Electric" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Hidraulic" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Sanitari" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Pluvia" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades T" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Iluminació" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Canceleria y herreri" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Piso" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Aplanados y pintur" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades muebles y griferí" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades Carpinterí" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades quipo y mobiliari" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+        {
+            nombre: "Amenidades mármol y granit" ,
+            descripcion: '',
+            status: 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        },
+
+		
 
   ], {});
    

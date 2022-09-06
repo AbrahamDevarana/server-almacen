@@ -226,13 +226,13 @@ module.exports = {
             updatedAt: new Date()
         },
         {
-            nombre: 'Ver Todos los Vales',
+            nombre: 'Ver Todos los Vales (Almacenista)',
             permisos: 'ver vales',
             createdAt: new Date(),
             updatedAt: new Date()
         },
         {
-            nombre: 'Solo Ver Préstamos',
+            nombre: 'Solo Ver Préstamos (Almacenista)',
             permisos: 'ver prestamos',
             createdAt: new Date(),
             updatedAt: new Date()

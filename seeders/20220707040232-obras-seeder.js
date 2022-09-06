@@ -4,61 +4,66 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     
 	await queryInterface.bulkInsert('obras', [
-
-// Amenidades Torre A
-// Amenidades Torre B
-// Obra Cabecera Torre A
-// Obra Cabecera Torre B
-// Edificación Torre A
-// Edificación Torre B
-// Urbanzación
-// Postventa
-// Oficinas Showroom.
-		{
-			nombre: 'Amenidades Torre A',
-			clave: 'AM1 - RV3',
-			status: true,
-		},
-		{
-			nombre: 'Amenidades Torre B',
-			clave: 'AM2 - RV3',
-			status: true,
-		},
-		{
-			nombre: 'Obra Cabecera Torre A',
-			clave: 'OCA - RV2',
-			status: true,
-		},
-		{
-			nombre: 'Obra Cabecera Torre B',
-			clave: 'OCB - RV2',
-			status: true,
-		},
-		{	
-			nombre: 'Edificación Torre A',
-			clave: 'ETA - RV2',
-			status: true,
-		},
-		{
-			nombre: 'Edificación Torre B',
-			clave: 'ETB - RV2',
-			status: true,
-		},
-		{
-			nombre: 'Urbanzación',
-			clave: 'URV - RV1',
-			status: true,
-		},
-		{
-			nombre: 'Postventa',
-			clave: 'PTV - RV9',
-			status: true,
-		},
-		{
-			nombre: 'Oficinas Showroom',
-			clave: 'RV3 - RV3',
-			status: true,
-		},
+{
+            nombre: 'Amenidades Torre A',
+            clave: 'AM1 - RV3',
+            status: true
+        },
+        {
+            nombre: 'Amenidades Torre B',
+            clave: 'AM2 - RV3',
+            status: true
+        },
+        {
+            nombre: 'Amenidades Torre C',
+            clave: 'AM3 - RV3',
+            status: true
+        },
+        {
+            nombre: 'Ampliación oficinas',
+            clave: 'OSW - RV3',
+            status: true
+        },
+        {
+            nombre: 'Urbanización',
+            clave: 'URV - RV1',
+            status: true
+        },
+        {
+            nombre: 'Edificación TA',
+            clave: 'ETA - RV2',
+            status: true
+        },
+        {
+            nombre: 'Edificación TB',
+            clave: 'ETB - RV2',
+            status: true
+        },
+        {
+            nombre: 'Edificación TC',
+            clave: 'ETC - RV2',
+            status: true
+        },
+        {
+            nombre: 'Obra cabecera TA',
+            clave: 'OCA - RV2',
+            status: true
+        },
+        {
+            nombre: 'Obra cabecera TB',
+            clave: 'OCB - RV2',
+            status: true
+        },
+        {
+            nombre: 'Obra cabecera TC',
+            clave: 'OCC - RV2',
+            status: true
+        },
+        {
+            nombre: 'Post venta TA',
+            clave: 'PVA - RV9',
+            status: true
+        },
 
 
 	], {});
