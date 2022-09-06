@@ -488,7 +488,8 @@ exports.updateValeSalida = async (req, res) => {
                             insumoId: insumo.id,
                             cantidadSolicitada: insumo.cantidadSolicitada,
                         })))
-                        sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
+
+                        sockets.to("recieve_vale", { message: 'Residente' }, ['almacen', 'residente'])
                         res.status(200).json({ valeSalida, detalleSalida })
                     }else {
                         res.status(404).json({ message: 'Error al agregar los insumos al vale' })

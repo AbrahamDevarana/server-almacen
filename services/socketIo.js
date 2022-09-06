@@ -5,7 +5,7 @@ module.exports = {
     connect: (server) => {
         io = new Server(server, {
             cors: {
-                origin: '*',
+                origin: process.env.CLIENT_URL,
             }
         });
 
