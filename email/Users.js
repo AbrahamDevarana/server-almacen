@@ -62,6 +62,7 @@ function mailNewUser (usuario) {
     
             <tr style="background-color: #fff;"> 
                 <td>
+                    <p style="font-size: 14px; color: #646375;text-align: center; padding: 35px 0;"> Puedes consultar el manual del software <a style="font-weight:500;color: #646375" href="https://www.canva.com/design/DAFLe-gu7Mk/mr5YoVYJgIDwsDfhqtp9Ew/view?utm_content=DAFLe-gu7Mk&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink"> aquí </a>  </p>
                     <p style="font-size: 14px; color: #646375;text-align: center; padding: 35px 0;"> Podrás acceder a través de tu computadora de escritorio y/o dispositivos móviles: </p>
                 </td>
             </tr>
