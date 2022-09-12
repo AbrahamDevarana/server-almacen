@@ -558,6 +558,8 @@ exports.deliverValeSalida = async (req, res) => {
                             valeSalida.statusVale = 4
                         } else if (valeSalida.detalle_salidas.every( item => item.status === 1 )) { // si todos los detalles no se han entregado 
                             valeSalida.statusVale = 1
+                        } else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 4 )){ // si todos estan cerrados o 
+                            valeSalida.statusVale = 3
                         } else if (valeSalida.detalle_salidas.some( item => item.status !== 1 )) { // si alguno de los detalles se ha entregado
                             valeSalida.statusVale = 2
                         } else if (valeSalida.detalle_salidas.some( item => item.status === 4 )) { // si alguno de los detalles se ha cancelado
