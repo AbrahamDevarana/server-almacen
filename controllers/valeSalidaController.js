@@ -696,8 +696,11 @@ exports.cancelDetalleSalida = async (req, res) => {
                 if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
                     valeSalida.statusVale = 5
                     await valeSalida.save()
-                }else if (valeSalida.detalle_salidas.every( item => item.status !== 1 )){
-                    valeSalida.statusVale = 7
+                // }else if (valeSalida.detalle_salidas.every( item => item.status !== 1 )){
+                //     valeSalida.statusVale = 7
+                //     await valeSalida.save()
+                }else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 6)){
+                    valeSalida.statusVale = 3
                     await valeSalida.save()
                 }
                 
