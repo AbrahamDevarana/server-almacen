@@ -43,7 +43,7 @@ exports.updatePersonal = async (req, res) => {
     }
 
     const { id } = req.params;
-    const { nombre, apellidoPaterno, apellidoMaterno, especialidad } = req.body;
+    const { nombre, apellidoPaterno, apellidoMaterno, especialidad, status} = req.body;
 
     try {
         const personal = await Personal.findOne({ where: { id }, include: Users }).catch(error => {
@@ -56,6 +56,7 @@ exports.updatePersonal = async (req, res) => {
                 personal.apellidoPaterno = apellidoPaterno ?? personal.apellidoPaterno;
                 personal.apellidoMaterno = apellidoMaterno ?? personal.apellidoMaterno;
                 personal.especialidad = especialidad ?? personal.especialidad;
+                personal.status = status ?? personal.status;
 
                 await personal.save().catch(error => {
                     res.status(500).json({ message: 'Error al actualizar el personal', error: error.message });
@@ -92,8 +93,10 @@ exports.getPersonal = async (req, res) => {
 }
 
 exports.getAllPersonal = async (req, res) => {
+
     try {
-        const personal = await Personal.findAll({include: Users}).catch(error => {
+
+        const personal = await Personal.findAll({ where: { status: 1 }, include: Users}).catch(error => {
             res.status(500).json({ message: 'Error al obtener los personales', error: error.message });
         });
 
@@ -114,7 +117,7 @@ exports.deletePersonal = async (req, res) => {
         await Personal.findOne({ where: { id } })
         .then( async personal => {
             if(personal.userId === req.user.id || req.user.suAdmin === true){
-                await personal.destroy()
+                await personal.update({status: 0})
                 .then( () => {
                     res.status(200).json({ personal });
                 })

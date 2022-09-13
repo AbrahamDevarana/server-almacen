@@ -20,7 +20,7 @@ exports.getRole = async (req, res) => {
 exports.getRoles = async (req, res) => {
 
     try {
-        const roles = await Role.findAll({include:Permisos}).catch(error => {
+        const roles = await Role.findAll({ include:Permisos, where: { status: 1 }},).catch(error => {
             res.status(500).json({ message: 'Error al obtener los roles', error: error.message })
         })
         if(roles){
@@ -93,7 +93,7 @@ exports.deleteRole = async (req, res) => {
     try {
         await Role.findOne({ where: { id } }).then(role => {
             if(role.id !== 3){
-                role.destroy()
+                role.update({status: 0})
                 res.status(200).json({ role })
             } else {
                 res.status(404).json({ message: 'Este rol no se puede borrar' })

@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 
 exports.getActividades = async (req, res) => {
     try {
-        const actividades = await Actividad.findAll().catch(error => {
+        const actividades = await Actividad.findAll({ where: { status: 1 }}).catch(error => {
             res.status(500).json({ message: 'Error al obtener las actividades', error: error.message })
         })
         if(actividades){
@@ -88,7 +88,7 @@ exports.deleteActividad = async (req, res) => {
             res.status(500).json({message: 'Error al obtener la actividad', error: error.message})
         })
         if(actividad){
-            await actividad.destroy()
+            await actividad.update({status: 0})
             res.status(200).json({actividad})
         }
     }

@@ -3,7 +3,7 @@ const { validationResult } = require('express-validator')
 
 exports.getZonas = async (req, res) => {
     try {
-        const zonas = await Zona.findAll().catch(error => {
+        const zonas = await Zona.findAll({ where: { status: 1 } }).catch(error => {
             res.status(500).json({ message: 'Error al obtener las zonas', error: error.message })
         })
         if(zonas){
@@ -84,7 +84,7 @@ exports.deleteZona = async (req, res) => {
             res.status(500).json({message: 'Error al obtener la zona', error: error.message})
         })
         if(zona){
-            await zona.destroy()
+            await zona.update({status: 0})
             res.status(200).json({zona})
         }
     }catch(error){

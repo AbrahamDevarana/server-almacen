@@ -6,7 +6,7 @@ const { validationResult } = require('express-validator')
 
 exports.getNiveles = async (req, res) => {
     try {
-        const niveles = await Nivel.findAll({ include: [Actividad, Zona]}).catch(error => {
+        const niveles = await Nivel.findAll({ include: [{ model:Actividad, where: { status: 1}}, { model: Zona, where: { status:1 }} ], where: { status: 1 }}).catch(error => {
             res.status(500).json({ message: 'Error al obtener los niveles', error: error.message })
         })
         if(niveles){
@@ -97,7 +97,7 @@ exports.deleteNivel = async (req, res) => {
             res.status(500).json({ message: 'Error al obtener el nivel', error: error.message })
         })
         if(nivel){
-            nivel.destroy()
+            nivel.update({status: 0})
             res.status(200).json({ nivel })
         }else{
             res.status(404).json({ message: 'Nivel no encontrado' })

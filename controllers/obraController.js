@@ -5,7 +5,7 @@ const { validationResult } = require('express-validator')
 
 exports.getObras = async (req, res) => {
     try {
-        const obra = await Obra.findAll({ include: Nivel }).catch(error => {
+        const obra = await Obra.findAll({ include: {model: Nivel, where:{ status : 1 }}, where: { status: 1 } }).catch(error => {
             res.status(500).json({ message: 'Error al obtener las obras', error: error.message })
         })
         if(obra){
@@ -101,7 +101,7 @@ exports.deleteObra = async (req, res) => {
             res.status(500).json({message: 'Error al obtener la obra', error: error.message})
         })
         if(obra){
-            await obra.destroy()
+            await obra.update({status: 0})
             res.status(200).json({obra})
         }
     }

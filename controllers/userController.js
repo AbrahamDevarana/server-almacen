@@ -132,7 +132,7 @@ exports.deleteUser = async (req, res) => {
             res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
         })
         if(usuario){
-            await usuario.destroy().catch(error => {
+            await usuario.update({status: 0}).catch(error => {
                 res.status(500).json({ message: 'Error al eliminar el usuario', error: error.message })
             })
 

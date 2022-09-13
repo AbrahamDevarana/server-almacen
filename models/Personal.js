@@ -28,6 +28,10 @@ const Personal = db.define('personal', {
         type: Sequelize.STRING,
         allowNull: false
     },
+    status: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: 1
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
