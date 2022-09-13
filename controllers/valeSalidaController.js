@@ -149,7 +149,6 @@ exports.getValeSalida = async (req, res) => {
     try {
         const { statusVale } = req.query
         const {id} = req.user
-
         await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos}] })
         .then( async user => {
             // Almacenista
@@ -199,7 +198,9 @@ exports.getValeSalida = async (req, res) => {
                         },
                     ], 
                     where: {
-                    statusVale: statusVale? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, order: [['id', 'DESC']] 
+                    // statusVale: statusVale ? { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, 
+                    statusVale: statusVale ? Number(statusVale) === 4 ? { [Op.or]: [ 3,  statusVale ] } : { [Op.eq]: statusVale  } : {[Op.ne]:  ''} }, 
+                    order: [['id', 'DESC']] 
                 }).then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })
@@ -252,7 +253,9 @@ exports.getValeSalida = async (req, res) => {
                         },
                     ], 
                     where: {
-                    statusVale: statusVale ? statusVale : {[Op.ne]: ''}, userId: user.id }, order: [['id', 'DESC']] })
+                    statusVale: statusVale ? Number(statusVale) === 4 ? { [Op.or]: [ 3,  statusVale ] } : { [Op.eq]: statusVale  } : {[Op.ne]:  ''}, userId: user.id }, 
+                    // statusVale: statusVale ? { [Op.eq]: statusVale  } : {[Op.ne]:  ''}, userId: user.id }, 
+                    order: [['id', 'DESC']] })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
                 })            
