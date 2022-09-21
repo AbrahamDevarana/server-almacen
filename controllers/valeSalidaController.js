@@ -765,7 +765,7 @@ exports.completeValeSalida = async (req, res) => {
 }
 
 // Cerrar Vale
-exports.validateVale = async (req, res) => {
+exports.cerrarValesAbiertos = async (req, res) => {
 
     try { 
         // Validar todos los vales abiertos y si fueron creados un dia antes, cerrarlos
@@ -775,8 +775,10 @@ exports.validateVale = async (req, res) => {
             { statusVale: 2 },
         ]
      }}).then( async valeSalida => {
-        valeSalida.forEach( async item => {
-            if(item.createdAt < moment().subtract(1, 'days')){
+
+        valeSalida.map( async item => {
+
+            if(item.fecha < moment().subtract(8, 'h') ){
                 // Si es nuevo, se cancela y todos los detalles se cancelan
                 if( item.statusVale === 1){
                     item.statusVale = 5
