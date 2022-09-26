@@ -22,7 +22,7 @@ const db = new Sequelize(
         dialect: 'mysql',
         port: process.env.DB_PORT,
         pool:{
-            max: 50,
+            max: 100,
             min: 0,
             acquire: 30000,
             idle: 10000
