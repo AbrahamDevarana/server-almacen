@@ -808,3 +808,169 @@ exports.cerrarValesAbiertos = async (req, res) => {
     }
 }
 
+
+
+exports.paginateAllVales = async (req, res) => {
+    console.log(req.params)
+    const { page, size, search, statusVale } = req.query
+    const {id} = req.user
+
+    const searchValue = search ? 
+        { 
+            [Op.or]: [
+                { 'id' : { [Op.like]: '%' + search + '%' } },
+                { '$user.nombre$': { [Op.like ]: `%${search}%` } },
+                { '$user.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+                { '$user.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+                { '$personal.nombre$': { [Op.like]: `%${search}%` } },
+                { '$personal.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+                { '$personal.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+                { '$actividad.nombre$': { [Op.like]: `%${search}%` } },
+            ] 
+            
+        } : null
+    
+    const searchStatus = statusVale ?
+            {
+                'statusVale': { [Op.in]: statusVale }
+            } : null
+        
+        const { limit, offset } = getPagination(page, size)
+
+        await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos }] })
+        .then( async user => {
+            // Validar permisos
+            if (user.role.permisos.some( item => item.permisos === 'ver vales'))  {
+                await ValeSalida.findAndCountAll({ 
+                    include: [ 
+                        {
+                            model: DetalleSalida, 
+                            include: [ 
+                                { model: Insumo },
+                                { model: Prestamos, 
+                                    include: [
+                                        { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                                    ]
+                                }
+                            ],
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['google_id', 'password', 'email', 'createdAt', 'updatedAt', 'deletedAt']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['especialidad', 'createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                    ], 
+                    distinct: true,
+                    where: {[Op.and]: [searchValue, searchStatus]}, 
+                    order: [['id', 'DESC']],
+                    limit: searchValue? null: limit, 
+                    offset: searchValue? null: offset,
+                })
+                .then(valeSalida => {
+                    const response = getPagingData(valeSalida, page, limit)
+                    res.status(200).json({ valeSalida:response })
+                })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+                })
+            }else{
+                await ValeSalida.findAndCountAll(
+                    { include: [ 
+                        {
+                            model: DetalleSalida, 
+                            include: [ 
+                                { model: Insumo },
+                                { model: Prestamos, 
+                                    include: [
+                                        { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                                    ]
+                                }
+                            ],
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['google_id', 'password', 'email']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['especialidad']
+                            },
+                        }], 
+                        where: {[Op.and] : [{userId: user.id}, searchValue ]},
+                        distinct: true,
+                        limit, 
+                        offset,
+                        order: [['id', 'DESC']] 
+                    })
+                .then(valeSalida => {
+                    res.status(200).json({ valeSalida })
+                })            
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+                })
+            }
+        })
+        .catch(error => {
+            res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+        })
+
+}
+const getPagingData = ( data, page, limit ) => {
+    const { count: totalItem , rows: valeSalida } = data
+    const currentPage = page ? + page : 0
+    const totalPages = Math.ceil (totalItem / limit )
+    return { totalItem, valeSalida, totalPages, currentPage }
+}
+
+const getPagination = (page, size) => {
+    const limit = size ? + size : 10;
+    const offset = page ? page * limit : 0;  
+    return { limit, offset };
+};
+

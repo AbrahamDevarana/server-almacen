@@ -32,4 +32,9 @@ router.post('/completeVale', checkAccess('entregar vales'), valeController.compl
 router.post('/cancelVale', checkAccess('eliminar vales'), valeController.cancelValeSalida)
 router.post('/cancelDetalle', checkAccess('eliminar vales'), valeController.cancelDetalleSalida)
 
+
+router.get('/paginate', valeController.paginateAllVales )
+
+
+
 module.exports = router

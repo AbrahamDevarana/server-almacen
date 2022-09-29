@@ -1,0 +1,10 @@
+package-lock.json
+/node_modules
+/out
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+/nginx
+.env
