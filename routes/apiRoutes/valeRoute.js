@@ -33,7 +33,9 @@ router.post('/cancelVale', checkAccess('eliminar vales'), valeController.cancelV
 router.post('/cancelDetalle', checkAccess('eliminar vales'), valeController.cancelDetalleSalida)
 
 
-router.get('/paginate', valeController.paginateAllVales )
+router.get('/paginate', valeController.paginateAllValesSimple )
+
+router.get('/detalleSalida', valeController.getDetalleValeSalida )
 
 
 

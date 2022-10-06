@@ -5,9 +5,41 @@ services:
     build: .
     ports:
     - 5000:5000
+    env_file: ./.env
     networks:
       - valesnetwork
-
+    restart: on-failure
+    depends_on:
+      mysql:
+        condition: service_healthy
+    links:
+      - mysql:mysql
+  mysql:
+    image: mysql
+    hostname: localhost
+    command: --default-authentication-plugin=mysql_native_password
+    env_file: ./.env
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_HOST: $DB_HOST
+      MYSQL_DATABASE: $DATABASE
+      MYSQL_USER: $DB_USER
+      MYSQL_PASSWORD: $DB_PASSWORD
+      MYSQL_ROOT_PASSWORD: root
+      
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./src/main/resources/db/init.sql:/data/application/init.sql
+    networks:
+      - valesnetwork
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
 networks:
   valesnetwork:
     name: valesnetwork
+volumes:
+  db_data:

@@ -766,7 +766,7 @@ exports.completeValeSalida = async (req, res) => {
 
 // Cerrar Vale
 exports.cerrarValesAbiertos = async (req, res) => {
-
+    
     try { 
         // Validar todos los vales abiertos y si fueron creados un dia antes, cerrarlos
     await ValeSalida.findAll({ where: { 
@@ -811,14 +811,14 @@ exports.cerrarValesAbiertos = async (req, res) => {
 
 
 exports.paginateAllVales = async (req, res) => {
-    console.log(req.params)
-    const { page, size, search, statusVale } = req.query
+    const { page, size, search, status:statusVale, dateInit, dateEnd} = req.query
     const {id} = req.user
+    
 
     const searchValue = search ? 
         { 
             [Op.or]: [
-                { 'id' : { [Op.like]: '%' + search + '%' } },
+                { '$vale_salida.id$' : { [Op.like]: '%' + search + '%' } },
                 { '$user.nombre$': { [Op.like ]: `%${search}%` } },
                 { '$user.apellidoPaterno$': { [Op.like]: `%${search}%` } },
                 { '$user.apellidoMaterno$': { [Op.like]: `%${search}%` } },
@@ -832,8 +832,13 @@ exports.paginateAllVales = async (req, res) => {
     
     const searchStatus = statusVale ?
             {
-                'statusVale': { [Op.in]: statusVale }
-            } : null
+                '$vale_salida.statusVale$': { [Op.in]: statusVale }
+        } : null
+    
+    const searchDate = dateInit && dateEnd ? {
+            '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") ]}
+            // 'fecha' : { [Op.and]: { [Op.gte]: moment(dateInit).format("YYYY-MM-DD HH:mm:ss"), [Op.lte]: moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") } }
+        } : null
         
         const { limit, offset } = getPagination(page, size)
 
@@ -884,12 +889,12 @@ exports.paginateAllVales = async (req, res) => {
                                 exclude: ['especialidad', 'createdAt', 'updatedAt', 'deletedAt']
                             },
                         },
-                    ], 
+                    ],
                     distinct: true,
-                    where: {[Op.and]: [searchValue, searchStatus]}, 
+                    where: {[Op.and]: [searchValue, searchStatus, searchDate]}, 
                     order: [['id', 'DESC']],
-                    limit: searchValue? null: limit, 
-                    offset: searchValue? null: offset,
+                    limit,
+                    offset
                 })
                 .then(valeSalida => {
                     const response = getPagingData(valeSalida, page, limit)
@@ -942,11 +947,11 @@ exports.paginateAllVales = async (req, res) => {
                                 exclude: ['especialidad']
                             },
                         }], 
-                        where: {[Op.and] : [{userId: user.id}, searchValue ]},
+                        where: {[Op.and] : [{userId: user.id}, searchValue, searchStatus, searchDate]},
                         distinct: true,
-                        limit, 
-                        offset,
-                        order: [['id', 'DESC']] 
+                        order: [['id', 'DESC']],
+                        limit: searchValue? null: limit, 
+                        offset: searchValue? null: offset,
                     })
                 .then(valeSalida => {
                     res.status(200).json({ valeSalida })
@@ -961,10 +966,122 @@ exports.paginateAllVales = async (req, res) => {
         })
 
 }
+
+exports.paginateAllValesSimple = async (req, res) => {
+    const { page, size, search, status:statusVale, dateInit, dateEnd} = req.query
+    const { limit, offset } = getPagination(page, size)
+    const {id} = req.user
+
+    const searchValue = search ? 
+    { 
+        [Op.or]: [
+            { '$vale_salida.id$' : { [Op.like]: '%' + search + '%' } },
+            { '$user.nombre$': { [Op.like ]: `%${search}%` } },
+            { '$user.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$user.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$personal.nombre$': { [Op.like]: `%${search}%` } },
+            { '$personal.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$personal.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$actividad.nombre$': { [Op.like]: `%${search}%` } },
+        ] 
+        
+    } : null
+
+    const searchStatus = statusVale ?
+        {
+            '$vale_salida.statusVale$': { [Op.in]: statusVale }
+    } : null
+
+    const searchDate = dateInit && dateEnd ? {
+        '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") ]}
+        // 'fecha' : { [Op.and]: { [Op.gte]: moment(dateInit).format("YYYY-MM-DD HH:mm:ss"), [Op.lte]: moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") } }
+    } : null
+
+    await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos }]})
+    .then( async user => {
+        // Validar permisos
+        if (user.role.permisos.some( item => item.permisos === 'ver vales'))  {
+            await ValeSalida.findAndCountAll({ 
+                logging: console.log, // log SQL statement to console
+                include: [ 
+                    {
+                        model: Users,
+                        as: 'user',
+                        attributes: {
+                            exclude: ['password', 'email', 'telefono', 'tipoUsuario_id', 'puesto', 'google_id', 'status', 'suAdmin', 'createdAt', 'updatedAt']
+                        },
+                        required: false
+                    }, 
+                    {
+                        model: Obra,
+                        as: 'obra',
+                    },
+                    {
+                        model: Nivel,
+                        as: 'nivel',
+                    },
+                    {
+                        model: Zona,
+                        as: 'zona',
+                    },
+                    {
+                        model: Actividades,
+                        as: 'actividad',
+                    },
+                    {
+                        model: Personal,
+                        as: 'personal',
+                        attributes: {
+                            exclude: ['especialidad', 'createdAt', 'updatedAt', 'deletedAt']
+                        },
+                    },
+                ],             
+                order: [['id', 'DESC']],
+                distinct: true,                
+                where: {[Op.and]: [searchValue, searchStatus, searchDate]}, 
+                limit,
+                offset,
+            })
+            .then(valeSalida => {
+                const response = getPagingData(valeSalida, page, limit)
+                res.status(200).json({ valeSalida:response })
+            })
+            .catch(error => {
+                res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+            })
+        }
+    })
+    .catch(error => {
+        res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+    })
+}
+
+exports.getDetalleValeSalida = async (req, res) => {
+    const { id } = req.query
+    await DetalleSalida.findAll({
+        include: [ 
+            { model: Insumo },
+            { model: Prestamos, 
+                include: [
+                    { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                ]
+            }
+        ],
+        where: { valeSalidaId: id }
+    })
+    .then( detalle => {
+        res.status(200).json({ detalle })
+    })
+    .catch( error => {
+        res.status(500).json({ message: 'Error al obtener el detalle del vale de salida', error: error.message })
+    })
+}
+
+
 const getPagingData = ( data, page, limit ) => {
     const { count: totalItem , rows: valeSalida } = data
     const currentPage = page ? + page : 0
-    const totalPages = Math.ceil (totalItem / limit )
+    const totalPages = Math.ceil(totalItem / limit)
     return { totalItem, valeSalida, totalPages, currentPage }
 }
 

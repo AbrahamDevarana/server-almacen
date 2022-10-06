@@ -27,6 +27,7 @@ const db = new Sequelize(
             acquire: 30000,
             idle: 10000
         },
+        timezone: '-05:00',
         logging: false
     }
 )
