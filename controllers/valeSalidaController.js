@@ -969,7 +969,7 @@ exports.paginateAllVales = async (req, res) => {
 }
 
 exports.paginateAllValesSimple = async (req, res) => {
-    const { page, limit:size, search, status:statusVale, dateInit, dateEnd} = req.query
+    const { page, limit:size, search, status:statusVale, dateInit, dateEnd, sort} = req.query
 
     const { limit, offset } = getPagination(page, size)
 
@@ -995,10 +995,8 @@ exports.paginateAllValesSimple = async (req, res) => {
     const status = statusVale? statusVale.map( item => parseInt(item)) : null
     const searchStatus = statusVale ?
         {
-            // 'statusVale': { [Op.or]: { [Op.eq]: status, [Op.eq]: status } }
             '$vale_salida.statusVale$': { [Op.or]: status }
-
-    } : null
+        } : null
 
     const searchDate = dateInit && dateEnd ? {
         '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") ]}
@@ -1007,12 +1005,13 @@ exports.paginateAllValesSimple = async (req, res) => {
 
     await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos }]})
     .then( async user => {
-        userType = user.role.permisos.some( item => item.permisos === 'ver vales') ? null : 
-        {'$vale_salida.userId$': user.id}
+        userType = user.role.permisos.some( item => item.permisos === 'ver vales') ? 
+                { '$vale_salida.statusVale$': { [Op.ne]: 8 } } 
+                : 
+                {'$vale_salida.userId$': user.id}
     })
 
             await ValeSalida.findAndCountAll({ 
-                logging: console.log, // log SQL statement to console
                 include: [ 
                     {
                         model: Users,
@@ -1046,12 +1045,11 @@ exports.paginateAllValesSimple = async (req, res) => {
                         },
                     },
                 ],             
-                order: [['id', 'DESC']],
+                order: [['id', `${sort ? sort : 'DESC'}`]],
                 distinct: true,                
-                where: {[Op.and]: [searchValue, searchStatus, searchDate, userType]}, 
+                where: {[Op.and]: [searchValue, searchStatus, searchDate, userType ]}, 
                 limit: limit,
                 offset:offset,
-                
             })
             .then(valeSalida => {
                 const response = getPagingData(valeSalida, page, limit)
@@ -1069,6 +1067,7 @@ exports.paginateAllValesSimple = async (req, res) => {
 
 exports.getDetalleValeSalida = async (req, res) => {
     const { id } = req.query
+    
     await DetalleSalida.findAll({
         include: [ 
             { model: Insumo },
@@ -1078,7 +1077,7 @@ exports.getDetalleValeSalida = async (req, res) => {
                 ]
             }
         ],
-        where: { valeSalidaId: id }
+        where: { '$detalle_salida.valeSalidaId$': id }
     })
     .then( detalle => {
         res.status(200).json({ detalle })
