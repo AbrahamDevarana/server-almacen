@@ -384,6 +384,7 @@ exports.createValeSalida = async (req, res) => {
                         await Prestamos.create({
                             belongsTo: userId,
                             deliverTo: insumo.residentePrestamo,
+                            valeSalidaId: valeSalida.id,
                         })
                         .then( async prestamo => {
                             await DetalleSalida.create({
@@ -968,8 +969,12 @@ exports.paginateAllVales = async (req, res) => {
 }
 
 exports.paginateAllValesSimple = async (req, res) => {
-    const { page, size, search, status:statusVale, dateInit, dateEnd} = req.query
+    const { page, limit:size, search, status:statusVale, dateInit, dateEnd} = req.query
+
     const { limit, offset } = getPagination(page, size)
+
+    let userType = null
+
     const {id} = req.user
 
     const searchValue = search ? 
@@ -987,20 +992,25 @@ exports.paginateAllValesSimple = async (req, res) => {
         
     } : null
 
+    const status = statusVale? statusVale.map( item => parseInt(item)) : null
     const searchStatus = statusVale ?
         {
-            '$vale_salida.statusVale$': { [Op.in]: statusVale }
+            // 'statusVale': { [Op.or]: { [Op.eq]: status, [Op.eq]: status } }
+            '$vale_salida.statusVale$': { [Op.or]: status }
+
     } : null
 
     const searchDate = dateInit && dateEnd ? {
         '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") ]}
-        // 'fecha' : { [Op.and]: { [Op.gte]: moment(dateInit).format("YYYY-MM-DD HH:mm:ss"), [Op.lte]: moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") } }
     } : null
+
 
     await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos }]})
     .then( async user => {
-        // Validar permisos
-        if (user.role.permisos.some( item => item.permisos === 'ver vales'))  {
+        userType = user.role.permisos.some( item => item.permisos === 'ver vales') ? null : 
+        {'$vale_salida.userId$': user.id}
+    })
+
             await ValeSalida.findAndCountAll({ 
                 logging: console.log, // log SQL statement to console
                 include: [ 
@@ -1010,7 +1020,7 @@ exports.paginateAllValesSimple = async (req, res) => {
                         attributes: {
                             exclude: ['password', 'email', 'telefono', 'tipoUsuario_id', 'puesto', 'google_id', 'status', 'suAdmin', 'createdAt', 'updatedAt']
                         },
-                        required: false
+                        required: false,
                     }, 
                     {
                         model: Obra,
@@ -1038,9 +1048,10 @@ exports.paginateAllValesSimple = async (req, res) => {
                 ],             
                 order: [['id', 'DESC']],
                 distinct: true,                
-                where: {[Op.and]: [searchValue, searchStatus, searchDate]}, 
-                limit,
-                offset,
+                where: {[Op.and]: [searchValue, searchStatus, searchDate, userType]}, 
+                limit: limit,
+                offset:offset,
+                
             })
             .then(valeSalida => {
                 const response = getPagingData(valeSalida, page, limit)
@@ -1049,8 +1060,8 @@ exports.paginateAllValesSimple = async (req, res) => {
             .catch(error => {
                 res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
             })
-        }
-    })
+        
+    
     .catch(error => {
         res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
     })
@@ -1083,11 +1094,11 @@ const getPagingData = ( data, page, limit ) => {
     const currentPage = page ? + page : 0
     const totalPages = Math.ceil(totalItem / limit)
     return { totalItem, valeSalida, totalPages, currentPage }
-}
+}   
 
 const getPagination = (page, size) => {
     const limit = size ? + size : 10;
-    const offset = page ? page * limit : 0;  
+    const offset = page ? page * limit : 0;
     return { limit, offset };
 };
 

@@ -92,14 +92,6 @@ exports.getFullPrestamos = async (req, res) => {
     } 
 }
 
-exports.createPrestamo = async (req, res) => {
-    try{
-        
-    } catch (error) {
-        res.status(500).json({ message: "Error del servidor", error: error.message })
-    }
-}
-
 exports.updatePrestamo = async (req, res) => {
 
     const errors = validationResult(req);

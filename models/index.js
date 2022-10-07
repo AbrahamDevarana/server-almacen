@@ -58,6 +58,12 @@ Role.hasMany(User, { foreignKey: 'tipoUsuario_id' })
 Prestamos.belongsTo(User, { foreignKey: 'deliverTo', as: 'residente' })
 Prestamos.belongsTo(User, { foreignKey: 'belongsTo', as: 'owner' })
 
+User.hasMany(Prestamos, { foreignKey: 'deliverTo', as: 'prestamosDeliver' })
+User.hasMany(Prestamos, { foreignKey: 'belongsTo', as: 'prestamosOwner' })
+
+
+ValeSalida.hasOne(Prestamos, { foreignKey: 'valeSalidaId' })
+
 
 // Prestamos
 Prestamos.hasOne( DetalleSalida, {foreignKey: 'prestamoId'} )
@@ -70,5 +76,6 @@ module.exports = {
     Personal,
     ValeSalida,
     DetalleSalida,
-    Role
+    Role,
+    Prestamos
 }
