@@ -321,8 +321,7 @@ exports.getCountValeSalida = async (req, res) => {
             if( user.role.permisos.some( item => item.permisos === 'ver vales' ) ){
                 delete where.userId
             }else{
-                
-                where.userId =user.id
+                where.userId = user.id
                 
             }
             await ValeSalida.findAll({where}).then(valeSalida => {
@@ -562,7 +561,7 @@ exports.deliverValeSalida = async (req, res) => {
                             valeSalida.statusVale = 4
                         } else if (valeSalida.detalle_salidas.every( item => item.status === 1 )) { // si todos los detalles no se han entregado 
                             valeSalida.statusVale = 1
-                        } else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 4 )){ // si todos estan cerrados o 
+                        } else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 4 || item.status === 6)){ // si todos estan cerrados o 
                             valeSalida.statusVale = 3
                         } else if (valeSalida.detalle_salidas.some( item => item.status !== 1 )) { // si alguno de los detalles se ha entregado
                             valeSalida.statusVale = 2
@@ -571,7 +570,7 @@ exports.deliverValeSalida = async (req, res) => {
                         } 
                         await valeSalida.save()
                         sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
-                        res.status(200).json({ detalleSalida, valeSalida })
+                        res.status(200).json({ valeSalida, detalleSalida })
                     })
                     .catch(error => {
                         res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
@@ -645,6 +644,7 @@ exports.registrarValeSalida = async (req, res) => {
 // Cancelar vale de salida y se cancelan los detalles del vale de salida
 exports.cancelValeSalida = async (req, res) => {
     const { id, comentarios } = req.body
+    console.log(req.body);
     try {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
@@ -700,10 +700,7 @@ exports.cancelDetalleSalida = async (req, res) => {
                 if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
                     valeSalida.statusVale = 5
                     await valeSalida.save()
-                // }else if (valeSalida.detalle_salidas.every( item => item.status !== 1 )){
-                //     valeSalida.statusVale = 7
-                //     await valeSalida.save()
-                }else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 6)){
+                }else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 4 || item.status === 6)){
                     valeSalida.statusVale = 3
                     await valeSalida.save()
                 }
@@ -724,9 +721,12 @@ exports.cancelDetalleSalida = async (req, res) => {
 // Entregar vale de salida sin subir a enkontrol
 exports.completeValeSalida = async (req, res) => {
     const { id } = req.body
+
+    console.log(req.body);
     try {
-        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
+
             if(valeSalida.statusVale === 1 || valeSalida.statusVale === 2 || valeSalida.statusVale === 3){
                 valeSalida.statusVale = 4
                 await valeSalida.save()
@@ -808,7 +808,6 @@ exports.cerrarValesAbiertos = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
-
 
 
 exports.paginateAllVales = async (req, res) => {
