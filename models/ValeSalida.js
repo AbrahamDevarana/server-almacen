@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
 
+const moment = require('moment')
+
 const ValeSalida = db.define('vale_salida', {
     id: {
         type: Sequelize.INTEGER,

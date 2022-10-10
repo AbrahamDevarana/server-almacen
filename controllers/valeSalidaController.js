@@ -321,8 +321,7 @@ exports.getCountValeSalida = async (req, res) => {
             if( user.role.permisos.some( item => item.permisos === 'ver vales' ) ){
                 delete where.userId
             }else{
-                
-                where.userId =user.id
+                where.userId = user.id
                 
             }
             await ValeSalida.findAll({where}).then(valeSalida => {
@@ -384,6 +383,7 @@ exports.createValeSalida = async (req, res) => {
                         await Prestamos.create({
                             belongsTo: userId,
                             deliverTo: insumo.residentePrestamo,
+                            valeSalidaId: valeSalida.id,
                         })
                         .then( async prestamo => {
                             await DetalleSalida.create({
@@ -561,7 +561,7 @@ exports.deliverValeSalida = async (req, res) => {
                             valeSalida.statusVale = 4
                         } else if (valeSalida.detalle_salidas.every( item => item.status === 1 )) { // si todos los detalles no se han entregado 
                             valeSalida.statusVale = 1
-                        } else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 4 )){ // si todos estan cerrados o 
+                        } else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 4 || item.status === 6)){ // si todos estan cerrados o 
                             valeSalida.statusVale = 3
                         } else if (valeSalida.detalle_salidas.some( item => item.status !== 1 )) { // si alguno de los detalles se ha entregado
                             valeSalida.statusVale = 2
@@ -570,7 +570,7 @@ exports.deliverValeSalida = async (req, res) => {
                         } 
                         await valeSalida.save()
                         sockets.to("recieve_vale", { message: 'Residente' }, 'residente')
-                        res.status(200).json({ detalleSalida, valeSalida })
+                        res.status(200).json({ valeSalida, detalleSalida })
                     })
                     .catch(error => {
                         res.status(500).json({ message: 'Error al obtener el vale de salida', error: error.message })
@@ -644,6 +644,7 @@ exports.registrarValeSalida = async (req, res) => {
 // Cancelar vale de salida y se cancelan los detalles del vale de salida
 exports.cancelValeSalida = async (req, res) => {
     const { id, comentarios } = req.body
+    console.log(req.body);
     try {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
@@ -699,10 +700,7 @@ exports.cancelDetalleSalida = async (req, res) => {
                 if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
                     valeSalida.statusVale = 5
                     await valeSalida.save()
-                // }else if (valeSalida.detalle_salidas.every( item => item.status !== 1 )){
-                //     valeSalida.statusVale = 7
-                //     await valeSalida.save()
-                }else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 6)){
+                }else if (valeSalida.detalle_salidas.every( item => item.status === 3 || item.status === 4 || item.status === 6)){
                     valeSalida.statusVale = 3
                     await valeSalida.save()
                 }
@@ -723,9 +721,12 @@ exports.cancelDetalleSalida = async (req, res) => {
 // Entregar vale de salida sin subir a enkontrol
 exports.completeValeSalida = async (req, res) => {
     const { id } = req.body
+
+    console.log(req.body);
     try {
-        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo}, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
+        await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
+
             if(valeSalida.statusVale === 1 || valeSalida.statusVale === 2 || valeSalida.statusVale === 3){
                 valeSalida.statusVale = 4
                 await valeSalida.save()
@@ -766,7 +767,7 @@ exports.completeValeSalida = async (req, res) => {
 
 // Cerrar Vale
 exports.cerrarValesAbiertos = async (req, res) => {
-
+    
     try { 
         // Validar todos los vales abiertos y si fueron creados un dia antes, cerrarlos
     await ValeSalida.findAll({ where: { 
@@ -807,4 +808,295 @@ exports.cerrarValesAbiertos = async (req, res) => {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }
+
+
+exports.paginateAllVales = async (req, res) => {
+    const { page, size, search, status:statusVale, dateInit, dateEnd} = req.query
+    const {id} = req.user
+    
+
+    const searchValue = search ? 
+        { 
+            [Op.or]: [
+                { '$vale_salida.id$' : { [Op.like]: '%' + search + '%' } },
+                { '$user.nombre$': { [Op.like ]: `%${search}%` } },
+                { '$user.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+                { '$user.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+                { '$personal.nombre$': { [Op.like]: `%${search}%` } },
+                { '$personal.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+                { '$personal.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+                { '$actividad.nombre$': { [Op.like]: `%${search}%` } },
+            ] 
+            
+        } : null
+    
+    const searchStatus = statusVale ?
+            {
+                '$vale_salida.statusVale$': { [Op.in]: statusVale }
+        } : null
+    
+    const searchDate = dateInit && dateEnd ? {
+            '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") ]}
+            // 'fecha' : { [Op.and]: { [Op.gte]: moment(dateInit).format("YYYY-MM-DD HH:mm:ss"), [Op.lte]: moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") } }
+        } : null
+        
+        const { limit, offset } = getPagination(page, size)
+
+        await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos }] })
+        .then( async user => {
+            // Validar permisos
+            if (user.role.permisos.some( item => item.permisos === 'ver vales'))  {
+                await ValeSalida.findAndCountAll({ 
+                    include: [ 
+                        {
+                            model: DetalleSalida, 
+                            include: [ 
+                                { model: Insumo },
+                                { model: Prestamos, 
+                                    include: [
+                                        { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                                    ]
+                                }
+                            ],
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['google_id', 'password', 'email', 'createdAt', 'updatedAt', 'deletedAt']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['especialidad', 'createdAt', 'updatedAt', 'deletedAt']
+                            },
+                        },
+                    ],
+                    distinct: true,
+                    where: {[Op.and]: [searchValue, searchStatus, searchDate]}, 
+                    order: [['id', 'DESC']],
+                    limit,
+                    offset
+                })
+                .then(valeSalida => {
+                    const response = getPagingData(valeSalida, page, limit)
+                    res.status(200).json({ valeSalida:response })
+                })
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+                })
+            }else{
+                await ValeSalida.findAndCountAll(
+                    { include: [ 
+                        {
+                            model: DetalleSalida, 
+                            include: [ 
+                                { model: Insumo },
+                                { model: Prestamos, 
+                                    include: [
+                                        { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                                    ]
+                                }
+                            ],
+                        },
+                        {
+                            model: Users,
+                            as: 'user',
+                            attributes: {
+                                exclude: ['google_id', 'password', 'email']
+                            }
+                        }, 
+                        {
+                            model: Obra,
+                            as: 'obra',
+                        },
+                        {
+                            model: Nivel,
+                            as: 'nivel',
+                        },
+                        {
+                            model: Zona,
+                            as: 'zona',
+                        },
+                        {
+                            model: Actividades,
+                            as: 'actividad',
+                        },
+                        {
+                            model: Personal,
+                            as: 'personal',
+                            attributes: {
+                                exclude: ['especialidad']
+                            },
+                        }], 
+                        where: {[Op.and] : [{userId: user.id}, searchValue, searchStatus, searchDate]},
+                        distinct: true,
+                        order: [['id', 'DESC']],
+                        limit: searchValue? null: limit, 
+                        offset: searchValue? null: offset,
+                    })
+                .then(valeSalida => {
+                    res.status(200).json({ valeSalida })
+                })            
+                .catch(error => {
+                    res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+                })
+            }
+        })
+        .catch(error => {
+            res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+        })
+
+}
+
+exports.paginateAllValesSimple = async (req, res) => {
+    const { page, limit:size, search, status:statusVale, dateInit, dateEnd, sort} = req.query
+
+    const { limit, offset } = getPagination(page, size)
+
+    let userType = null
+
+    const {id} = req.user
+
+    const searchValue = search ? 
+    { 
+        [Op.or]: [
+            { '$vale_salida.id$' : { [Op.like]: '%' + search + '%' } },
+            { '$user.nombre$': { [Op.like ]: `%${search}%` } },
+            { '$user.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$user.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$personal.nombre$': { [Op.like]: `%${search}%` } },
+            { '$personal.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$personal.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$actividad.nombre$': { [Op.like]: `%${search}%` } },
+        ] 
+        
+    } : null
+
+    const status = statusVale? statusVale.map( item => parseInt(item)) : null
+    const searchStatus = statusVale ?
+        {
+            '$vale_salida.statusVale$': { [Op.or]: status }
+        } : null
+
+    const searchDate = dateInit && dateEnd ? {
+        '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") ]}
+    } : null
+
+
+    await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos }]})
+    .then( async user => {
+        userType = user.role.permisos.some( item => item.permisos === 'ver vales') ? 
+                { '$vale_salida.statusVale$': { [Op.ne]: 8 } } 
+                : 
+                {'$vale_salida.userId$': user.id}
+    })
+
+            await ValeSalida.findAndCountAll({ 
+                include: [ 
+                    {
+                        model: Users,
+                        as: 'user',
+                        attributes: {
+                            exclude: ['password', 'email', 'telefono', 'tipoUsuario_id', 'puesto', 'google_id', 'status', 'suAdmin', 'createdAt', 'updatedAt']
+                        },
+                        required: false,
+                    }, 
+                    {
+                        model: Obra,
+                        as: 'obra',
+                    },
+                    {
+                        model: Nivel,
+                        as: 'nivel',
+                    },
+                    {
+                        model: Zona,
+                        as: 'zona',
+                    },
+                    {
+                        model: Actividades,
+                        as: 'actividad',
+                    },
+                    {
+                        model: Personal,
+                        as: 'personal',
+                        attributes: {
+                            exclude: ['especialidad', 'createdAt', 'updatedAt', 'deletedAt']
+                        },
+                    },
+                ],             
+                order: [['id', `${sort ? sort : 'DESC'}`]],
+                distinct: true,                
+                where: {[Op.and]: [searchValue, searchStatus, searchDate, userType ]}, 
+                limit: limit,
+                offset:offset,
+            })
+            .then(valeSalida => {
+                const response = getPagingData(valeSalida, page, limit)
+                res.status(200).json({ valeSalida:response })
+            })
+            .catch(error => {
+                res.status(500).json({ message: 'Error al obtener los vale de salida', error: error.message })
+            })
+        
+    
+    .catch(error => {
+        res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
+    })
+}
+
+exports.getDetalleValeSalida = async (req, res) => {
+    const { id } = req.query
+    
+    await DetalleSalida.findAll({
+        include: [ 
+            { model: Insumo },
+            { model: Prestamos, 
+                include: [
+                    { model: Users, attributes: ['nombre', 'apellidoPaterno'], as: 'residente' }
+                ]
+            }
+        ],
+        where: { '$detalle_salida.valeSalidaId$': id }
+    })
+    .then( detalle => {
+        res.status(200).json({ detalle })
+    })
+    .catch( error => {
+        res.status(500).json({ message: 'Error al obtener el detalle del vale de salida', error: error.message })
+    })
+}
+
+
+const getPagingData = ( data, page, limit ) => {
+    const { count: totalItem , rows: valeSalida } = data
+    const currentPage = page ? + page : 0
+    const totalPages = Math.ceil(totalItem / limit)
+    return { totalItem, valeSalida, totalPages, currentPage }
+}   
+
+const getPagination = (page, size) => {
+    const limit = size ? + size : 10;
+    const offset = page ? page * limit : 0;
+    return { limit, offset };
+};
 

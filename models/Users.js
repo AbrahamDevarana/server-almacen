@@ -52,7 +52,7 @@ const Users = db.define('users', {
         defaultValue: true
     },
     picture: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: true
     },
     suAdmin: {

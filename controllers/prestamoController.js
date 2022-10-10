@@ -92,14 +92,6 @@ exports.getFullPrestamos = async (req, res) => {
     } 
 }
 
-exports.createPrestamo = async (req, res) => {
-    try{
-        
-    } catch (error) {
-        res.status(500).json({ message: "Error del servidor", error: error.message })
-    }
-}
-
 exports.updatePrestamo = async (req, res) => {
 
     const errors = validationResult(req);
@@ -110,9 +102,14 @@ exports.updatePrestamo = async (req, res) => {
     const { id, action } = req.body 
     try {
         await Prestamos.findOne({ where: {id} }).then( async prestamo => {
+        
             switch (action) {
                 case 'approve':
                     await Prestamos.update({ status: 2 }, { where: {id} })
+    
+                        .then( async () => {
+                            await ValeSalida.update({ statusVale: 1 }, { where: {id: prestamo.valeSalidaId} })
+                        }).catch( error => res.status(500).json({ message: 'Error al actualizar el prestamo', error: error.message }))
                     .catch( error => res.status(500).json({ message: 'Error al actualizar el prestamo', error: error.message }))
                 break;
                 case 'cancel':
@@ -127,7 +124,7 @@ exports.updatePrestamo = async (req, res) => {
                             .then( async valeSalida => {
                                 if(valeSalida.detalle_salidas.every( item => item.status === 4 )){
                                     valeSalida.statusVale = 5
-                                    valeSalida.comemntarios = 'Cancelado, no fue aprobado el prestamo'
+                                    valeSalida.comentarios = 'Cancelado, no fue aprobado el prestamo'
                                     await valeSalida.save()
                                 }
                             })
@@ -140,7 +137,6 @@ exports.updatePrestamo = async (req, res) => {
                     await Prestamos.update({ status: 4 }, { where: {id} })
                     .catch( error => res.status(500).json({ message: 'Error al actualizar el prestamo', error: error.message }))
                 break;
-
                 case 'verify':
                     await Prestamos.update({ status: 5}, { where: {id} })
                     .catch( error => res.status(500).json({ message: 'Error al actualizar el prestamo', error: error.message }))

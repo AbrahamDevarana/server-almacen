@@ -26,6 +26,10 @@ const Prestamos = db.define('prestamos', {
         defaultValue: 1,
         comment: '1: Nuevo, 2: Autorizado, 3: Rechazado, 4: Devuelto, 5: Verificado 6: Ticket Cancelado'
     },
+    valeSalidaId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
