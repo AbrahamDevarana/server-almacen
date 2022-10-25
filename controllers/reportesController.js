@@ -1,3 +1,4 @@
+const moment = require('moment');
 const { Sequelize } = require('sequelize');
 const { Op } = require('sequelize');
 const sequelize = require('sequelize');
@@ -35,7 +36,7 @@ exports.getReportesAcumulados = async (req, res) => {
     }
 
     if( fechaInicial && fechaFinal ){
-        date += ` AND (detalle_salidas.updatedAt BETWEEN '${fechaInicial}' AND '${fechaFinal}')`
+        date += ` AND (detalle_salidas.updatedAt BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
     }
     
 
@@ -49,6 +50,7 @@ exports.getReportesAcumulados = async (req, res) => {
             INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
             WHERE 1 
             ${ where }
+            ${ date }
             `           
         });
 
@@ -136,7 +138,7 @@ exports.getReporteGeneral = async (req, res) => {
     }
 
     if( fechaInicial && fechaFinal ){
-        date += ` AND (vale_salidas.fecha BETWEEN '${fechaInicial}' AND '${fechaFinal}')`
+        date += ` AND (vale_salidas.fecha BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
     }
 
     if(actividad){
@@ -184,6 +186,7 @@ exports.getReporteGeneral = async (req, res) => {
             INNER JOIN users ON personals.userId = users.id
             WHERE 1
             ${ where }
+            ${ date }
             limit ${limit} offset ${offset}
         `
 
