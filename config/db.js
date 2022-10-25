@@ -22,9 +22,9 @@ const db = new Sequelize(
         dialect: 'mysql',
         port: process.env.DB_PORT,
         pool:{
-            max: 50,
+            max: 30,
             min: 0,
-            acquire: 30000,
+            acquire: 60000,
             idle: 10000
         },
         timezone: '-05:00',

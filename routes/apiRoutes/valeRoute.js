@@ -3,11 +3,8 @@ const { check } = require('express-validator')
 const valeController = require('../../controllers/valeSalidaController')
 const checkAccess = require('../../middleware/checkAccess')
 
-router.get('/', valeController.getAllValeSalida)
-router.get('/search', valeController.getValeSalida)
+
 router.get('/countVales', valeController.getCountValeSalida)
-
-
 
 router.post('/', checkAccess('crear vales'),
     [
@@ -33,7 +30,7 @@ router.post('/cancelVale', checkAccess('eliminar vales'), valeController.cancelV
 router.post('/cancelDetalle', checkAccess('eliminar vales'), valeController.cancelDetalleSalida)
 
 
-router.get('/paginate', valeController.paginateAllValesSimple )
+router.get('/', valeController.getAllValesSalida )
 
 router.get('/detalleSalida', valeController.getDetalleValeSalida )
 
