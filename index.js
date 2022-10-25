@@ -43,16 +43,36 @@ app.use('/api', router)
 
 dbConfig.sync()
     .then( () => console.log('Conectado al servidor'))
-    .catch( error => console.log(error))
+    .catch( err => {
+        const errorinfo = `${new Date(Date.now()).toLocaleString()} - ${err} \n`
+        console.log(errorinfo);
+        fs.appendFile('logs/error.log', errorinfo, function (err) {
+            if (err) throw err;
+            process.exit(1);
+        })
+    })
 
-    
-process.on('uncaughtException', (err, origin) => {
-    console.error('Vaya ha habido un error tipo: uncaughtException', err)
-})
 
-process.on('unhandledRejection', (err, origin) => {
-    console.error('Vaya ha habido un error tipo:  unhandledRejection', err)
-})
+
+process.on('uncaughtException', (err) => {
+    const errorinfo = `${new Date(Date.now()).toLocaleString()} - ${err} \n`
+    console.log(errorinfo);
+    fs.appendFile('logs/error.log', errorinfo, function (err) {
+        if (err) throw err;
+        process.exit(1);
+    })
+});
+
+process.on('unhandledRejection', (err) => {
+    const errorinfo = `${new Date(Date.now()).toLocaleString()} - ${err} \n`
+    console.log(errorinfo);
+    fs.appendFile('logs/error.log', errorinfo, function (err) {
+        if (err) throw err;
+        process.exit(1);
+    })
+});
+
+
 
 
 const PORT = process.env.PORT || 5000;

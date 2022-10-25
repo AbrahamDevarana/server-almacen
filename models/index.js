@@ -61,8 +61,10 @@ Prestamos.belongsTo(User, { foreignKey: 'belongsTo', as: 'owner' })
 User.hasMany(Prestamos, { foreignKey: 'deliverTo', as: 'prestamosDeliver' })
 User.hasMany(Prestamos, { foreignKey: 'belongsTo', as: 'prestamosOwner' })
 
-
 ValeSalida.hasOne(Prestamos, { foreignKey: 'valeSalidaId' })
+
+// Insumos
+Insumo.hasMany(DetalleSalida, { foreignKey: 'insumoId' })
 
 
 // Prestamos

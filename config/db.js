@@ -24,7 +24,7 @@ const db = new Sequelize(
         pool:{
             max: 100,
             min: 0,
-            acquire: 30000,
+            acquire: 60000,
             idle: 10000
         },
         timezone: '-05:00',
