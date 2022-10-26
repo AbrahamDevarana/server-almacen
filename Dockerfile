@@ -8,6 +8,7 @@ RUN mv .env.development .env
 RUN npm install
 EXPOSE 5000
 RUN chmod -R 777 /usr/src/app
+# RUN chmod -R 777 /var/www/almacen/server/logs
 USER node
 
 CMD [ "pm2-runtime", "npm", "--", "start" ]
