@@ -91,10 +91,6 @@ exports.getReportesAcumulados = async (req, res) => {
             res.status(200).json(response);
         })
 
-
-        // res.status(200).json({reportes})
-
-
     } catch (err) {
         res.status(500).json({ message: 'Error al obtener el usuario', error: err.message })
     }
@@ -124,8 +120,9 @@ exports.getReporteGeneral = async (req, res) => {
     }
 
     if(busqueda){
-        where += ` AND (insumos.nombre LIKE '%${busqueda}%' OR 
-                        insumos.claveEnk LIKE '%${busqueda}%'
+        where += `   AND ( insumos.nombre LIKE '%${busqueda}%' 
+                        OR vale_salidas.id LIKE '%${busqueda}%' 
+                        OR insumos.claveEnk LIKE '%${busqueda}%'
                         OR actividades.nombre LIKE '%${busqueda}%'
                         OR personals.nombre LIKE '%${busqueda}%'
                         OR personals.apellidoPaterno LIKE '%${busqueda}%'
@@ -148,7 +145,8 @@ exports.getReporteGeneral = async (req, res) => {
         where += ` AND (personals.id = '${lider}')`
     }
     if(residente){
-        where += ` AND (users.id = '${residente}')`    
+        console.log('asdasd');
+        where += ` AND (users.id= :residente)`
     }
 
 
@@ -157,7 +155,7 @@ exports.getReporteGeneral = async (req, res) => {
         let reportData = { }
 
         const countQuery = await db.query({
-            query: `SELECT COUNT( DISTINCT insumos.id) AS total 
+            query: `SELECT COUNT( insumos.id ) AS total 
             FROM insumos 
             INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
@@ -172,12 +170,13 @@ exports.getReporteGeneral = async (req, res) => {
 
 
         reportQuery = `
-            SELECT DISTINCT insumos.id, insumos.nombre as insumoNombre, insumos.claveEnk, insumos.centroCosto,
+            SELECT insumos.id, insumos.nombre as insumoNombre, insumos.claveEnk, insumos.centroCosto,
             detalle_salidas.cantidadSolicitada, detalle_salidas.cantidadEntregada,
             actividades.nombre as actividadNombre, personals.nombre as personalNombre, personals.apellidoPaterno, personals.apellidoMaterno,
             users.nombre as usuarioNombre, users.apellidoPaterno, vale_salidas.salidaEnkontrol, vale_salidas.fecha,
             concat(personals.nombre, ' (', personals.apellidoMaterno, ') ', personals.apellidoPaterno) as personal,
-            concat(users.nombre, ' ', users.apellidoPaterno) as usuario
+            concat(users.nombre, ' ', users.apellidoPaterno) as usuario,
+            vale_salidas.id as folio
             FROM insumos 
             INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
@@ -192,20 +191,10 @@ exports.getReporteGeneral = async (req, res) => {
 
         await db.query(reportQuery, {
             logging: console.log,
+            replacements: {
+                residente
+            },
             type: sequelize.QueryTypes.SELECT,
-            // replacements: {
-            //     fechaInicial,
-            //     fechaFinal,
-            //     busqueda,
-            //     status,
-            //     centroCosto,
-            //     actividad,
-            //     lider,
-            //     residente,
-            //     orden,
-            //     page,
-            //     size
-            // }
         }).then(data => {
             reportData.count = countQuery[0][0].total
             reportData.rows = data

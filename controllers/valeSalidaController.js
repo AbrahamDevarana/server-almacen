@@ -516,7 +516,6 @@ exports.registrarValeSalida = async (req, res) => {
 // Cancelar vale de salida y se cancelan los detalles del vale de salida
 exports.cancelValeSalida = async (req, res) => {
     const { id, comentarios } = req.body
-    console.log(req.body);
     try {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
@@ -594,7 +593,6 @@ exports.cancelDetalleSalida = async (req, res) => {
 exports.completeValeSalida = async (req, res) => {
     const { id } = req.body
 
-    console.log(req.body);
     try {
         await ValeSalida.findOne({ where: { id }, include: [ { model: DetalleSalida, include:Insumo }, 'user', 'obra', 'nivel', 'zona', 'actividad', 'personal'] })
         .then( async valeSalida => {
