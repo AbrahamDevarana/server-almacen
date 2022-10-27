@@ -1,6 +1,4 @@
 const moment = require('moment');
-const { Sequelize } = require('sequelize');
-const { Op } = require('sequelize');
 const sequelize = require('sequelize');
 const db = require('../config/db');
 const { getPagination, getPagingData } = require('../utils/paginacion');
@@ -48,7 +46,7 @@ exports.getReportesAcumulados = async (req, res) => {
         const countQuery = await db.query({
             query: `SELECT COUNT( DISTINCT insumos.id) AS total FROM insumos
             INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
-            WHERE 1 
+            WHERE 1
             ${ where }
             ${ date }
             `           
@@ -59,10 +57,10 @@ exports.getReportesAcumulados = async (req, res) => {
             SELECT DISTINCT insumos.id, 
             insumos.nombre, 
             insumos.centroCosto,
-            (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id AND (NOT detalle_salidas.status = 4 ${ date } OR NOT detalle_salidas.status = NULL) ) as totalEntregado
+            (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` AND ( ${date} )`: '' } ) as totalEntregado
             FROM insumos
             INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
-            WHERE NOT detalle_salidas.status = 4 
+            WHERE 1
             ${ where }
             ${ ordenSolicitado? `ORDER BY totalEntregado ${ordenSolicitado}` : `ORDER BY insumos.id ${ orden }` }
             limit ${limit} offset ${offset}
@@ -71,19 +69,6 @@ exports.getReportesAcumulados = async (req, res) => {
         await db.query(reportQuery, {
             logging: console.log,
             type: sequelize.QueryTypes.SELECT,
-            // replacements: {
-            //     fechaInicial,
-            //     fechaFinal,
-            //     busqueda,
-            //     status,
-            //     centroCosto,
-            //     actividad,
-            //     lider,
-            //     residente,
-            //     orden,
-            //     page,
-            //     size
-            // }
         }).then(data => {
             reportData.count = countQuery[0][0].total
             reportData.rows = data
@@ -145,8 +130,8 @@ exports.getReporteGeneral = async (req, res) => {
         where += ` AND (personals.id = '${lider}')`
     }
     if(residente){
-        console.log('asdasd');
-        where += ` AND (users.id= :residente)`
+        console.log(residente);
+        where += ` AND (users.id = '${residente}')`
     }
 
 
@@ -176,7 +161,8 @@ exports.getReporteGeneral = async (req, res) => {
             users.nombre as usuarioNombre, users.apellidoPaterno, vale_salidas.salidaEnkontrol, vale_salidas.fecha,
             concat(personals.nombre, ' (', personals.apellidoMaterno, ') ', personals.apellidoPaterno) as personal,
             concat(users.nombre, ' ', users.apellidoPaterno) as usuario,
-            vale_salidas.id as folio
+            vale_salidas.id as folio,
+            detalle_salidas.status
             FROM insumos 
             INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
@@ -191,9 +177,6 @@ exports.getReporteGeneral = async (req, res) => {
 
         await db.query(reportQuery, {
             logging: console.log,
-            replacements: {
-                residente
-            },
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
             reportData.count = countQuery[0][0].total
@@ -206,101 +189,3 @@ exports.getReporteGeneral = async (req, res) => {
         res.status(500).json({ message: 'Error al obtener el usuario', error: err.message })
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        // await Insumo.findAndCountAll({
-        //     logging: console.log,
-        //     distinct: true,
-        //     exclude: ['status'],
-        //     raw: true,
-        //     subQuery: false,
-        //     include: [
-        //         {
-        //             model: DetalleSalida,
-        //             right: true,
-        //             include: [
-        //                 {
-        //                     model: ValeSalida,
-        //                     as: 'vale_salida',
-        //                     include: [
-        //                         {
-        //                             model: Users,
-        //                             as: 'user',
-        //                             attributes: {
-        //                                 exclude: ['password', 'email', 'telefono', 'tipoUsuario_id', 'puesto', 'google_id', 'status', 'suAdmin', 'createdAt', 'updatedAt', 'deletedAt']
-        //                             },
-        //                         },
-        //                         {
-        //                             model: Obra,
-        //                             as: 'obra',
-        //                             attributes: {
-        //                                 exclude: ['status', 'createdAt', 'updatedAt', 'deletedAt']
-        //                             }
-        //                         },
-        //                         {
-        //                             model: Nivel,
-        //                             as: 'nivel',
-        //                             attributes: {
-        //                                 exclude: ['status', 'createdAt', 'updatedAt', 'deletedAt']
-        //                             }
-        //                         },
-        //                         {
-        //                             model: Zona,
-        //                             as: 'zona',
-        //                             attributes: {
-        //                                 exclude: ['status', 'createdAt', 'updatedAt', 'deletedAt']
-        //                             }
-        //                         },
-        //                         {
-        //                             model: Actividades,
-        //                             as: 'actividad',
-        //                             attributes: {
-        //                                 exclude: ['descripcion', 'status', 'createdAt', 'updatedAt', 'deletedAt']
-        //                             }
-        //                         },
-        //                         {
-        //                             model: Personal,
-        //                             as: 'personal',
-        //                             attributes: {
-        //                                 exclude: ['especialidad', 'createdAt', 'updatedAt', 'deletedAt', 'status', 'userId']
-        //                             },
-        //                         },
-        //                     ]
-        //                 }
-        //             ],
-        //         }
-        //     ],
-        //     where: {
-        //         [Op.and]: [
-        //             // searchByValue,
-        //             // searchByStatus,
-        //         ]           
-        //     },
-        //     limit: limit,
-        //     offset:offset,
-        // }).then(response => {
-        //     const reporte = getPagingData(response, page, limit);
-        //     res.status(200).json(reporte);
