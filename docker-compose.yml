@@ -5,7 +5,7 @@ services:
     build: .
     ports:
     - 5000:5000
-    env_file: ./.env
+    env_file: ./.env.development
     networks:
       - valesnetwork
     restart: on-failure
@@ -18,13 +18,13 @@ services:
     image: mysql
     hostname: localhost
     command: --default-authentication-plugin=mysql_native_password
-    env_file: ./.env
+    env_file: ./.env.development
     ports:
       - 3307:3306
     environment:
       MYSQL_HOST: ${DB_HOST}
       MYSQL_DATABASE: ${DATABASE}
-      MYSQL_USER: ${DB_USER}
+      MYSQL_USER: almacen_user
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       
