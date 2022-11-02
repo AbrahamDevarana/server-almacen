@@ -44,7 +44,7 @@ exports.getReportesAcumulados = async (req, res) => {
 
         const countQuery = await db.query({
             query: `SELECT COUNT( DISTINCT insumos.id) AS total FROM insumos
-            INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
             WHERE 1
             ${ where }
             ${ date }
@@ -58,7 +58,7 @@ exports.getReportesAcumulados = async (req, res) => {
             insumos.centroCosto,
             (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
             FROM insumos
-            INNER JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
             WHERE 1
             ${ where }
             ${ ordenSolicitado? `ORDER BY totalEntregado ${ordenSolicitado}` : `ORDER BY insumos.id ${ orden }` }
