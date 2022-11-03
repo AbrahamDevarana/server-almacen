@@ -192,11 +192,62 @@ exports.getReporteGeneral = async (req, res) => {
 
 
 exports.generateReporteAcumulados = async ( req, res ) => {
+    const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type} = req.query;
 
+    let searchByCentroCosto = '';
+
+    centroCosto ? centroCosto.forEach((element, index) => {
+        searchByCentroCosto += `insumos.centroCosto = '${element.trim()}'`
+        if(index !== centroCosto.length - 1){
+            searchByCentroCosto += ` OR `
+        }
+        } ) : searchByCentroCosto = '';
+    
+
+
+    let where = ''
+    let date = ''
+    if (centroCosto){
+        where += `AND (${searchByCentroCosto})`
+    }
+
+    if(busqueda){
+        where += ` AND (insumos.nombre LIKE '%${busqueda}%' OR insumos.claveEnk LIKE '%${busqueda}%')`
+    }
+
+    if( fechaInicial && fechaFinal ){
+        date += ` AND (detalle_salidas.updatedAt BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
+    }
+    
+
+
+    try {
+
+        reportQuery = `
+            SELECT DISTINCT insumos.id, 
+            insumos.nombre, 
+            insumos.centroCosto,
+            (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
+            FROM insumos
+            LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            WHERE 1
+            ${ where }
+            ${ ordenSolicitado? `ORDER BY totalEntregado ${ordenSolicitado}` : `ORDER BY insumos.id ${ orden }` }
+        `
+
+        await db.query(reportQuery, {
+            type: sequelize.QueryTypes.SELECT,
+        }).then(data => {
+            res.status(200).json(data);
+        })
+
+    } catch (err) {
+        res.status(500).json({ message: 'Error al obtener el reporte', error: err.message })
+    }
 }
 
 
-exports.generarteReporteGeneral = async ( req, res ) => {
+exports.generateReporteGeneral = async ( req, res ) => {
     const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status } = req.query;
 
     try {
@@ -270,7 +321,6 @@ exports.generarteReporteGeneral = async ( req, res ) => {
             `
 
         await db.query(reportQuery, {
-            logging: console.log,
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
             res.status(200).json(data);
