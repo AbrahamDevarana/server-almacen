@@ -8,5 +8,8 @@ router.get('/export-reporte-general', reportesController.generateReporteGeneral)
 router.get('/export-reporte-acumulado', reportesController.generateReporteAcumulados)
 
 
+router.get('/export-pdf', reportesController.generatePdf)
+
+
 module.exports = router
 
