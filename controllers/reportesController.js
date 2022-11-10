@@ -74,7 +74,6 @@ exports.getReportesAcumulados = async (req, res) => {
         `
 
         await db.query(reportQuery, {
-            logging: console.log,
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
             reportData.count = countQuery[0][0].total
@@ -184,7 +183,6 @@ exports.getReporteGeneral = async (req, res) => {
         `
 
         await db.query(reportQuery, {
-            logging: console.log,
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
             reportData.count = countQuery[0][0].total
@@ -200,7 +198,9 @@ exports.getReporteGeneral = async (req, res) => {
 
 
 exports.generateReporteAcumulados = async ( req, res ) => {
-    const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type} = req.query;
+    const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type, isReport = false} = req.query;
+
+    let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
 
     let searchByCentroCosto = '';
 
@@ -246,7 +246,22 @@ exports.generateReporteAcumulados = async ( req, res ) => {
         await db.query(reportQuery, {
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
-            res.status(200).json(data);
+            if(isReport){
+
+                const header = [
+                    { id: 'nombre', name: 'Nombre', prompt: 'Nombre', align: 'left', padding: 0 },
+                    { id: 'centroCosto', name: 'Centro de costo', prompt: 'Centro de costo', width: 100, align: 'center', padding: 0 },
+                    { id: 'totalEntregado', name: 'Total entregado', prompt: 'Total entregado', width: 80, align: 'center', padding: 0 },
+                ]
+                
+                filterNames.titulo = 'Reporte Acumulados'
+                
+                generatePdf(data, header, filterNames, res)
+
+                
+            }else {
+                res.status(200).json(data);
+            }
         })
 
     } catch (err) {
@@ -256,8 +271,9 @@ exports.generateReporteAcumulados = async ( req, res ) => {
 
 
 exports.generateReporteGeneral = async ( req, res ) => {
-    const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status } = req.query;
+    const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status, isReport = false} = req.query;
 
+    let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
     try {
 
         let where = ''
@@ -330,28 +346,34 @@ exports.generateReporteGeneral = async ( req, res ) => {
 
         await db.query(reportQuery, {
             type: sequelize.QueryTypes.SELECT,
-        }).then(data => {
+        }).then( async data => {
 
             if(isReport){
 
                 const header = [
-                    { id: 'folio', name: 'ID', prompt: 'ID', width: 30, align: 'center', padding: 0 },
+                    { id: 'folio', name: 'ID', prompt: 'ID', width: 20, align: 'center', padding: 0 },
                     { id: 'insumoNombre', name: 'Insumo', prompt: 'Insumo', width: 160, align: 'left', padding: 0 },
                     { id: 'claveEnk', name: 'ID EK', prompt: 'ID EK', width: 50, align: 'center', padding: 0 },
-                    { id: 'centroCosto', name: 'Centro de Costo', prompt: 'Centro de Costo', width: 40, align: 'center', padding: 0 },
+                    { id: 'centroCosto', name: 'Centro Costo', prompt: 'Centro de Costo', width: 40, align: 'center', padding: 0 },
                     { id: 'cantidadSolicitada', name: 'Cantidad Solicitada', prompt: 'Cantidad Solicitada', width: 40, align: 'center', padding: 0 },
                     { id: 'cantidadEntregada', name: 'Cantidad Entregada', prompt: 'Cantidad Entregada', width: 40, align: 'center', padding: 0 },
                     { id: 'actividadNombre', name: 'Actividad', prompt: 'Actividad', width: 100, align: 'left', padding: 0 },
                     { id: 'personal', name: 'Personal', prompt: 'Personal', width: 140, align: 'left', padding: 0 },
                     { id: 'usuario', name: 'Usuario', prompt: 'Usuario', width: 100, align: 'left', padding: 0 },
-                    { id: 'salidaEnkontrol', name: 'Salida Enkontrol', prompt: 'Salida Enkontrol', width: 50, align: 'center', padding: 0 },
-                    { id: 'fecha', name: 'Fecha', prompt: 'Fecha', width: 50, align: 'center', padding: 0 },
+                    { id: 'salidaEnkontrol', name: 'Salida Enkontrol', prompt: 'Salida Enkontrol', width: 100, align: 'center', padding: 0 },
+                    { id: 'fecha', name: 'Fecha', prompt: 'Fecha', width: 60, align: 'center', padding: 0 },
                     { id: 'status', name: 'Status', prompt: 'Status', width: 40, align: 'center', padding: 0 },
                 ]
-                generatePdf(data, header, reporte)
+                
+                filterNames.titulo = 'Reporte General'
+                
+                generatePdf(data, header, filterNames, res)
+
+                
+            }else {
+                res.status(200).json(data);
             }
 
-            res.status(200).json(data);
         })
     
     } catch (err) {
@@ -360,9 +382,10 @@ exports.generateReporteGeneral = async ( req, res ) => {
 }
 
 
-generatePdf = async ( data, header, reporte ) => {
+const generatePdf = async ( data, header, filterNames, res ) => {
 
-    const { titulo, centroCosto, fechaInicial, fechaFinal, busqueda, actividad, lider, residente, status } = reporte
+    
+    const { titulo, centroCosto, fechaInicial, fechaFinal, busqueda, actividad, personal, usuario, status } = filterNames
 
     // const header = [
     //     { id: 'folio', name: 'ID', prompt: 'ID', width: 30, align: 'center', padding: 0 },
@@ -607,9 +630,9 @@ generatePdf = async ( data, header, reporte ) => {
                 </style>
             </head>
                 <body>
-                    <table>
-                        <thead>
-                            ${ header.map(heading => `<th>${heading.name}</th>`).join('') }
+                    <table style="width:100%">
+                        <thead style="display:none">
+                            ${ header.map(heading => `<th style="width:${heading.width}px;">${heading.name}</th>`).join('') }
                         </thead>
                         <tbody>
                             ${ data.map(row => `
@@ -623,11 +646,14 @@ generatePdf = async ( data, header, reporte ) => {
                                             }else{
                                                 return `<td style="width:${column.width}px;text-align:${column.align}">Cancelado</td>`
                                             }
-                                        }else if(column.id === 'fecha'){
-                                            return `<td style="width:${column.width}px;text-align:${column.align}">${moment(row[column.id]).format('DD/MM/YYYY')}</td>`
-                                        }else{
-                                            return `<td style="width:${column.width}px;text-align:${column.align}">${row[column.id]}</td>`
-                                        }
+                                            }else if(column.id === 'fecha'){
+                                                return `<td style="width:${column.width}px;text-align:${column.align}">${moment(row[column.id]).format('DD/MM/YYYY')}</td>`
+                                            }else if(column.id === 'totalEntregado'){
+                                                return `<td style="width:${column.width}px;text-align:${column.align}">${row[column.id] ? row[column.id] : "0.00" }</td>`
+
+                                            }else{
+                                                return `<td style="width:${column.width}px;text-align:${column.align}">${row[column.id]}</td>`
+                                            }
                                     }).join('') }
                                 </tr>
                             `).join('') }   
@@ -636,7 +662,9 @@ generatePdf = async ( data, header, reporte ) => {
             </html>
     `;
 
-    pdf.create(content, {
+    
+
+    await pdf.create(content, {
         format: 'A4',
         orientation: 'landscape',
         border: {
@@ -646,32 +674,37 @@ generatePdf = async ( data, header, reporte ) => {
             left: '0.2in'
         },
         header: {
-            height: '1.3in',
+            height: '1.65in',
             width: '100%',
             contents: ` 
-            <table style="width: 100%; font-size: 8px; background:gray;" id="pageHeader">
+            <table style="width: 100%; font-size: 8px; id="pageHeader">
                 <tr>
                     <td style="width:10%">
                         <img src="${ path.resolve('./static/img/logo.png') }"
                         style="width: 50px; height: 50px; padding:0 25%">
                         </td>
                         <td style="width: 50%; text-align: right;">
-                        <h1 style="text-align:center">${titulo}</h1>
-                        <h2 style="text-align:center"> Vales de Salida de Almacén </h2>
+                        <h1 style="text-align:center; color:#646375;">${titulo || ''}</h1>
+                        <h2 style="text-align:center; color:#646375;"> Vales de Salida de Almacén </h2>
                     </td>
                     <td style="width:15%;padding:5px;">
-                        <p> Centro de Costo: ${centroCosto} </p>
-                        <p> Fecha de Inicio: ${fechaInicial} </p>
-                        <p> Fecha Final: ${fechaFinal} </p>
-                        <p> Busqueda: ${busqueda} </p>
+                        <p style="font-weight:bold;color:#646375;"> Centro de Costo: <span style="font-weight:normal;"> ${centroCosto || '-'} </span> </p>
+                        <p style="font-weight:bold;color:#646375;"> Fecha de Inicio: <span style="font-weight:normal;"> ${fechaInicial || '-'} </span> </p>
+                        <p style="font-weight:bold;color:#646375;"> Fecha Final: <span style="font-weight:normal;"> ${fechaFinal || '-'} </span> </p>
+                        <p style="font-weight:bold;color:#646375;"> Busqueda: <span style="font-weight:normal;"> ${busqueda || '-'} </span> </p>
                     </td>
                     <td style="width:15%;padding:5px;">
-                        <p> Actividad: ${actividad} </p>
-                        <p> Lider de cuadrilla: ${lider} </p>
-                        <p> Usuario: ${residente} </p>
-                        <p> Estatus: ${status} </p>
+                        <p style="font-weight:bold;color:#646375;"> Actividad: <span style="font-weight:normal;"> ${actividad || '-'} </span> </p>
+                        <p style="font-weight:bold;color:#646375;"> Lider de cuadrilla: <span style="font-weight:normal;"> ${personal || '-'} </span> </p>
+                        <p style="font-weight:bold;color:#646375;"> Usuario: <span style="font-weight:normal;"> ${usuario || '-'} </span> </p>
+                        <p style="font-weight:bold;color:#646375;"> Estatus: <span style="font-weight:normal;"> ${status || '-'} </span> </p>
                     </td>
                 </tr>
+            </table>
+            <table style="width: 100%;"> 
+                <thead>
+                    ${ header.map(heading => `<th style="width:${heading.width}px;">${heading.name}</th>`).join('') }
+                </thead>
             </table>
             `
         },
@@ -687,12 +720,19 @@ generatePdf = async ( data, header, reporte ) => {
     }).toFile(`./public/pdf/Reporte-${moment().format('DD-MM-YYYY-hh-mm')}.pdf`, (err, result) => {
         if(err){
             res.status(500).json({ message: 'Error al generar el pdf', error: err.message })
-        }else{
-            res.download(result.filename, (err) => {
+        }else{           
+            fs.readFile(result.filename, (err, data) => {
                 if(err){
-                    res.status(500).json({ message: 'Error al descargar el pdf', error: err.message })
+                    res.status(500).json({ message: 'Error al leer el pdf', error: err.message })
                 }else{
-                    fs.unlinkSync(result.filename)
+                    res.contentType('application/pdf');
+                    res.send(data);
+
+                    fs.unlink(result.filename, (err) => {
+                        if(err){
+                            console.log(err);
+                        }
+                    })
                 }
             })
         }

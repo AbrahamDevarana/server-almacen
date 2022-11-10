@@ -17,6 +17,7 @@ exports.createAccessToken = (user) => {
         suAdmin: user.suAdmin,
         expiresIn: moment().add( 7 , 'days').unix(),
     }
+
     return jwt.sign(payload, JWT_SECRET);
 }
 
