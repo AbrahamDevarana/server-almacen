@@ -61,7 +61,7 @@ exports.getReportesAcumulados = async (req, res) => {
 
 
         reportQuery = `
-            SELECT DISTINCT insumos.id, 
+            SELECT DISTINCT insumos.claveEnk, 
             insumos.nombre, 
             insumos.centroCosto,
             (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
@@ -198,7 +198,7 @@ exports.getReporteGeneral = async (req, res) => {
 
 
 exports.generateReporteAcumulados = async ( req, res ) => {
-    const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type, isReport = false} = req.query;
+    const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type, isReport} = req.query;
 
     let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
 
@@ -232,7 +232,7 @@ exports.generateReporteAcumulados = async ( req, res ) => {
     try {
 
         reportQuery = `
-            SELECT DISTINCT insumos.id, 
+            SELECT DISTINCT insumos.claveEnk, 
             insumos.nombre, 
             insumos.centroCosto,
             (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
@@ -246,8 +246,7 @@ exports.generateReporteAcumulados = async ( req, res ) => {
         await db.query(reportQuery, {
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
-            if(isReport){
-
+            if(isReport === 'true'){
                 const header = [
                     { id: 'nombre', name: 'Nombre', prompt: 'Nombre', align: 'left', padding: 0 },
                     { id: 'centroCosto', name: 'Centro de costo', prompt: 'Centro de costo', width: 100, align: 'center', padding: 0 },
@@ -258,7 +257,6 @@ exports.generateReporteAcumulados = async ( req, res ) => {
                 
                 generatePdf(data, header, filterNames, res)
 
-                
             }else {
                 res.status(200).json(data);
             }
@@ -271,7 +269,7 @@ exports.generateReporteAcumulados = async ( req, res ) => {
 
 
 exports.generateReporteGeneral = async ( req, res ) => {
-    const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status, isReport = false} = req.query;
+    const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status, isReport} = req.query;
 
     let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
     try {
@@ -348,8 +346,8 @@ exports.generateReporteGeneral = async ( req, res ) => {
             type: sequelize.QueryTypes.SELECT,
         }).then( async data => {
 
-            if(isReport){
-
+            if(isReport === 'true'){
+                // 
                 const header = [
                     { id: 'folio', name: 'ID', prompt: 'ID', width: 20, align: 'center', padding: 0 },
                     { id: 'insumoNombre', name: 'Insumo', prompt: 'Insumo', width: 160, align: 'left', padding: 0 },
