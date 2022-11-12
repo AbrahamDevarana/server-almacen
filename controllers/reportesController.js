@@ -6,6 +6,9 @@ const pdf = require('html-pdf');
 
 const fs = require('fs');
 const path = require('path');
+const Users = require('../models/Users');
+const { Role } = require('../models');
+const Permisos = require('../models/Permisos');
 
 // path
 
@@ -15,6 +18,18 @@ const path = require('path');
 exports.getReportesAcumulados = async (req, res) => {
 
     const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type} = req.query;
+
+    // verificar permisos
+   const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+        model: Role,
+        include: {
+            model: Permisos, 
+        }
+   } });
+
+    const { role } = user.dataValues
+    const { permisos } = role.dataValues
+    const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
     const { limit, offset } = getPagination(page, size);
 
@@ -44,7 +59,9 @@ exports.getReportesAcumulados = async (req, res) => {
         date += ` AND (detalle_salidas.updatedAt BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
     }
     
-
+    if(!userPermit){
+        where += ` AND vale_salidas.userId = ${ req.user.id }`
+    }
 
     try {
 
@@ -53,6 +70,7 @@ exports.getReportesAcumulados = async (req, res) => {
         const countQuery = await db.query({
             query: `SELECT COUNT( DISTINCT insumos.id) AS total FROM insumos
             LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            ${ !userPermit? 'LEFT JOIN vale_salidas on vale_salidas.id = detalle_salidas.valeSalidaId' : ''}  
             WHERE 1
             ${ where }
             ${ date }
@@ -67,6 +85,7 @@ exports.getReportesAcumulados = async (req, res) => {
             (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
             FROM insumos
             LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            ${ !userPermit? 'LEFT JOIN vale_salidas on vale_salidas.id = detalle_salidas.valeSalidaId' : ''}  
             WHERE 1
             ${ where }
             ${ ordenSolicitado? `ORDER BY totalEntregado ${ordenSolicitado}` : `ORDER BY insumos.id ${ orden }` }
@@ -92,6 +111,17 @@ exports.getReporteGeneral = async (req, res) => {
     const {  fechaInicial, fechaFinal, busqueda, centroCosto, page, limit:size, actividad, lider, residente, status } = req.query;
 
     const { limit, offset } = getPagination(page, size);
+
+    const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+        model: Role,
+        include: {
+            model: Permisos, 
+        }
+   } });
+
+   const { role } = user.dataValues
+   const { permisos } = role.dataValues
+   const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
     let where = ''
     let date = ''
@@ -141,6 +171,10 @@ exports.getReporteGeneral = async (req, res) => {
         where += ` AND (detalle_salidas.status = ${status})`
     }
 
+    if(!userPermit){
+        where += ` AND vale_salidas.userId = ${ req.user.id }`
+    }
+
 
     try {
 
@@ -153,7 +187,7 @@ exports.getReporteGeneral = async (req, res) => {
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
             INNER JOIN actividades ON vale_salidas.actividadId = actividades.id
             INNER JOIN personals ON vale_salidas.personalId = personals.id
-            INNER JOIN users ON personals.userId = users.id
+            INNER JOIN users ON vale_salidas.userId = users.id
             WHERE 1
             ${ where }
             ${ date }
@@ -175,7 +209,7 @@ exports.getReporteGeneral = async (req, res) => {
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
             INNER JOIN actividades ON vale_salidas.actividadId = actividades.id
             INNER JOIN personals ON vale_salidas.personalId = personals.id
-            INNER JOIN users ON personals.userId = users.id
+            INNER JOIN users ON vale_salidas.userId = users.id
             WHERE 1
             ${ where }
             ${ date }
@@ -183,6 +217,7 @@ exports.getReporteGeneral = async (req, res) => {
         `
 
         await db.query(reportQuery, {
+            logging: console.log,
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
             reportData.count = countQuery[0][0].total
@@ -196,11 +231,21 @@ exports.getReporteGeneral = async (req, res) => {
     }
 }
 
-
 exports.generateReporteAcumulados = async ( req, res ) => {
     const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type, isReport} = req.query;
 
     let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
+
+    const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+        model: Role,
+        include: {
+            model: Permisos, 
+        }
+   } });
+
+    const { role } = user.dataValues
+    const { permisos } = role.dataValues
+    const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
     let searchByCentroCosto = '';
 
@@ -226,6 +271,10 @@ exports.generateReporteAcumulados = async ( req, res ) => {
     if( fechaInicial && fechaFinal ){
         date += ` AND (detalle_salidas.updatedAt BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
     }
+
+    if(!userPermit){
+        where += ` AND vale_salidas.userId = ${ req.user.id }`
+    }
     
 
 
@@ -238,6 +287,7 @@ exports.generateReporteAcumulados = async ( req, res ) => {
             (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
             FROM insumos
             LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            ${ !userPermit? 'LEFT JOIN vale_salidas on vale_salidas.id = detalle_salidas.valeSalidaId' : ''}  
             WHERE 1
             ${ where }
             ${ ordenSolicitado? `ORDER BY totalEntregado ${ordenSolicitado}` : `ORDER BY insumos.id ${ orden }` }
@@ -267,12 +317,24 @@ exports.generateReporteAcumulados = async ( req, res ) => {
     }
 }
 
-
 exports.generateReporteGeneral = async ( req, res ) => {
     const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status, isReport} = req.query;
 
     let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
+
+    
     try {
+
+        const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+            model: Role,
+            include: {
+                model: Permisos, 
+            }
+        } });
+    
+        const { role } = user.dataValues
+        const { permisos } = role.dataValues
+        const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
         let where = ''
         let date = ''
@@ -322,6 +384,10 @@ exports.generateReporteGeneral = async ( req, res ) => {
             where += ` AND (detalle_salidas.status = ${status})`
         }
 
+        if(!userPermit){
+            where += ` AND vale_salidas.userId = ${ req.user.id }`
+        }
+
         reportQuery = `
             SELECT insumos.id, insumos.nombre as insumoNombre, insumos.claveEnk, insumos.centroCosto,
             detalle_salidas.cantidadSolicitada, detalle_salidas.cantidadEntregada,
@@ -336,7 +402,7 @@ exports.generateReporteGeneral = async ( req, res ) => {
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
             INNER JOIN actividades ON vale_salidas.actividadId = actividades.id
             INNER JOIN personals ON vale_salidas.personalId = personals.id
-            INNER JOIN users ON personals.userId = users.id
+            INNER JOIN users ON vale_salidas.userId = users.id
             WHERE 1
             ${ where }
             ${ date }
@@ -378,7 +444,6 @@ exports.generateReporteGeneral = async ( req, res ) => {
         res.status(500).json({ message: 'Error al obtener el reporte', error: err.message })
     }
 }
-
 
 const generatePdf = async ( data, header, filterNames, res ) => {
 
