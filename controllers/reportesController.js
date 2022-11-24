@@ -6,6 +6,9 @@ const pdf = require('html-pdf');
 
 const fs = require('fs');
 const path = require('path');
+const Users = require('../models/Users');
+const { Role } = require('../models');
+const Permisos = require('../models/Permisos');
 
 // path
 
@@ -15,6 +18,18 @@ const path = require('path');
 exports.getReportesAcumulados = async (req, res) => {
 
     const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type} = req.query;
+
+    // verificar permisos
+   const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+        model: Role,
+        include: {
+            model: Permisos, 
+        }
+   } });
+
+    const { role } = user.dataValues
+    const { permisos } = role.dataValues
+    const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
     const { limit, offset } = getPagination(page, size);
 
@@ -44,7 +59,9 @@ exports.getReportesAcumulados = async (req, res) => {
         date += ` AND (detalle_salidas.updatedAt BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
     }
     
-
+    if(!userPermit){
+        where += ` AND vale_salidas.userId = ${ req.user.id }`
+    }
 
     try {
 
@@ -53,6 +70,7 @@ exports.getReportesAcumulados = async (req, res) => {
         const countQuery = await db.query({
             query: `SELECT COUNT( DISTINCT insumos.id) AS total FROM insumos
             LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            ${ !userPermit? 'LEFT JOIN vale_salidas on vale_salidas.id = detalle_salidas.valeSalidaId' : ''}  
             WHERE 1
             ${ where }
             ${ date }
@@ -61,12 +79,13 @@ exports.getReportesAcumulados = async (req, res) => {
 
 
         reportQuery = `
-            SELECT DISTINCT insumos.id, 
+            SELECT DISTINCT insumos.claveEnk, 
             insumos.nombre, 
             insumos.centroCosto,
             (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
             FROM insumos
             LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            ${ !userPermit? 'LEFT JOIN vale_salidas on vale_salidas.id = detalle_salidas.valeSalidaId' : ''}  
             WHERE 1
             ${ where }
             ${ ordenSolicitado? `ORDER BY totalEntregado ${ordenSolicitado}` : `ORDER BY insumos.id ${ orden }` }
@@ -92,6 +111,17 @@ exports.getReporteGeneral = async (req, res) => {
     const {  fechaInicial, fechaFinal, busqueda, centroCosto, page, limit:size, actividad, lider, residente, status } = req.query;
 
     const { limit, offset } = getPagination(page, size);
+
+    const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+        model: Role,
+        include: {
+            model: Permisos, 
+        }
+   } });
+
+   const { role } = user.dataValues
+   const { permisos } = role.dataValues
+   const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
     let where = ''
     let date = ''
@@ -141,6 +171,10 @@ exports.getReporteGeneral = async (req, res) => {
         where += ` AND (detalle_salidas.status = ${status})`
     }
 
+    if(!userPermit){
+        where += ` AND vale_salidas.userId = ${ req.user.id }`
+    }
+
 
     try {
 
@@ -153,7 +187,7 @@ exports.getReporteGeneral = async (req, res) => {
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
             INNER JOIN actividades ON vale_salidas.actividadId = actividades.id
             INNER JOIN personals ON vale_salidas.personalId = personals.id
-            INNER JOIN users ON personals.userId = users.id
+            INNER JOIN users ON vale_salidas.userId = users.id
             WHERE 1
             ${ where }
             ${ date }
@@ -175,7 +209,7 @@ exports.getReporteGeneral = async (req, res) => {
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
             INNER JOIN actividades ON vale_salidas.actividadId = actividades.id
             INNER JOIN personals ON vale_salidas.personalId = personals.id
-            INNER JOIN users ON personals.userId = users.id
+            INNER JOIN users ON vale_salidas.userId = users.id
             WHERE 1
             ${ where }
             ${ date }
@@ -183,6 +217,7 @@ exports.getReporteGeneral = async (req, res) => {
         `
 
         await db.query(reportQuery, {
+            logging: console.log,
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
             reportData.count = countQuery[0][0].total
@@ -196,11 +231,21 @@ exports.getReporteGeneral = async (req, res) => {
     }
 }
 
-
 exports.generateReporteAcumulados = async ( req, res ) => {
-    const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type, isReport = false} = req.query;
+    const {  fechaInicial, fechaFinal, busqueda, centroCosto, orden, page, limit:size, ordenSolicitado, type, isReport} = req.query;
 
     let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
+
+    const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+        model: Role,
+        include: {
+            model: Permisos, 
+        }
+   } });
+
+    const { role } = user.dataValues
+    const { permisos } = role.dataValues
+    const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
     let searchByCentroCosto = '';
 
@@ -226,18 +271,23 @@ exports.generateReporteAcumulados = async ( req, res ) => {
     if( fechaInicial && fechaFinal ){
         date += ` AND (detalle_salidas.updatedAt BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
     }
+
+    if(!userPermit){
+        where += ` AND vale_salidas.userId = ${ req.user.id }`
+    }
     
 
 
     try {
 
         reportQuery = `
-            SELECT DISTINCT insumos.id, 
+            SELECT DISTINCT insumos.claveEnk, 
             insumos.nombre, 
             insumos.centroCosto,
             (SELECT SUM(detalle_salidas.cantidadEntregada) from detalle_salidas WHERE detalle_salidas.insumoId = insumos.id ${ date ? ` ${date} `: '' } ) as totalEntregado
             FROM insumos
             LEFT JOIN detalle_salidas on detalle_salidas.insumoId = insumos.id
+            ${ !userPermit? 'LEFT JOIN vale_salidas on vale_salidas.id = detalle_salidas.valeSalidaId' : ''}  
             WHERE 1
             ${ where }
             ${ ordenSolicitado? `ORDER BY totalEntregado ${ordenSolicitado}` : `ORDER BY insumos.id ${ orden }` }
@@ -246,8 +296,7 @@ exports.generateReporteAcumulados = async ( req, res ) => {
         await db.query(reportQuery, {
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
-            if(isReport){
-
+            if(isReport === 'true'){
                 const header = [
                     { id: 'nombre', name: 'Nombre', prompt: 'Nombre', align: 'left', padding: 0 },
                     { id: 'centroCosto', name: 'Centro de costo', prompt: 'Centro de costo', width: 100, align: 'center', padding: 0 },
@@ -258,7 +307,6 @@ exports.generateReporteAcumulados = async ( req, res ) => {
                 
                 generatePdf(data, header, filterNames, res)
 
-                
             }else {
                 res.status(200).json(data);
             }
@@ -269,12 +317,24 @@ exports.generateReporteAcumulados = async ( req, res ) => {
     }
 }
 
-
 exports.generateReporteGeneral = async ( req, res ) => {
-    const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status, isReport = false} = req.query;
+    const {  fechaInicial, fechaFinal, busqueda, centroCosto, actividad, lider, residente, status, isReport} = req.query;
 
     let filterNames = req.query.filterNames ? JSON.parse(req.query.filterNames) : {};
+
+    
     try {
+
+        const user = await Users.findOne({ where: { id: req.user.id }, include: { 
+            model: Role,
+            include: {
+                model: Permisos, 
+            }
+        } });
+    
+        const { role } = user.dataValues
+        const { permisos } = role.dataValues
+        const userPermit = permisos.map(permiso => permiso.permisos).includes('ver reportes')
 
         let where = ''
         let date = ''
@@ -324,6 +384,10 @@ exports.generateReporteGeneral = async ( req, res ) => {
             where += ` AND (detalle_salidas.status = ${status})`
         }
 
+        if(!userPermit){
+            where += ` AND vale_salidas.userId = ${ req.user.id }`
+        }
+
         reportQuery = `
             SELECT insumos.id, insumos.nombre as insumoNombre, insumos.claveEnk, insumos.centroCosto,
             detalle_salidas.cantidadSolicitada, detalle_salidas.cantidadEntregada,
@@ -338,7 +402,7 @@ exports.generateReporteGeneral = async ( req, res ) => {
             INNER JOIN vale_salidas ON detalle_salidas.valeSalidaId = vale_salidas.id
             INNER JOIN actividades ON vale_salidas.actividadId = actividades.id
             INNER JOIN personals ON vale_salidas.personalId = personals.id
-            INNER JOIN users ON personals.userId = users.id
+            INNER JOIN users ON vale_salidas.userId = users.id
             WHERE 1
             ${ where }
             ${ date }
@@ -348,8 +412,8 @@ exports.generateReporteGeneral = async ( req, res ) => {
             type: sequelize.QueryTypes.SELECT,
         }).then( async data => {
 
-            if(isReport){
-
+            if(isReport === 'true'){
+                // 
                 const header = [
                     { id: 'folio', name: 'ID', prompt: 'ID', width: 20, align: 'center', padding: 0 },
                     { id: 'insumoNombre', name: 'Insumo', prompt: 'Insumo', width: 160, align: 'left', padding: 0 },
@@ -381,220 +445,10 @@ exports.generateReporteGeneral = async ( req, res ) => {
     }
 }
 
-
 const generatePdf = async ( data, header, filterNames, res ) => {
 
     
     const { titulo, centroCosto, fechaInicial, fechaFinal, busqueda, actividad, personal, usuario, status } = filterNames
-
-    // const header = [
-    //     { id: 'folio', name: 'ID', prompt: 'ID', width: 30, align: 'center', padding: 0 },
-    //     { id: 'insumoNombre', name: 'Insumo', prompt: 'Insumo', width: 160, align: 'left', padding: 0 },
-    //     { id: 'claveEnk', name: 'ID EK', prompt: 'ID EK', width: 50, align: 'center', padding: 0 },
-    //     { id: 'centroCosto', name: 'Centro de Costo', prompt: 'Centro de Costo', width: 40, align: 'center', padding: 0 },
-    //     { id: 'cantidadSolicitada', name: 'Cantidad Solicitada', prompt: 'Cantidad Solicitada', width: 40, align: 'center', padding: 0 },
-    //     { id: 'cantidadEntregada', name: 'Cantidad Entregada', prompt: 'Cantidad Entregada', width: 40, align: 'center', padding: 0 },
-    //     { id: 'actividadNombre', name: 'Actividad', prompt: 'Actividad', width: 100, align: 'left', padding: 0 },
-    //     { id: 'personal', name: 'Personal', prompt: 'Personal', width: 140, align: 'left', padding: 0 },
-    //     { id: 'usuario', name: 'Usuario', prompt: 'Usuario', width: 100, align: 'left', padding: 0 },
-    //     { id: 'salidaEnkontrol', name: 'Salida Enkontrol', prompt: 'Salida Enkontrol', width: 50, align: 'center', padding: 0 },
-    //     { id: 'fecha', name: 'Fecha', prompt: 'Fecha', width: 50, align: 'center', padding: 0 },
-    //     { id: 'status', name: 'Status', prompt: 'Status', width: 40, align: 'center', padding: 0 },
-    // ]
-
-    // const data = [
-    //     {
-    //         "id": 1830,
-    //         "insumoNombre": "GOMA CESPOL PARA LAVABO",
-    //         "claveEnk": "1170006",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "1.00",
-    //         "cantidadEntregada": "1.00",
-    //         "actividadNombre": "Amueblado Hidrosanitario",
-    //         "personalNombre": "J. Guadalupe ",
-    //         "apellidoPaterno": "Evangelista ",
-    //         "apellidoMaterno": "Lupe plomero",
-    //         "usuarioNombre": "Luis Roberto",
-    //         "salidaEnkontrol": "12166",
-    //         "fecha": "2022-09-12T19:23:22.000Z",
-    //         "personal": "J. Guadalupe  (Lupe plomero) Alvarez",
-    //         "usuario": "Luis Roberto Evangelista ",
-    //         "folio": 1,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 1826,
-    //         "insumoNombre": "CESPOL P/LAVABO S/CONTRA LATON CROM FOSET 49985 CE-210",
-    //         "claveEnk": "1170002",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "1.00",
-    //         "cantidadEntregada": "1.00",
-    //         "actividadNombre": "Amueblado Hidrosanitario",
-    //         "personalNombre": "J. Guadalupe ",
-    //         "apellidoPaterno": "Evangelista ",
-    //         "apellidoMaterno": "Lupe plomero",
-    //         "usuarioNombre": "Luis Roberto",
-    //         "salidaEnkontrol": "12166",
-    //         "fecha": "2022-09-12T19:23:22.000Z",
-    //         "personal": "J. Guadalupe  (Lupe plomero) Alvarez",
-    //         "usuario": "Luis Roberto Evangelista ",
-    //         "folio": 1,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 1891,
-    //         "insumoNombre": "MANGUERA COFLEX P/FREGADERO DE 55 CM AL-A40",
-    //         "claveEnk": "1170073",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "2.00",
-    //         "cantidadEntregada": "2.00",
-    //         "actividadNombre": "Amueblado Hidrosanitario",
-    //         "personalNombre": "J. Guadalupe ",
-    //         "apellidoPaterno": "Evangelista ",
-    //         "apellidoMaterno": "Lupe plomero",
-    //         "usuarioNombre": "Luis Roberto",
-    //         "salidaEnkontrol": "12166",
-    //         "fecha": "2022-09-12T19:23:22.000Z",
-    //         "personal": "J. Guadalupe  (Lupe plomero) Alvarez",
-    //         "usuario": "Luis Roberto Evangelista ",
-    //         "folio": 1,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 2648,
-    //         "insumoNombre": "PINTURA +MTS PRO-1000 K5-03 PULQUE",
-    //         "claveEnk": "1240030",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "38.00",
-    //         "cantidadEntregada": "38.00",
-    //         "actividadNombre": "Pintura",
-    //         "personalNombre": "Raul ",
-    //         "apellidoPaterno": "Hernández ",
-    //         "apellidoMaterno": "Rulas ",
-    //         "usuarioNombre": "Luis Jesus",
-    //         "salidaEnkontrol": "12167",
-    //         "fecha": "2022-09-12T19:31:18.000Z",
-    //         "personal": "Raul  (Rulas ) Vega Vega ",
-    //         "usuario": "Luis Jesus Hernández ",
-    //         "folio": 2,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 1710,
-    //         "insumoNombre": "RD+MIX CLASICO 7.5 KG",
-    //         "claveEnk": "1090009",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "1.00",
-    //         "cantidadEntregada": "1.00",
-    //         "actividadNombre": "Pintura",
-    //         "personalNombre": "Raul ",
-    //         "apellidoPaterno": "Hernández ",
-    //         "apellidoMaterno": "Rulas ",
-    //         "usuarioNombre": "Luis Jesus",
-    //         "salidaEnkontrol": "12167",
-    //         "fecha": "2022-09-12T19:31:18.000Z",
-    //         "personal": "Raul  (Rulas ) Vega Vega ",
-    //         "usuario": "Luis Jesus Hernández ",
-    //         "folio": 2,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 2643,
-    //         "insumoNombre": "SELLADOR 5X1 REFORZADO",
-    //         "claveEnk": "1240003",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "19.00",
-    //         "cantidadEntregada": "19.00",
-    //         "actividadNombre": "Pintura",
-    //         "personalNombre": "Raul ",
-    //         "apellidoPaterno": "Hernández ",
-    //         "apellidoMaterno": "Rulas ",
-    //         "usuarioNombre": "Luis Jesus",
-    //         "salidaEnkontrol": "12167",
-    //         "fecha": "2022-09-12T19:31:18.000Z",
-    //         "personal": "Raul  (Rulas ) Vega Vega ",
-    //         "usuario": "Luis Jesus Hernández ",
-    //         "folio": 2,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 1708,
-    //         "insumoNombre": "OK RESANADOR 950ML",
-    //         "claveEnk": "1090007",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "2.00",
-    //         "cantidadEntregada": "2.00",
-    //         "actividadNombre": "Pintura",
-    //         "personalNombre": "Raul ",
-    //         "apellidoPaterno": "Hernández ",
-    //         "apellidoMaterno": "Rulas ",
-    //         "usuarioNombre": "Luis Jesus",
-    //         "salidaEnkontrol": "12167",
-    //         "fecha": "2022-09-12T19:31:18.000Z",
-    //         "personal": "Raul  (Rulas ) Vega Vega ",
-    //         "usuario": "Luis Jesus Hernández ",
-    //         "folio": 2,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 2648,
-    //         "insumoNombre": "PINTURA +MTS PRO-1000 K5-03 PULQUE",
-    //         "claveEnk": "1240030",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "19.00",
-    //         "cantidadEntregada": "19.00",
-    //         "actividadNombre": "Pintura",
-    //         "personalNombre": "Raul ",
-    //         "apellidoPaterno": "Hernández ",
-    //         "apellidoMaterno": "Rulas ",
-    //         "usuarioNombre": "Luis Jesus",
-    //         "salidaEnkontrol": "12167",
-    //         "fecha": "2022-09-12T19:31:18.000Z",
-    //         "personal": "Raul  (Rulas ) Vega Vega ",
-    //         "usuario": "Luis Jesus Hernández ",
-    //         "folio": 2,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 2643,
-    //         "insumoNombre": "SELLADOR 5X1 REFORZADO",
-    //         "claveEnk": "1240003",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "19.00",
-    //         "cantidadEntregada": "19.00",
-    //         "actividadNombre": "Pintura",
-    //         "personalNombre": "Raul ",
-    //         "apellidoPaterno": "Hernández ",
-    //         "apellidoMaterno": "Rulas ",
-    //         "usuarioNombre": "Luis Jesus",
-    //         "salidaEnkontrol": "12167",
-    //         "fecha": "2022-09-12T19:31:18.000Z",
-    //         "personal": "Raul  (Rulas ) Vega Vega ",
-    //         "usuario": "Luis Jesus Hernández ",
-    //         "folio": 2,
-    //         "status": 3
-    //     },
-    //     {
-    //         "id": 1807,
-    //         "insumoNombre": "PORTA ROLLO SENCILLO NEGRO MOEN",
-    //         "claveEnk": "1150046",
-    //         "centroCosto": "RV2",
-    //         "cantidadSolicitada": "5.00",
-    //         "cantidadEntregada": "5.00",
-    //         "actividadNombre": "Amueblado Hidrosanitario",
-    //         "personalNombre": "Eduardo ",
-    //         "apellidoPaterno": "Gallegos ",
-    //         "apellidoMaterno": "Tilo",
-    //         "usuarioNombre": "Valeria",
-    //         "salidaEnkontrol": "12168",
-    //         "fecha": "2022-09-12T19:38:07.000Z",
-    //         "personal": "Eduardo  (Tilo) Martinez",
-    //         "usuario": "Valeria Gallegos ",
-    //         "folio": 3,
-    //         "status": 3
-    //     }
-    // ]
-
 
     const content = `
         <!doctype html>
@@ -703,7 +557,7 @@ const generatePdf = async ( data, header, filterNames, res ) => {
             </table>
             <table style="width: 100%;"> 
                 <thead>
-                    ${ header.map(heading => `<th style="width:${heading.width}px;">${heading.name}</th>`).join('') }
+                    ${ header.map(heading => `<th style="width:${heading.width}px;padding:10px 0;">${heading.name}</th>`).join('') }
                 </thead>
             </table>
             `
