@@ -14,6 +14,11 @@ const Notificaciones = require('./Notificaciones')
 
 const Prestamos = require('./Prestamos')
 
+
+const Bitacora = require('./Bitacora')
+const TipoBitacora = require('./TipoBitacora')
+const GaleriaBitacora = require('./GaleriaBitacora')
+
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
 // En esta parte solo son relaciones many to many, y genera automaticamente las tablas que se necesitan mediante el valor through.
@@ -70,6 +75,24 @@ Insumo.hasMany(DetalleSalida, { foreignKey: 'insumoId' })
 // Prestamos
 Prestamos.hasOne( DetalleSalida, {foreignKey: 'prestamoId'} )
 DetalleSalida.belongsTo( Prestamos, {foreignKey: 'prestamoId'} )
+
+
+// Bitacora
+Bitacora.belongsToMany(User, {  through: 'pivot_bitacora_users', foreignKey: 'bitacoraId'  });
+User.belongsToMany(Bitacora, {  through: 'pivot_bitacora_users', foreignKey: 'userId'  });
+
+Bitacora.belongsToMany(GaleriaBitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'bitacoraId'  });
+GaleriaBitacora.belongsToMany(Bitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'galeriaId'  });
+
+Bitacora.belongsTo(TipoBitacora, { foreignKey: 'tipoBitacoraId' })
+Bitacora.belongsTo(Obra, { foreignKey: 'obraId' })
+Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId' })
+Bitacora.belongsTo(Zona, { foreignKey: 'zonaId' })
+Bitacora.belongsTo(Actividad, { foreignKey: 'actividadId' })
+Bitacora.belongsTo(Personal, { foreignKey: 'personalId' })
+
+TipoBitacora.hasMany(Bitacora, { foreignKey: 'tipoBitacoraId' })
+
 
 module.exports = {
     Obra,

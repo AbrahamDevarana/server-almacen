@@ -13,6 +13,7 @@ const permisoRoute = require('./apiRoutes/permisoRoute')
 const notificacionRoute = require('./apiRoutes/notificacionRoute')
 const prestamoRoute = require('./apiRoutes/prestamoRoute')
 const reportesRoute = require('./apiRoutes/reportesRoute')
+const bitacoraRoute = require('./apiRoutes/bitacoraRoute')
 
 //Middleware para verificar que el usuario tenga permisos para realizar la acción
 
@@ -30,6 +31,7 @@ router.use('/permisos', permisoRoute)
 router.use('/notificaciones', notificacionRoute)
 router.use('/prestamos', prestamoRoute)
 router.use('/reportes', reportesRoute)
+router.use('/bitacora', bitacoraRoute)
 
 
 module.exports = router

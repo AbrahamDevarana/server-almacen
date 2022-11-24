@@ -1,13 +1,34 @@
 # Stage 1
 FROM node:16-alpine as server
-WORKDIR /usr/src/app
+
+WORKDIR /app/server
+
 RUN npm install -g npm@8.19.2
 RUN npm install pm2 -g
-COPY . .
-# RUN mv .env.development .env
+
+COPY package.json ./
+COPY config ./config
+COPY controllers ./controllers
+COPY email ./email
+COPY logs ./logs
+COPY middleware ./middleware
+COPY models ./models
+COPY public ./public
+COPY routes ./routes
+COPY seeders ./seeders
+COPY services ./services
+COPY src ./src
+COPY static ./static
+COPY utils ./utils
+COPY index.js ./
+COPY .sequelizerc ./
+COPY .env.development ./.env
+
 RUN npm install
+
 EXPOSE 5000
-RUN chmod -R 777 /usr/src/app
+
+RUN chmod -R 777 /app/server
 # RUN chmod -R 777 /var/www/almacen/server/logs
 USER node
 

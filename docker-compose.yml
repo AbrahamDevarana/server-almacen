@@ -5,7 +5,6 @@ services:
     build: .
     ports:
     - 5000:5000
-    env_file: ./.env.development
     networks:
       - valesnetwork
     restart: on-failure
@@ -16,28 +15,25 @@ services:
       - mysql:mysql
   mysql:
     image: mysql
-    hostname: localhost
-    command: --default-authentication-plugin=mysql_native_password
-    env_file: ./.env.development
+    hostname: mysql
     ports:
-      - 3307:3306
+      - "3307:3306"
     environment:
-      MYSQL_HOST: ${DB_HOST}
-      MYSQL_DATABASE: ${DATABASE}
+      MYSQL_ROOT_PASSWORD: devarana
+      MYSQL_DATABASE: db_almacen
       MYSQL_USER: almacen_user
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      
+      MYSQL_PASSWORD: devarana
+    networks:
+      - valesnetwork
     volumes:
       - db_data:/var/lib/mysql
       - ./src/main/resources/db/init.sql:/data/application/init.sql
-    networks:
-      - valesnetwork
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 5s
-      retries: 10
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "almacen_user", "-pdevarana"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 networks:
   valesnetwork:
     name: valesnetwork
