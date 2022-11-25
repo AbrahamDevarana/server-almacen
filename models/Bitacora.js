@@ -8,6 +8,14 @@ const Bitacora = db.define('bitacora', {
         autoIncrement: true,
         unique: true
     },
+    titulo: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    informacionAdicional: {
+        type: Sequelize.TEXT,
+        allowNull: true
+    },
     obraId: {
         type: Sequelize.INTEGER,
         allowNull: false,

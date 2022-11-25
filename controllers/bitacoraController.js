@@ -2,23 +2,14 @@
 const Bitacora = require('../models/Bitacora')
 const TipoBitacora = require('../models/TipoBitacora')
 const GaleriaBitacora = require('../models/GaleriaBitacora')
-const jwt = require('../services/jwtStrategy')
 const moment = require('moment')
 const fs = require('fs')
-
 const formidable = require('formidable-serverless')
-
-const aws = require('aws-sdk')
-
-const multer = require('multer');
-const multerS3 = require('multer-s3');
+const { s3Client, s3 } = require('../utils/s3Client')
 
 
-const s3 = new aws.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    endpoint: process.env.AWS_ENDPOINT,
-})
+const { GetObjectCommand, PutObjectCommand } = require('@aws-sdk/client-s3')
+
 
 
 exports.getBitacoras = async (req, res) => {
@@ -56,88 +47,118 @@ exports.getBitacora = async (req, res) => {
 exports.createBitacora = async (req, res) => {
 
     const form = new formidable.IncomingForm({ multiples: true })
-    
-    // Log form-data        
     form.uploadDir = './static/bitacoras'
     form.keepExtensions = true
 
-    let galeriaId = []
-
     //  Upload multiple files to S3
-    await form.parse(req, async (err, fields, files) => {
-        
+    form.parse(req, async (err, fields, files) => {
         if (err) return res.status(500).json({ message: "Error al subir la bitacora", err });
 
+        let galeria = files.files
+
+        if (!Array.isArray(galeria)) {
+            galeria = [galeria]
+        }
+
         try {
-                Object.keys(files.files).forEach((key) => {
-                    
-                    const fileName = files.files[key].name
-                    const file = fs.readFileSync(files.files[key].path)
-                    const originalPath = files.files[key].path
-                    // Upload file to S3
 
-                    const uploadParams = {
-                        Bucket: process.env.AWS_BUCKET_NAME,
-                        Body: file,
-                        Key: `bitacoras/${fileName}`,
-                        ACL: 'public-read'
-                    }
-
-                    s3.upload(uploadParams, {
-                        partSize: 10 * 1024 * 1024,
-                        queueSize: 10,
-                    }).send( async (err, data) => {
-                        if (err) {
-                            fs.unlinkSync(originalPath)
-                            return res.status(500).json({ message: "Error al subir el archivo", err })
-                        }else{
-                            fs.unlinkSync(originalPath)
-                        
-                            await GaleriaBitacora.create({
-                                url: data.Location,
-                                type: files.files[key].type,
-                            }).then((galeria) => {
-                                galeriaId.push(galeria.id)
-                            }).catch((err) => {
-                                res.status(500).json({ message: "Error al subir el archivo", err })
-                            })
-                        }
-                    })
-                })
-
-                //  Create bitacora and associate with files
-                const bitacora = await Bitacora.create({
-                    titulo: fields.titulo,
-                    descripcion: fields.descripcion,
-                    fecha: moment(fields.fecha).format('YYYY-MM-DD'),
-                    tipoBitacoraId: fields.tipoBitacoraId,
-                    obraId: fields.obraId,
-                    nivelId: fields.nivelId,
-                    zonaId: fields.zonaId,
-                    actividadId: fields.actividadId,
-                    personalId: fields.personalId,
-                })
-
-                
-
-       
-
-               
-                if( bitacora ){
-                    console.log(galeriaId);
-                    if(galeriaId.length > 0){
-                        await bitacora.setGaleriaBitacora(galeriaId)
-                    }
-                    res.status(200).json({ message: "Bitacora creada correctamente", bitacora })
-                }else {
-                    return res.status(500).json({ message: "Error al crear la bitacora" })
-                }
-                
+            await Bitacora.create({
+                titulo: fields.titulo,
+                informacionAdicional: fields.informacionAdicional,
+                fecha: moment(fields.fecha),
+                tipoBitacoraId: fields.tipoBitacoraId,
+                obraId: fields.obraId,
+                nivelId: fields.nivelId,
+                zonaId: fields.zonaId,
+                actividadId: fields.actividadId,
+                personalId: fields.personalId,
+            }).then( async (bitacora) => {
+                    const galeriaSet = await uploadFiles(galeria, bitacora.id)
+                    res.status(200).json({ message: "Bitacora creada con exito", bitacora })
+            })    
         } catch (error) {                
             res.status(500).json({ message: "Error al crear la bitacora", error })
         }
     })
-
-    
-
 }
+
+
+const uploadFiles = async (files, bitacoraId) => {
+
+    let galeriaSet  = []
+
+    return new Promise( async (resolve, reject) => {
+
+        await Promise.all(files.map(async (file) => {
+
+        const fileName = file.name
+        const fileBuffered = fs.readFileSync(file.path)
+
+
+        const uploadParams = {
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Body: fileBuffered,
+            Key: `bitacoras/${ new Date().getTime() }-${ fileName }`,
+            ACL: 'public-read',
+            ContentType: file.type
+        }
+
+
+        await s3Client.send(new PutObjectCommand(uploadParams)).then( async (data) => {
+
+            await GaleriaBitacora.create({
+                url: uploadParams.Key,
+                type: file.type,
+                }).then( async (galeria) => {
+                    galeriaSet.push(galeria.id)
+                    await galeria.setBitacoras(bitacoraId)
+                })
+            }).catch( (err) => {
+                console.log(err);
+            })
+        }))
+
+        
+        resolve(galeriaSet)
+    })  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // return new Promise((resolve, reject) => {
+    //     Object.keys(files.files).forEach( async (key) => {
+    //         const fileName = files.files[key].name
+    //         const file = fs.readFileSync(files.files[key].path)
+    //         const originalPath = files.files[key].path
+
+    //         const uploadParams = {
+    //             Bucket: process.env.AWS_BUCKET_NAME,
+    //             Body: file,
+    //             Key: `bitacoras/${Math.random()+fileName}`,
+    //             ACL: 'public-read',
+    //             ContentType: files.files[key].type
+    //         }
+
+    //         s3Client.send(new PutObjectCommand(uploadParams))
+    //             await GaleriaBitacora.create({
+    //                 url: uploadParams.Key,
+    //                 type: files.files[key].type,
+    //             }).then( async galeria => {            
+    //                 fs.unlinkSync(originalPath)
+    //                 galeriaSet.push(galeria)
+    //             })
+    //     })
+    //     resolve(galeriaSet)
+    // })
