@@ -8,6 +8,10 @@ const GaleriaBitacora = db.define('galeria_bitacora', {
         autoIncrement: true,
         unique: true
     },
+    uid: {
+        type: Sequelize.UUID,
+        defaultValue: Sequelize.UUIDV4
+    },
     url: {
         type: Sequelize.TEXT,
         allowNull: false,

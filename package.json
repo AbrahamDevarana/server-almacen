@@ -41,6 +41,7 @@
     "sequelize": "^6.21.0",
     "slugify": "^1.6.5",
     "socket.io": "^4.5.1",
+    "tinify": "^1.7.1",
     "uuid": "^8.3.2"
   }
 }

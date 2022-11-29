@@ -90,6 +90,7 @@ Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId' })
 Bitacora.belongsTo(Zona, { foreignKey: 'zonaId' })
 Bitacora.belongsTo(Actividad, { foreignKey: 'actividadId' })
 Bitacora.belongsTo(Personal, { foreignKey: 'personalId' })
+Bitacora.belongsTo(User, { foreignKey: 'autorId' })
 
 TipoBitacora.hasMany(Bitacora, { foreignKey: 'tipoBitacoraId' })
 
@@ -102,5 +103,10 @@ module.exports = {
     ValeSalida,
     DetalleSalida,
     Role,
-    Prestamos
+    Prestamos,
+    Bitacora,
+    TipoBitacora,
+    GaleriaBitacora,
+    Actividad,
+    User
 }

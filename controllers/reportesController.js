@@ -217,7 +217,6 @@ exports.getReporteGeneral = async (req, res) => {
         `
 
         await db.query(reportQuery, {
-            logging: console.log,
             type: sequelize.QueryTypes.SELECT,
         }).then(data => {
             reportData.count = countQuery[0][0].total

@@ -36,6 +36,10 @@ const Bitacora = db.define('bitacora', {
         type: Sequelize.INTEGER,
         allowNull: false,
     },
+    autorId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+    },
     tipoBitacoraId: {
         type: Sequelize.INTEGER,
         allowNull: false,
