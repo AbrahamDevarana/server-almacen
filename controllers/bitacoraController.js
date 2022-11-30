@@ -92,6 +92,21 @@ exports.createBitacora = async (req, res) => {
     })
 }
 
+
+exports.createComentario = async (req, res) => {
+
+    try {
+        await ComentarioBitacora.create({
+            bitacoraId: req.body.id,
+            comentario: req.body.comentario,
+            autorId: req.user.id
+        })
+        res.status(200).json({ message: "Comentario creado con exito" })
+    } catch (error) {
+        res.status(500).json({ message: "Error al crear el comentario", error })
+    }
+}
+
 const uploadFiles = async (files, bitacoraId) => {
 
     let galeriaSet  = []
@@ -140,3 +155,7 @@ const uploadFiles = async (files, bitacoraId) => {
     })  
 }
 
+
+const uploadDynamicFiles = async (files, bitacoraId) => {
+
+}
