@@ -1,10 +1,11 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
 
-const ComentariosBitacora = db.define('comentariosBitacora', {
+const ComentariosBitacora = db.define('comentarios_bitacora', {
     id: {
         type: Sequelize.INTEGER,
-        primaryKey: true
+        primaryKey: true,
+        autoIncrement: true,
     },
     bitacoraId: {
         type: Sequelize.INTEGER,

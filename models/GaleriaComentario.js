@@ -1,10 +1,11 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
 
-const GaleriaComentario = db.define('galeriaComentario', {
+const GaleriaComentario = db.define('galeria_comentario', {
     id: {
         type: Sequelize.INTEGER,
-        primaryKey: true
+        primaryKey: true,
+        autoIncrement: true,
     },
     comentarioId: {
         type: Sequelize.INTEGER,

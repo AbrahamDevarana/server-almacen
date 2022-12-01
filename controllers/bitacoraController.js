@@ -4,6 +4,8 @@ const formidable = require('formidable-serverless')
 const { s3Client } = require('../utils/s3Client')
 const { PutObjectCommand } = require('@aws-sdk/client-s3')
 const tinify = require('tinify');
+const ComentariosBitacora = require('../models/ComentarioBitacora')
+const GaleriaComentario = require('../models/GaleriaComentario')
 tinify.key = process.env.TINY_IMG_API_KEY;
 
 exports.getBitacoras = async (req, res) => {
@@ -17,7 +19,10 @@ exports.getBitacoras = async (req, res) => {
                 { model: Zona, attributes: ['nombre'] },
                 { model: Actividad, attributes: ['nombre'] },
                 { model: Personal, attributes: ['nombre'] },
-                { model: User, attributes: ['nombre'] }
+                { model: User, attributes: ['nombre'] },
+            ],
+            order: [
+                ['id', 'DESC']
             ]
         })
         res.status(200).json({bitacoras})
@@ -39,12 +44,16 @@ exports.getBitacora = async (req, res) => {
                     { model: Zona, attributes: ['id', 'nombre'] },
                     { model: Actividad, attributes: ['id', 'nombre'] },
                     { model: Personal, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] },
-                    { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ] }
+                    { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ] },
+                    { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
+                        { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ] },
+                        { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
+                    ] }
                 ]
             })
         res.status(200).json({bitacora})
     } catch (error) {
-        res.status(500).json({ message: "Error al obtener la bitacora" })
+        res.status(500).json({ message: "Error al obtener la bitacora", error})
     }
 }
 
@@ -92,19 +101,49 @@ exports.createBitacora = async (req, res) => {
     })
 }
 
-
 exports.createComentario = async (req, res) => {
 
-    try {
-        await ComentarioBitacora.create({
-            bitacoraId: req.body.id,
-            comentario: req.body.comentario,
-            autorId: req.user.id
-        })
-        res.status(200).json({ message: "Comentario creado con exito" })
-    } catch (error) {
-        res.status(500).json({ message: "Error al crear el comentario", error })
-    }
+
+    const form = new formidable.IncomingForm({ multiples: true })
+    form.keepExtensions = true
+
+    form.parse(req, async (err, fields, files) => {
+        if (err) return res.status(500).json({ message: "Error al subir la bitacora", err });
+
+        const { comentario, id } = fields
+
+        const galeria = Object.values(files)
+
+        try {
+            await ComentariosBitacora.create({
+                    bitacoraId: id,
+                    comentario: comentario,
+                    autorId: req.user.id
+            }).then( async (comentario) => {
+                
+                
+                await uploadDynamicFiles(galeria, 'comentarios').then( async (result) => {
+                    await GaleriaComentario.bulkCreate(result.map( item => {
+                        return { url:item.url, comentarioId: comentario.id, type: item.type }
+                    }))
+
+                    result = await ComentariosBitacora.findOne({
+                        where: { id: comentario.id },
+                        include: [
+                            { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ] },
+                            { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
+                        ]
+                    })
+
+                    res.status(200).json({ message: "Comentario creado con exito", comentario:result })
+                    
+                })
+            })
+            
+        } catch (error) {
+            res.status(500).json({ message: "Error al crear el comentario", error })
+        }
+    })
 }
 
 const uploadFiles = async (files, bitacoraId) => {
@@ -156,6 +195,43 @@ const uploadFiles = async (files, bitacoraId) => {
 }
 
 
-const uploadDynamicFiles = async (files, bitacoraId) => {
+const uploadDynamicFiles = async (files, folderName) => {
 
+
+    let galeriaSet  = []
+
+    return new Promise( async (resolve, reject) => {
+            
+            await Promise.all(files.map(async (picture) => {
+                
+            const contentType = picture.type
+            let file = picture.path
+            let folder = `${folderName}/files`
+
+
+            if ( contentType === 'image/jpeg' || contentType === 'image/png' || contentType === 'image/jpg' ) {
+                let source = tinify.fromFile(picture.path);
+                file = await source.toBuffer();
+                folder = `${folderName}/images`
+            }
+
+            const uploadParams = {
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Body: file,
+                Key: `${folder}/file-${ new Date().getTime() }`,
+                ACL: 'public-read',
+                ContentType: contentType
+            }
+
+            const data = await s3Client.send(new PutObjectCommand(uploadParams))
+            if(data) {
+                galeriaSet.push({url: uploadParams.Key, type: contentType})
+            }else{
+                reject('error')
+            }
+
+        }))
+
+        resolve(galeriaSet);
+    })
 }

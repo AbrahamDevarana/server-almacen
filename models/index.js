@@ -18,6 +18,8 @@ const Prestamos = require('./Prestamos')
 const Bitacora = require('./Bitacora')
 const TipoBitacora = require('./TipoBitacora')
 const GaleriaBitacora = require('./GaleriaBitacora')
+const ComentariosBitacora = require('./ComentarioBitacora')
+const GaleriaComentario = require('./GaleriaComentario')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -92,7 +94,12 @@ Bitacora.belongsTo(Actividad, { foreignKey: 'actividadId' })
 Bitacora.belongsTo(Personal, { foreignKey: 'personalId' })
 Bitacora.belongsTo(User, { foreignKey: 'autorId' })
 
+Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
 TipoBitacora.hasMany(Bitacora, { foreignKey: 'tipoBitacoraId' })
+
+ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' })
+ComentariosBitacora.hasMany(GaleriaComentario, { foreignKey: 'comentarioId' })
+
 
 
 module.exports = {
@@ -108,5 +115,7 @@ module.exports = {
     TipoBitacora,
     GaleriaBitacora,
     Actividad,
-    User
+    User,
+    ComentariosBitacora,
+    GaleriaComentario
 }
