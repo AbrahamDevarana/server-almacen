@@ -6,11 +6,29 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3')
 const tinify = require('tinify');
 const ComentariosBitacora = require('../models/ComentarioBitacora')
 const GaleriaComentario = require('../models/GaleriaComentario')
+const { getPagination, getPagingData } = require('../utils/paginacion')
 tinify.key = process.env.TINY_IMG_API_KEY;
 
 exports.getBitacoras = async (req, res) => {
+
+
+    const { obraId, nivelId, zonaId, actividadId, personalId, tipoBitacoraId, fechaInicio, fechaFin, page, size } = req.query
+
+    const { limit, offset } = getPagination(page, size);
+
+    const where = {}
+
+    if (obraId) where.obraId = obraId
+    if (nivelId) where.nivelId = nivelId
+    if (zonaId) where.zonaId = zonaId
+    if (actividadId) where.actividadId = actividadId
+    if (personalId) where.personalId = personalId
+    if (tipoBitacoraId) where.tipoBitacoraId = tipoBitacoraId
+    if (fechaInicio) where.fecha = { [Op.gte]: fechaInicio }
+    if (fechaFin) where.fecha = { [Op.lte]: fechaFin }
+
     try {
-        const bitacoras = await Bitacora.findAll({
+        const bitacoras = await Bitacora.findAndCountAll({
             include: [
                 { model: TipoBitacora, attributes: ['nombre'] },
                 { model: GaleriaBitacora, attributes: ['url', 'type'] },
@@ -23,9 +41,16 @@ exports.getBitacoras = async (req, res) => {
             ],
             order: [
                 ['id', 'DESC']
-            ]
+            ],
+            where,
+            limit,
+            distinct: true,
+            offset
+
         })
-        res.status(200).json({bitacoras})
+
+        const response = getPagingData(bitacoras, page, limit);
+        res.status(200).json({bitacoras:response})
     } catch (error) {
         res.status(500).json({ message: "Error al obtener las bitacoras", error})
     }
