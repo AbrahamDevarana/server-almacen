@@ -712,7 +712,7 @@ exports.getAllValesSalida = async (req, res) => {
         } : null
 
     const searchDate = dateInit && dateEnd ? {
-        '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).format("YYYY-MM-DD HH:mm:ss") ]}
+        '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).startOf('day').format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).endOf('day').format("YYYY-MM-DD HH:mm:ss") ]}
     } : null
 
 

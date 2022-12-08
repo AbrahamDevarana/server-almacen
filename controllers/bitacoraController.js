@@ -6,52 +6,86 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3')
 const tinify = require('tinify');
 const ComentariosBitacora = require('../models/ComentarioBitacora')
 const GaleriaComentario = require('../models/GaleriaComentario')
+
+
 const { getPagination, getPagingData } = require('../utils/paginacion')
+const { Op } = require('sequelize')
 tinify.key = process.env.TINY_IMG_API_KEY;
 
 exports.getBitacoras = async (req, res) => {
 
 
-    const { obraId, nivelId, zonaId, actividadId, personalId, tipoBitacoraId, fechaInicio, fechaFin, page, size } = req.query
+    const { obraId, nivelId, zonaId, actividadId, personalId, tipoBitacoraId, fechaInicio, fechaFin, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
+
+    console.log(obraId);
 
     const { limit, offset } = getPagination(page, size);
 
-    const where = {}
 
-    if (obraId) where.obraId = obraId
-    if (nivelId) where.nivelId = nivelId
-    if (zonaId) where.zonaId = zonaId
-    if (actividadId) where.actividadId = actividadId
-    if (personalId) where.personalId = personalId
-    if (tipoBitacoraId) where.tipoBitacoraId = tipoBitacoraId
-    if (fechaInicio) where.fecha = { [Op.gte]: fechaInicio }
-    if (fechaFin) where.fecha = { [Op.lte]: fechaFin }
+    const obraWhere = [
+        obraId ? {"$obra.id$" : obraId } : {},
+        busqueda ? {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
+    ]
+    
+    const nivelWhere = [
+        nivelId ? {"$nivele.id$" : nivelId } : {},
+        busqueda ? {"$nivele.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
+    ]
+
+    const zonaWhere = [
+        zonaId ? {"$zona.id$" : zonaId } : {},
+        busqueda ? {"$zona.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
+    ]
+
+    const actividadWhere = [
+        actividadId ? {"$actividade.id$" : actividadId } : {},
+        busqueda ? {"$actividade.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
+    ]
+
+    const personalWhere = [
+        personalId ? {"$personal.id$" : personalId } : {},
+        busqueda ? {"$personal.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
+    ]
+
+    // const tipoBitacoraWhere = [
+    //     tipoBitacoraId ? {"$tipo_bitacora.id$" : tipoBitacoraId } : {},
+    //     busqueda ? {"$tipo_bitacora.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
+    // ]
+
+    const fechaWhere = [
+        fechaInicio ? {"fecha" : {[Op.gte]: moment(fechaInicio).startOf('day').format('YYYY-MM-DD HH:mm:ss')}} : {},     
+        fechaFin ? {"fecha" : {[Op.lte]: moment(fechaFin).endOf('day').format('YYYY-MM-DD HH:mm:ss')}} : {}
+    ]
+    
+    console.log(fechaWhere)
 
     try {
         const bitacoras = await Bitacora.findAndCountAll({
             include: [
                 { model: TipoBitacora, attributes: ['nombre'] },
                 { model: GaleriaBitacora, attributes: ['url', 'type'] },
-                { model: Obra, attributes: ['nombre'] },
-                { model: Nivel, attributes: ['nombre'] },
-                { model: Zona, attributes: ['nombre'] },
-                { model: Actividad, attributes: ['nombre'] },
-                { model: Personal, attributes: ['nombre'] },
+                { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere },
+                { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere},
+                { model: Zona, attributes: ['nombre'], where: zonaWhere},
+                { model: Actividad, attributes: ['nombre'], where: actividadWhere},
+                { model: Personal, attributes: ['nombre'], where: personalWhere},
                 { model: User, attributes: ['nombre'] },
             ],
             order: [
-                ['id', 'DESC']
+                ['id', ordenSolicitado]
             ],
-            where,
             limit,
             distinct: true,
-            offset
+            offset,
+            where: {[Op.and] : [fechaWhere]},
+            logging: console.log
 
         })
 
         const response = getPagingData(bitacoras, page, limit);
         res.status(200).json({bitacoras:response})
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: "Error al obtener las bitacoras", error})
     }
 }
@@ -219,7 +253,6 @@ const uploadFiles = async (files, bitacoraId) => {
     })  
 }
 
-
 const uploadDynamicFiles = async (files, folderName) => {
 
 
@@ -259,4 +292,46 @@ const uploadDynamicFiles = async (files, folderName) => {
 
         resolve(galeriaSet);
     })
+}
+
+
+//  Tipo de bitacora
+
+exports.getTipoBitacoras = async (req, res) => {
+    try {
+        const tiposBitacora = await TipoBitacora.findAll()
+        res.status(200).json({ message: "Tipo de bitacoras", tiposBitacora })
+    } catch (error) {
+        res.status(500).json({ message: "Error al obtener los tipos de bitacoras", error })
+    }
+}
+
+exports.createTipoBitacora = async (req, res) => {
+    try {
+        const { nombre } = req.body
+        const tiposBitacora = await TipoBitacora.create({ nombre })
+        res.status(200).json({ message: "Tipo de bitacora creado", tiposBitacora })
+    } catch (error) {
+        res.status(500).json({ message: "Error al crear el tipo de bitacora", error })
+    }
+}
+
+exports.updateTipoBitacora = async (req, res) => {
+    try {
+        const { id, nombre } = req.body
+        const tiposBitacora = await TipoBitacora.update({ nombre }, { where: { id } })
+        res.status(200).json({ message: "Tipo de bitacora actualizado", tiposBitacora })
+    } catch (error) {
+        res.status(500).json({ message: "Error al actualizar el tipo de bitacora", error })
+    }
+}
+
+exports.deleteTipoBitacora = async (req, res) => {
+    try {
+        const { id } = req.body
+        const tiposBitacora = await TipoBitacora.destroy({ where: { id } })
+        res.status(200).json({ message: "Tipo de bitacora eliminado", tiposBitacora })
+    } catch (error) {
+        res.status(500).json({ message: "Error al eliminar el tipo de bitacora", error })
+    }
 }

@@ -367,7 +367,7 @@ exports.generateReporteGeneral = async ( req, res ) => {
         }
 
         if( fechaInicial && fechaFinal ){
-            date += ` AND (vale_salidas.fecha BETWEEN '${ moment(fechaInicial).format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).format("YYYY-MM-DD HH:mm:ss") }')`
+            date += ` AND (vale_salidas.fecha BETWEEN '${ moment(fechaInicial).startOf('day').format("YYYY-MM-DD HH:mm:ss") }' AND '${ moment(fechaFinal).endOf('day').format("YYYY-MM-DD HH:mm:ss") }')`
         }
 
         if(actividad){
