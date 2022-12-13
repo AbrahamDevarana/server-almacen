@@ -9,6 +9,7 @@ router.get('/:id', bitacoraController.getBitacora)
 router.post('/', bitacoraController.createBitacora)
 
 router.post('/crearComentario', bitacoraController.createComentario)
+router.post('/generar-reporte', bitacoraController.generateReport)
 
 
 module.exports = router

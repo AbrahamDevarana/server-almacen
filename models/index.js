@@ -81,7 +81,7 @@ DetalleSalida.belongsTo( Prestamos, {foreignKey: 'prestamoId'} )
 
 // Bitacora
 Bitacora.belongsToMany(User, {  through: 'pivot_bitacora_users', foreignKey: 'bitacoraId'  });
-User.belongsToMany(Bitacora, {  through: 'pivot_bitacora_users', foreignKey: 'userId'  });
+User.belongsToMany(Bitacora, {  through: 'pivot_bitacora_users', foreignKey: 'userId', as: 'participantes'  });
 
 Bitacora.belongsToMany(GaleriaBitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'bitacoraId'  });
 GaleriaBitacora.belongsToMany(Bitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'galeriaId'  });
@@ -92,7 +92,8 @@ Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId' })
 Bitacora.belongsTo(Zona, { foreignKey: 'zonaId' })
 Bitacora.belongsTo(Actividad, { foreignKey: 'actividadId' })
 Bitacora.belongsTo(Personal, { foreignKey: 'personalId' })
-Bitacora.belongsTo(User, { foreignKey: 'autorId' })
+
+Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autor'})
 
 Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
 TipoBitacora.hasMany(Bitacora, { foreignKey: 'tipoBitacoraId' })
