@@ -86,7 +86,7 @@ function mailNewUser (usuario) {
     </body>
     </html>`
 
-    mailSender(usuario.email, 'Bienvenid@ al Software de Gestión de Almacén', html)    
+    mailSender(usuario.email, 'Bienvenid@ al Software de Gestión de Almacén', html, true)    
 }
 
 

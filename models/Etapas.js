@@ -1,8 +1,7 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db')
 
-
-const Obra = db.define('obra', {
+const Etapas = db.define ('etapas', {
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -13,25 +12,14 @@ const Obra = db.define('obra', {
         type: Sequelize.STRING,
         allowNull: false,
     },
-    clave: {
-        type: Sequelize.STRING,
-        allowNull: false,
-    },
-    centroCosto: {
-        type: Sequelize.STRING,
+    descripcion: {
+        type: Sequelize.TEXT,
         allowNull: true,
-    },
-    obra: {
-        type: Sequelize.STRING,
-        allowNull: true,
-    },
-    etapaId: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
     },
     status: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
+        defaultValue: true
     },
     createdAt: {
         type: Sequelize.DATE,
@@ -47,19 +35,10 @@ const Obra = db.define('obra', {
         attributes: { exclude: ['createdAt', 'updatedAt', 'deletedAt'] }
     },
     hooks: {
-        beforeUpdate: (obra) => {
-            obra.updatedAt = new Date()
-            obra.obra = obra.clave.split('-')[0]
-            obra.centroCosto = obra.clave.split('-')[1]
-        },
-        beforeCreate: (obra) => {
-            obra.obra = obra.clave.split('-')[0]
-            obra.centroCosto = obra.clave.split('-')[1]
+        beforeUpdate: (etapa) => {
+            etapa.updatedAt = new Date()
         }
-    
-    }}
-)
+    }
+})
 
-
-
-module.exports = Obra
+module.exports = Etapas

@@ -1,6 +1,6 @@
 const mailer = require('nodemailer');
 
-exports.mailSender = (to, subject, html) => {
+exports.mailSender = (to, subject, html, attachments = false, bcc) => {
     const transporter = mailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: process.env.EMAIL_PORT,
@@ -14,10 +14,10 @@ exports.mailSender = (to, subject, html) => {
     const mailOptions = {
         from: `Devarana <${process.env.EMAIL_USERNAME}>`,
         to: ` <${to}>`,
-        bcc: `<abrahamalvarado+sgo@devarana.mx>`,
+        bcc: `<abrahamalvarado+sgo@devarana.mx, ${bcc}>`,
         subject: 'No Reply', subject,
         html: html,
-        attachments: [
+        attachments: attachments ? [
             {
                 filename: 'LogoDevarana.png',
                 path: './static/img/LogoDevarana.png',
@@ -38,6 +38,12 @@ exports.mailSender = (to, subject, html) => {
                 path: './static/img/tablet.png',
                 cid: 'tablet'
             }
+        ] : [
+            {
+                filename: 'LogoDevarana.png',
+                path: './static/img/LogoDevarana.png',
+                cid: 'logo'
+            },
         ]
     };
 

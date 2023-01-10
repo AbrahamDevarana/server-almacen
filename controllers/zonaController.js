@@ -1,9 +1,11 @@
+const { Op } = require('sequelize')
 const Zona = require('../models/Zona')
 const { validationResult } = require('express-validator')
 
 exports.getZonas = async (req, res) => {
     try {
-        const zonas = await Zona.findAll({ where: { status: 1 } }).catch(error => {
+        // where id != 0
+        const zonas = await Zona.findAll({ where: { status: 1, id: { [Op.ne]: 0 } } }).catch(error => {
             res.status(500).json({ message: 'Error al obtener las zonas', error: error.message })
         })
         if(zonas){

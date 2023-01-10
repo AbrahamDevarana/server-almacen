@@ -1,7 +1,6 @@
 const Notificaciones = require('../models/Notificaciones')
 const { validationResult } = require('express-validator')
-const { Op } = require('sequelize')
-
+const { v4: uuid } = require('uuid');
 
 exports.getNotificaciones = async (req, res) => {
 
@@ -64,4 +63,28 @@ exports.updateNotificacion = async (req, res) => {
     }   
 }
 
-
+exports.createNotification = async (almacenistasArray, titulo, mensaje, type) => {
+    try {
+        
+        Notificaciones.bulkCreate(
+            almacenistasArray.map( item => ({ 
+                titulo,
+                mensaje,
+                status: 1,
+                userId: item,
+                type,
+                uuid: uuid()
+            })
+        )).then( ( notificacion ) => {               
+                
+            return true
+        }
+        ).catch(error => {
+            console.log(error)
+            return false
+        })
+    } catch (error) {
+        console.log(error.message);
+        return error.message
+    }
+}

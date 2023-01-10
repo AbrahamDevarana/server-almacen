@@ -6,7 +6,6 @@ const app = express()
 const dbConfig = require('./config/db')
 const cookieSession = require('express-session');
 const router = require('./routes')
-const sockets = require('./services/socketIo')
 require('./utils/cronSchedule')
 const fs = require('fs')
 
@@ -83,7 +82,7 @@ const server = app.listen(PORT, HOST, () => {
     console.log(server.address())
 });
 
-sockets.connect(server)
+// sockets.connect(server)
 
 
 

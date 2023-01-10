@@ -1,8 +1,9 @@
 const router = require('express').Router()
 const bitacoraController = require('../../controllers/bitacoraController')
+const tiposBitacoraController = require('../../controllers/tiposBitacoraController')
 
 
-router.get('/tipoBitacoras', bitacoraController.getTipoBitacoras)
+router.get('/tipoBitacoras', tiposBitacoraController.getTipoBitacoras)
 
 router.get('/', bitacoraController.getBitacoras)
 router.get('/:id', bitacoraController.getBitacora)

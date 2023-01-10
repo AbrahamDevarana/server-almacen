@@ -8,37 +8,49 @@ const Bitacora = db.define('bitacora', {
         autoIncrement: true,
         unique: true
     },
+    uid:{
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+        defaultValue: Sequelize.UUIDV4        
+    },
     titulo: {
         type: Sequelize.STRING,
         allowNull: false
     },
-    informacionAdicional: {
+    descripcion: {
         type: Sequelize.TEXT,
         allowNull: true
     },
-    obraId: {
+    etapaId:{
         type: Sequelize.INTEGER,
         allowNull: false,
+    },
+    obraId: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0,
     },
     nivelId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        defaultValue: 0,
     },
     zonaId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        defaultValue: 0,
     },
-    actividadId: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
+    actividad: {
+        type: Sequelize.TEXT,
     },
-    personalId: {
+    externoId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        defaultValue: 0,
     },
     autorId: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+    },
+    esInterno:{
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
     },
     tipoBitacoraId: {
         type: Sequelize.INTEGER,

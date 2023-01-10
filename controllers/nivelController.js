@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const Actividad = require('../models/Actividad')
 const Nivel = require('../models/Nivel')
 const Zona = require('../models/Zona')
@@ -6,7 +7,7 @@ const { validationResult } = require('express-validator')
 
 exports.getNiveles = async (req, res) => {
     try {
-        const niveles = await Nivel.findAll({ include: [{ model:Actividad, where: { status: 1}}, { model: Zona, where: { status:1 }} ], where: { status: 1 }}).catch(error => {
+        const niveles = await Nivel.findAll({ include: [{ model: Actividad, where: { status: 1 }}, { model: Zona, where: { status: 1 }} ], where: { status: 1 }}).catch(error => {
             res.status(500).json({ message: 'Error al obtener los niveles', error: error.message })
         })
         if(niveles){

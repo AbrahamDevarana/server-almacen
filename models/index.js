@@ -20,6 +20,7 @@ const TipoBitacora = require('./TipoBitacora')
 const GaleriaBitacora = require('./GaleriaBitacora')
 const ComentariosBitacora = require('./ComentarioBitacora')
 const GaleriaComentario = require('./GaleriaComentario')
+const Etapas = require('./Etapas')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -28,6 +29,11 @@ const GaleriaComentario = require('./GaleriaComentario')
 // Relaciones many to many entre Centro Costo y Niveles 
 Obra.belongsToMany(Nivel, {  through: 'pivot_niveles_obras', foreignKey: 'obraId' })
 Nivel.belongsToMany(Obra, {  through: 'pivot_niveles_obras', foreignKey: 'nivelesId'  });
+
+
+// Relaciones one to one entre Etapas y Obras
+Etapas.hasMany(Obra, { foreignKey: 'etapaId' })
+Obra.belongsTo(Etapas, { foreignKey: 'etapaId' })
 
 // Relaciones many to many entre Nivel y Zona
 Nivel.belongsToMany(Zona, {  through: 'pivot_niveles_zonas', foreignKey: 'nivelesId'  });
@@ -80,25 +86,24 @@ DetalleSalida.belongsTo( Prestamos, {foreignKey: 'prestamoId'} )
 
 
 // Bitacora
+
+
+Bitacora.belongsTo(Etapas, { foreignKey: 'etapaId' })
+Bitacora.belongsTo(Obra, { foreignKey: 'obraId' })
+Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId' })
+Bitacora.belongsTo(Zona, { foreignKey: 'zonaId' })
+Bitacora.belongsTo(TipoBitacora, { foreignKey: 'tipoBitacoraId' })
+
 Bitacora.belongsToMany(User, {  through: 'pivot_bitacora_users', foreignKey: 'bitacoraId'  });
-User.belongsToMany(Bitacora, {  through: 'pivot_bitacora_users', foreignKey: 'userId', as: 'participantes'  });
 
 Bitacora.belongsToMany(GaleriaBitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'bitacoraId'  });
 GaleriaBitacora.belongsToMany(Bitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'galeriaId'  });
 
-Bitacora.belongsTo(TipoBitacora, { foreignKey: 'tipoBitacoraId' })
-Bitacora.belongsTo(Obra, { foreignKey: 'obraId' })
-Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId' })
-Bitacora.belongsTo(Zona, { foreignKey: 'zonaId' })
-Bitacora.belongsTo(Actividad, { foreignKey: 'actividadId' })
-Bitacora.belongsTo(Personal, { foreignKey: 'personalId' })
-
-Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autor'})
+Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorInt' })
+Bitacora.belongsTo(Personal, { foreignKey: 'autorId', as: 'autorExt' })
 
 Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
-TipoBitacora.hasMany(Bitacora, { foreignKey: 'tipoBitacoraId' })
-
-ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' })
+ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' } )
 ComentariosBitacora.hasMany(GaleriaComentario, { foreignKey: 'comentarioId' })
 
 

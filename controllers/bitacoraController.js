@@ -9,23 +9,16 @@ const GaleriaComentario = require('../models/GaleriaComentario')
 const pdf = require('html-pdf');
 const fs = require('fs');
 const path = require('path');
-
 const { getPagination, getPagingData } = require('../utils/paginacion')
-const { Op } = require('sequelize')
+const { Op, Sequelize } = require('sequelize')
+const { reporteBitacora } = require('../email/Notificaciones')
 tinify.key = process.env.TINY_IMG_API_KEY;
-
 // moment locale mx
 moment.locale('es-mx')
 
 exports.getBitacoras = async (req, res) => {
-
-
-    const { userId, obraId, nivelId, zonaId, actividadId, personalId, tipoBitacoraId, fechaInicio, fechaFin, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
-
-
+    const { userId, obraId, nivelId, zonaId, actividad, fechaInicio, fechaFin, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { limit, offset } = getPagination(page, size);
-
-
     const obraWhere = [
         obraId ? {"$obra.id$" : obraId } : {},
         // busqueda ? {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
@@ -39,16 +32,6 @@ exports.getBitacoras = async (req, res) => {
     const zonaWhere = [
         zonaId ? {"$zona.id$" : zonaId } : {},
         // busqueda ? {"$zona.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
-    ]
-
-    const actividadWhere = [
-        actividadId ? {"$actividade.id$" : actividadId } : {},
-        // busqueda ? {"$actividade.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
-    ]
-
-    const personalWhere = [
-        personalId ? {"$personal.id$" : personalId } : {},
-        // busqueda ? {"$personal.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
     ]
 
     const userWhere = [
@@ -69,7 +52,6 @@ exports.getBitacoras = async (req, res) => {
                 {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$nivele.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$zona.nombre$" : {[Op.like]: `%${busqueda}%`}},
-                {"$actividade.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$personal.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$autor.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$autor.apellidoPaterno$" : {[Op.like]: `%${busqueda}%`}},
@@ -91,18 +73,28 @@ exports.getBitacoras = async (req, res) => {
                 { model: GaleriaBitacora, attributes: ['url', 'type'] },
                 { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere },
                 { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere},
-                { model: Zona, attributes: ['nombre'], where: zonaWhere},
-                { model: Actividad, attributes: ['nombre'], where: actividadWhere},
-                { model: Personal, attributes: ['nombre'], where: personalWhere},
-                { model: User, attributes: ['nombre', 'apellidoPaterno'], as: 'autor', where: userWhere },
-                { model: User, attributes: ['nombre', 'apellidoPaterno'], where: userWhere },
+                { model: Zona, attributes: ['nombre'], where: zonaWhere},       
+                {
+                    model: User,
+                    attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                    as: 'autorInt',
+                    required: false,
+                    where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
+                }, 
+                {
+                    model: Personal,
+                    attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                    as: 'autorExt',
+                    required: false,
+                    where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
+                }, 
             ],
             order: [
                 ['id', ordenSolicitado]
             ],
             // limit,
-            distinct: true,
             // offset,
+            distinct: true,
             where: {[Op.and] : [fechaWhere, busquedaWhere]},
             logging: console.log
 
@@ -124,24 +116,34 @@ exports.getBitacora = async (req, res) => {
                 include: [
                     { model: TipoBitacora, attributes: ['id', 'nombre'] },
                     { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
-                    { model: Obra, attributes: ['id', 'nombre'] },
-                    { model: Nivel, attributes: ['id', 'nombre'] },
-                    { model: Zona, attributes: ['id', 'nombre'] },
-                    { model: Actividad, attributes: ['id', 'nombre'] },
-                    { model: Personal, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] },
+                    //  where id != 0
+                    { model: Obra, attributes: ['id', 'nombre']},
+                    { model: Nivel, attributes: ['id', 'nombre']},
+                    { model: Zona, attributes: ['id', 'nombre']},
                     { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ] },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
-                        { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ] },
+                        { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
                         { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
                     ] },
                     {
-                        model: User, as: 'autor' , attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ] 
-                    }
+                        model: User,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'autorInt',
+                        required: false,
+                        where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
+                    }, 
+                    {
+                        model: Personal,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'autorExt',
+                        required: false,
+                        where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
+                    }, 
                 ]
             })
         res.status(200).json({bitacora})
     } catch (error) {
-        console.loge(error);
+        console.log(error);
         res.status(500).json({ message: "Error al obtener la bitacora", error})
     }
 }
@@ -157,7 +159,7 @@ exports.createBitacora = async (req, res) => {
 
         //  obtener todos los participantesId del objeto fields
         const participantesId = Object.keys(fields).filter( (key) => key.includes('participantesId') )
-        const participantes = participantesId.map( (key) => fields[key] )
+        const participantes = participantesId.map( (key) => Number(fields[key]) )
        
         if (err) return res.status(500).json({ message: "Error al subir la bitacora", err });
 
@@ -165,17 +167,24 @@ exports.createBitacora = async (req, res) => {
 
         try {
 
+            const tipoBitacora = await TipoBitacora.findOne({ where: { id: fields.tipoBitacoraId } })
+
             await Bitacora.create({
                 titulo: fields.titulo,
-                informacionAdicional: fields.informacionAdicional,
-                fecha: moment(new Date(fields.fecha)).format('YYYY-MM-DD HH:mm:ss'),
-                tipoBitacoraId: fields.tipoBitacoraId,
+                descripcion: fields.descripcion,
+                
+                etapaId: fields.etapaId,
                 obraId: fields.obraId,
                 nivelId: fields.nivelId,
                 zonaId: fields.zonaId,
-                actividadId: fields.actividadId,
-                personalId: fields.personalId,
-                autorId: req.user.id
+                externoId: fields.externoId,
+                tipoBitacoraId: fields.tipoBitacoraId,
+                autorId: req.user.id,
+
+                actividad: fields.actividad,
+                esInterno: fields.esInterno,                
+                fecha: moment(new Date(fields.fecha)).format('YYYY-MM-DD HH:mm:ss'),
+
             }).then( async (bitacora) => {
                 await uploadDynamicFiles(galeria, 'bitacoras').then( async (result) => {
                     await result.forEach( async (item) => {
@@ -190,9 +199,22 @@ exports.createBitacora = async (req, res) => {
                         })
                     })     
 
+                    
                     await bitacora.setUsers(participantes)
+                    
+                    if( participantes.length > 0 ){
+                        await User.findAll({
+                            where: { id: participantes }
+                        }).then( async (users) => {                            
+                            await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users)
+                        }).catch( (error) => {
+                            console.log(error);
+                            res.status(500).json({ message: "Error al enviar reporte bitacora", error })
+                        })
+                    }
+                    
+                    res.status(200).json({ message: "Bitacora creada correctamente", bitacora })   
 
-                    res.status(200).json({ message: "Bitacora creada correctamente", bitacora })                  
                 }).catch( (error) => {
                     console.log(error);
                     res.status(500).json({ message: "Error al subir archivos", error })
@@ -229,7 +251,7 @@ exports.createComentario = async (req, res) => {
             }).then( async (comentario) => {
                 
                 
-                await uploadDynamicFiles(galeria, 'comentarios').then( async (result) => {
+                await uploadDynamicFiles(galeria, 'bitacoras/comentarios').then( async (result) => {
                     await GaleriaComentario.bulkCreate(result.map( item => {
                         return { url:item.url, comentarioId: comentario.id, type: item.type }
                     }))
@@ -253,9 +275,7 @@ exports.createComentario = async (req, res) => {
     })
 }
 
-
-
-
+// Generar reporte de bitacoras
 exports.generateReport = async (req, res) => {
     const { titulo, descripcion, comentarios, imagenes, selectedOption = [] } = req.body
     
@@ -293,46 +313,6 @@ exports.generateReport = async (req, res) => {
 }
 
 
-//  Tipo de bitacora
-
-exports.getTipoBitacoras = async (req, res) => {
-    try {
-        const tiposBitacora = await TipoBitacora.findAll()
-        res.status(200).json({ message: "Tipo de bitacoras", tiposBitacora })
-    } catch (error) {
-        res.status(500).json({ message: "Error al obtener los tipos de bitacoras", error })
-    }
-}
-
-exports.createTipoBitacora = async (req, res) => {
-    try {
-        const { nombre } = req.body
-        const tiposBitacora = await TipoBitacora.create({ nombre })
-        res.status(200).json({ message: "Tipo de bitacora creado", tiposBitacora })
-    } catch (error) {
-        res.status(500).json({ message: "Error al crear el tipo de bitacora", error })
-    }
-}
-
-exports.updateTipoBitacora = async (req, res) => {
-    try {
-        const { id, nombre } = req.body
-        const tiposBitacora = await TipoBitacora.update({ nombre }, { where: { id } })
-        res.status(200).json({ message: "Tipo de bitacora actualizado", tiposBitacora })
-    } catch (error) {
-        res.status(500).json({ message: "Error al actualizar el tipo de bitacora", error })
-    }
-}
-
-exports.deleteTipoBitacora = async (req, res) => {
-    try {
-        const { id } = req.body
-        const tiposBitacora = await TipoBitacora.destroy({ where: { id } })
-        res.status(200).json({ message: "Tipo de bitacora eliminado", tiposBitacora })
-    } catch (error) {
-        res.status(500).json({ message: "Error al eliminar el tipo de bitacora", error })
-    }
-}
 
 
 // Funciones
