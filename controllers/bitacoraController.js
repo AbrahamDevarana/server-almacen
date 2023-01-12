@@ -12,12 +12,13 @@ const path = require('path');
 const { getPagination, getPagingData } = require('../utils/paginacion')
 const { Op, Sequelize } = require('sequelize')
 const { reporteBitacora } = require('../email/Notificaciones')
+const Etapas = require('../models/Etapas')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
 
 exports.getBitacoras = async (req, res) => {
-    const { userId, obraId, nivelId, zonaId, actividad, fechaInicio, fechaFin, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
+    const { userId, obraId, nivelId, zonaId, actividad, fechaInicio, fechaFin, etapaId, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { limit, offset } = getPagination(page, size);
     const obraWhere = [
         obraId ? {"$obra.id$" : obraId } : {},
@@ -39,6 +40,11 @@ exports.getBitacoras = async (req, res) => {
         // busqueda ? {"$personal.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
     ]
 
+    const etapaWhere = [
+        etapaId ? {"$etapa.id$" : etapaId } : {},
+        // busqueda ? {"$actividad.etapa$" : {[Op.like]: `%${busqueda}%`}} : {}
+    ]
+
     // const tipoBitacoraWhere = [
     //     tipoBitacoraId ? {"$tipo_bitacora.id$" : tipoBitacoraId } : {},
     //     busqueda ? {"$tipo_bitacora.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
@@ -52,9 +58,11 @@ exports.getBitacoras = async (req, res) => {
                 {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$nivele.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$zona.nombre$" : {[Op.like]: `%${busqueda}%`}},
-                {"$personal.nombre$" : {[Op.like]: `%${busqueda}%`}},
-                {"$autor.nombre$" : {[Op.like]: `%${busqueda}%`}},
-                {"$autor.apellidoPaterno$" : {[Op.like]: `%${busqueda}%`}},
+                {"$autorExt.nombre$" : {[Op.like]: `%${busqueda}%`}},
+                {"$autorInt.nombre$" : {[Op.like]: `%${busqueda}%`}},
+                {"$autorExt.apellidoPaterno$" : {[Op.like]: `%${busqueda}%`}},
+                {"$autorInt.apellidoPaterno$" : {[Op.like]: `%${busqueda}%`}},
+                {"actividad" : {[Op.like]: `%${busqueda}%`}},
             ]
         } : {}
 
@@ -73,7 +81,8 @@ exports.getBitacoras = async (req, res) => {
                 { model: GaleriaBitacora, attributes: ['url', 'type'] },
                 { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere },
                 { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere},
-                { model: Zona, attributes: ['nombre'], where: zonaWhere},       
+                { model: Zona, attributes: ['nombre'], where: zonaWhere},
+                { model: Etapas, attributes: ['nombre'], where: etapaWhere},
                 {
                     model: User,
                     attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],

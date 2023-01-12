@@ -3,6 +3,8 @@ const Users = require('../models/Users')
 const { validationResult } = require('express-validator')
 const { mailNewUser } = require('../email/Users')
 const Permisos = require('../models/Permisos')
+const bcrypt = require('bcrypt')
+const { Op } = require('sequelize')
 
 
 exports.getUser = async (req, res) => {
@@ -24,17 +26,32 @@ exports.getUser = async (req, res) => {
 }
 
 exports.getUsers = async (req, res) => {
+
+    const { search } = req.query
+    const where = search ? 
+    {
+        [Op.or]: [
+            { nombre: { [Op.like]: `%${search}%` } },
+            { apellidoPaterno: { [Op.like]: `%${search}%` } },
+            { apellidoMaterno: { [Op.like]: `%${search}%` } },
+            { email: { [Op.like]: `%${search}%` } },
+            { telefono: { [Op.like]: `%${search}%` } },
+            { puesto: { [Op.like]: `%${search}%` } },
+            { '$role.nombre$': { [Op.like]: `%${search}%` } },
+        ]
+    }
+    : 
+    {}
+    
+    where.status = true
+
     try {
-        const usuarios = await Users.findAll({ where: { status: true }, 
-            include: { model: Role, include: Permisos }
+        await Users.findAll( { where, include: { model: Role, include: Permisos } } ).then(usuarios => {
+            res.status(200).json({ usuarios })
         }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los usuarios', error: error.message })
         })
-        if(usuarios){
-            res.status(200).json({ usuarios })
-        }else{
-            res.status(404).json({ message: 'No hay usuarios registrados' })
-        }
+       
     
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
@@ -48,7 +65,11 @@ exports.createUser = async (req, res) => {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
     }
 
-    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto } = req.body
+    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, password, esInterno} = req.body
+
+    const dummyPassword = 'notPassword'
+    const safePassword = password ? bcrypt.hashSync(password, 10) : bcrypt.hashSync(dummyPassword, 10)
+    
 
     try {
         const existsUser = await Users.findOne({ where: { email } }).catch(error => {
@@ -63,10 +84,11 @@ exports.createUser = async (req, res) => {
                 apellidoPaterno,
                 apellidoMaterno,
                 email,
-                password: '123456',
+                password: safePassword,
                 telefono: telefono ?? '',
                 tipoUsuario_id,
-                puesto
+                puesto,
+                esInterno
             }).catch(error => {
                 res.status(500).json({ message: 'Error al crear el usuario', error: error.message })
             })
@@ -94,9 +116,12 @@ exports.updateUser = async (req, res) => {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
     }
 
-    const { id } = req.params
-    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, status } = req.body
 
+    
+    const { id } = req.params
+    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, status, esInterno, password } = req.body
+    
+    const safePassword = password ? bcrypt.hashSync(password, 10) : null
     try {
 
         const usuario = await Users.findOne({ where: { id }, include: Role }).catch(error => {
@@ -112,6 +137,7 @@ exports.updateUser = async (req, res) => {
             usuario.tipoUsuario_id = tipoUsuario_id ?? usuario.tipoUsuario_id
             usuario.puesto = puesto ?? usuario.puesto
             usuario.status = status ?? usuario.status
+            usuario.password = safePassword ?? usuario.password
 
             await usuario.save().catch(error => {
                 res.status(500).json({ message: 'Error al actualizar el usuario', error: error.message })

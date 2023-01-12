@@ -1,6 +1,7 @@
 const Role = require('../models/Role')
 const { validationResult } = require('express-validator')
 const Permisos = require('../models/Permisos')
+const { Op } = require('sequelize')
 
 
 exports.getRole = async (req, res) => {
@@ -19,15 +20,26 @@ exports.getRole = async (req, res) => {
 
 exports.getRoles = async (req, res) => {
 
+
+    const { search } = req.query
+    const where = search ? 
+    {
+        [Op.or]: [
+            { nombre: { [Op.like]: `%${search}%` } },
+            { descripcion: { [Op.like]: `%${search}%` } },
+        ]
+    }
+    : 
+    {}
+    
+    where.status = true
+
     try {
-        const roles = await Role.findAll({ include:Permisos, where: { status: 1 }},).catch(error => {
+        await Role.findAll({ include: Permisos, where }).then(roles => {
+            res.status(200).json({ roles })
+        }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los roles', error: error.message })
         })
-        if(roles){
-            res.status(200).json({ roles })
-        }else {
-            res.status(404).json({ message: 'No hay roles registrados' })
-        }
     } catch (error) {
         res.status(500).json({ message: 'Error del servidor', error: error.message })
     }

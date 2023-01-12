@@ -59,6 +59,14 @@ const Users = db.define('users', {
         type: Sequelize.BOOLEAN,
         defaultValue: 0
     },
+    esInterno:{
+        type: Sequelize.BOOLEAN,
+        defaultValue: 1
+    },
+    lastLogin: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
@@ -73,9 +81,7 @@ const Users = db.define('users', {
         beforeUpdate: (usuario) => {
             usuario.updatedAt = new Date()
         },
-        beforeCreate: (usuario) => {
-            usuario.password = bcrypt.hashSync(usuario.password, bcrypt.genSaltSync(10))
-        }
+
     },
     defaultScope: {
         attributes:{

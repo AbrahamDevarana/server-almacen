@@ -1,5 +1,6 @@
 const Users = require('../models/Users')
 require('dotenv').config()
+const bcrypt = require('bcrypt')
 
 const passport = require('passport')
 const GoogleStrategy = require('passport-google-oauth20').Strategy
@@ -22,7 +23,8 @@ const googleLogin = new GoogleStrategy({
             await user.update({
                 google_id: profile.id,
                 picture: profile.photos[0].value,
-                password: 'Devarana#1234*'
+                password: bcrypt.hashSync('DevaranA-#1234*', 10),
+                lastLogin: new Date()
             })
             await user.save()
             return cb(null, user.dataValues)

@@ -32,6 +32,8 @@ router.get(
     }
 )
 
+router.post('/login', authController.loginWithPassword)
+
 
 router.post('/refresh-access-token', authController.refreshAccessToken)
 module.exports = router
