@@ -13,6 +13,7 @@ const { getPagination, getPagingData } = require('../utils/paginacion')
 const { Op, Sequelize } = require('sequelize')
 const { reporteBitacora } = require('../email/Notificaciones')
 const Etapas = require('../models/Etapas')
+const PivotBitacoraUser = require('../models/PivotBitacoraUser')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
@@ -118,10 +119,10 @@ exports.getBitacoras = async (req, res) => {
 }
 
 exports.getBitacora = async (req, res) => {
+
     try {
-        const bitacora = await
-            Bitacora.findOne({
-                where: { id: req.params.id },
+        await Bitacora.findOne({
+                where: { uid: req.params.uid },
                 include: [
                     { model: TipoBitacora, attributes: ['id', 'nombre'] },
                     { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
@@ -149,11 +150,19 @@ exports.getBitacora = async (req, res) => {
                         where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
                     }, 
                 ]
+            }).then( bitacora => {
+                if(!bitacora) {
+                    res.status(404).json({ message: "No se encontró la bitácora" })
+                } else {
+                    res.status(200).json({ bitacora })
+                }
+            }).catch( error => {
+                console.log(error);
+                res.status(500).json({ message: "Error al obtener bitácora", error})
             })
-        res.status(200).json({bitacora})
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Error al obtener la bitacora", error})
+        res.status(500).json({ message: "Error al obtener la bitácora", error})
     }
 }
 
@@ -288,29 +297,32 @@ exports.createComentario = async (req, res) => {
 exports.generateReport = async (req, res) => {
     const { titulo, descripcion, comentarios, imagenes, selectedOption = [] } = req.body
     
-    
-
     try {
 
         await Bitacora.findAll({
-            where: { id: selectedOption },
+            where: { uid: selectedOption },
             include: [
-                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'], as: 'autor' },
+                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'], as: 'autorInt' },
+                { model: Personal, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'], as: 'autorExt'},
                 { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
-                { model: ComentariosBitacora, attributes: ['id', 'comentario', 'createdAt'], include: [{ model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] }, { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }] },
+                { model: ComentariosBitacora, attributes: ['id', 'comentario', 'createdAt'], 
+                    include: [
+                        { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] }, 
+                        { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
+                    ]
+                },
                 { model: TipoBitacora, attributes: ['id', 'nombre'] },
                 { model: Obra, attributes: ['id', 'nombre'] },
                 { model: Nivel, attributes: ['id', 'nombre'] },
-                { model: Zona, attributes: ['id', 'nombre'] },
-                { model: Actividad, attributes: ['id', 'nombre'] },
-                { model: Personal, attributes: ['id', 'nombre'] },
-                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ]},
+                { model: Zona, attributes: ['id', 'nombre'], as: 'zona'},
+
                 
             ]
         }).then( async (bitacoras) => {
-            generatePdf(res, bitacoras, titulo, descripcion, comentarios, imagenes)
+            generatePdf(res, bitacoras,  titulo, descripcion, comentarios, imagenes)
           
         })
+        
         
     } catch (error) {
         console.log(error);
@@ -319,6 +331,54 @@ exports.generateReport = async (req, res) => {
 
 
 
+}
+
+exports.updateBitacoraView = async (req, res) => {
+    const { uid } = req.params
+    const { id } = req.user
+
+    try {
+        await Bitacora.findOne({
+            where: { uid },
+            include: [
+                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] }
+            ]
+        }).then( async (bitacora) => {
+            const participantes = bitacora.users.map( item => item.id )
+            if ( participantes.includes(id) ) {
+                await PivotBitacoraUser.update({ visited: true }, { where: { bitacoraId: bitacora.id, userId: id } })
+            }
+        })
+        res.status(200).json({ message: "Bitacora actualizada correctamente" , id})
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error al actualizar la bitacora", error })
+    }    
+}
+
+exports.updateBitacoraConfirm = async (req, res) => {
+    const { uid } = req.params
+    const { id } = req.user
+
+    try {
+        await Bitacora.findOne({
+            where: { uid },
+            include: [
+                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] }
+            ]
+        }).then( async (bitacora) => {
+            const participantes = bitacora.users.map( item => item.id )
+            if ( participantes.includes(id) ) {
+                await PivotBitacoraUser.update({ confirmed: true }, { where: { bitacoraId: bitacora.id, userId: id } })
+            }
+        })
+        res.status(200).json({ message: "Bitacora confirmada correctamente" , id})
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error al actualizar la bitacora", error })
+    }
 }
 
 
@@ -377,10 +437,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
     const logoBase64 = logo.toString('base64')
 
     // print first bitacoras
-    const bitacora = bitacoras[0]
-    console.log(bitacora.comentarios_bitacoras);
-
-
+    const bitacora = bitacoras[0].dataValues
     const content = `
     <!DOCTYPE html>
     <html lang="en">
@@ -409,16 +466,17 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
 
             <div>
                 <h1 style="font-size: 20px;">${titulo}</h1>
-                ${descripcion? `<p style="font-size: 12px;">${descripcion}</p>` : ''}
+                ${descripcion ? `<p style="font-size: 12px;">${descripcion}</p>` : ''}
             </div>
 
             <div>
                 <h2 style="font-size: 16px;">Fecha: ${moment(bitacora.fecha).format('LLL') } </h2>
             </div>
             <div>
-                <h3 style="font-size: 14px;">${bitacora.obra.nombre} - ${bitacora.nivele.nombre } - ${bitacora.actividade.nombre } - ${bitacora.zona.nombre} </h3> 
+            
+            <h3 style="font-size: 14px;">${ bitacora.obraId === 0 ? '' : `${bitacora.obra.dataValues.nombre} - ${ bitacora.nivelId === 0 ? '' : `${bitacora.nivel.dataValues.nombre} - ` } ${bitacora.zonaId === 0 ? '' : `${bitacora.zona.dataValues.nombre}` }` }</h3>    
                 <p>
-                    ${bitacora.informacionAdicional}
+                    ${bitacora.descripcion}
                 </p>
             </div>
 
@@ -427,28 +485,27 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                     bitacora.comentarios_bitacoras.map( (comentario) => {
                         return `
                         <div>
-                            <p style="font-size: 12px;">Autor: ${comentario.user.nombre} ${comentario.user.apellidoPaterno } </p>
-                            <p style="font-size: 12px;">${comentario.comentario}</p>
+                            <p style="font-size: 12px;">Autor: ${comentario.dataValues.user.nombre} ${comentario.dataValues.user.apellidoPaterno } </p>
+                            <p style="font-size: 12px;">${comentario.dataValues.comentario}</p>
 
                             <p style="font-size: 12px;">Fecha: ${moment(bitacora.fecha).format('LLL') } </p>
                         </div>
-                            <div style="display:flex; flex-direction:row;">
-                                ${ imagenes ?
-                                    comentario.galeria_comentarios.map( (imagen) => {
-                                        // https://spaces.erp-devarana.mx/${imagen.url} add images from aws
-
-                                        return `
-                                            <img src="https://spaces.erp-devarana.mx/${imagen.url}" style="50px; height: 50px; padding:0 25%" />
-                                        `
-                                    }).join('') : ''
-                                }
-                            <div>
+                        <div style="display:flex; flex-direction:row; width:100%;">
+                            ${ imagenes ?
+                                comentario.galeria_comentarios.map( (imagen) => {
+                                    return `
+                                        <a href="https://spaces.erp-devarana.mx/${imagen.dataValues.url}" target="_blank">
+                                            <img src="https://spaces.erp-devarana.mx/${imagen.dataValues.url}" style="width:50px; height: 50px; padding:0 25%" />
+                                        </a>
+                                    `
+                                }).join('') : ''
+                            }
+                        <div>
                         `
                     }).join('') : ''
                 }
             </div>
-            
-                <p style="font-size: 12px;">${bitacora.autor.nombre} ${bitacora.autor.apellidoPaterno } </p>
+                <p style="font-size: 12px;">${bitacora.autorInt ? bitacora.autorInt.nombre : bitacora.autorExt.nombre } ${bitacora.autorInt ? bitacora.autorInt.apellidoPaterno : bitacora.autorExt.apellidoPaterno } </p>
             </div>
 
     </body>

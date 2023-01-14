@@ -21,6 +21,7 @@ const GaleriaBitacora = require('./GaleriaBitacora')
 const ComentariosBitacora = require('./ComentarioBitacora')
 const GaleriaComentario = require('./GaleriaComentario')
 const Etapas = require('./Etapas')
+const PivotBitacoraUser = require('./PivotBitacoraUser')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -94,7 +95,11 @@ Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId' })
 Bitacora.belongsTo(Zona, { foreignKey: 'zonaId' })
 Bitacora.belongsTo(TipoBitacora, { foreignKey: 'tipoBitacoraId' })
 
-Bitacora.belongsToMany(User, {  through: 'pivot_bitacora_users', foreignKey: 'bitacoraId'  });
+Bitacora.belongsToMany(User, {
+    through: PivotBitacoraUser,
+    foreignKey: 'bitacoraId',
+    otherKey: 'userId',
+});
 
 Bitacora.belongsToMany(GaleriaBitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'bitacoraId'  });
 GaleriaBitacora.belongsToMany(Bitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'galeriaId'  });

@@ -60,6 +60,10 @@ const Bitacora = db.define('bitacora', {
         type: Sequelize.DATE,
         allowNull: false,
     },
+    status: {
+        type: Sequelize.INTEGER,
+        defaultValue: 0
+    },
     createdAt: {
         type: Sequelize.DATE,
         defaultValue: Sequelize.NOW
