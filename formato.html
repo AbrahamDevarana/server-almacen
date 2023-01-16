@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;700&family=Playfair+Display&display=swap" rel="stylesheet">
+            <style>
+                p, li, span {
+                    color: #646375;
+                    font-family: 'Mulish', sans-serif;
+                    
+                }
+                h1, h2, h3, h4, h5, h6 {
+                    font-family: 'Playfair Display', serif;
+                    color: #56739B;
+                }
+            </style>
+        </head>
+            
+        <body>
+            <table style="width: 100%; font-size: 8px; border-bottom: 1px solid rgba(100, 99, 117, .3);";>
+                <tr>
+                    <td style="width:10%">
+                        <img src="data:image/png;base64,${logoBase64}" style="width: 50px; height: 50px; padding:0 25%" />
+                    </td>
+                    <td style="width: 80%;">
+                        <h1 style="font-size: 24px;color:#56739B;text-align: center;">
+                            ${titulo}
+                        </h1>
+                    </td>
+                    <td style="width: 10%;">
+                    </td>
+                </tr>
+            </table>
+            
+            <div style="padding: 0 0 10px; ">
+                <p style="font-size: 14px;">
+                    ${descripcion}
+                </p>
+            </div>
+
+            ${
+                bitacoras.map( (values) => {
+                
+                const bitacora = values.dataValues
+                
+                return (` 
+                
+                <div style="padding: 0 0 25px; ">
+
+                <table style="background-color: #56739B; width: 100%;">
+                    <td>
+                        <p style="color: white; font-size: 16spx; font-weight: 600; padding: 0px 10px;"> ${bitacora.titulo} </p>
+                    </td>
+                    <td>
+                        <p style="color: white; font-size: 16spx; font-weight: 600; margin-left: auto; padding: 0 20px; text-align:right;">Folio: RV-${bitacora.id}</p>                
+                    </td>
+                </table>
+                <div style="padding: 0px 10px;">
+                    <table style="width: 100%;">
+                        <td>
+                            <p style="font-size: 12px;"><span style="font-weight: 700;">Autor:</span>  
+                                ${
+                                    bitacora.autorInt? bitacora.autorInt.dataValues.nombre + ' ' + bitacora.autorInt.dataValues.apellidoPaterno : bitacora.autorExt.dataValues.nombre + ' ' + bitacora.autorExt.dataValues.apellidoPaterno
+                                }
+                            </p>
+                        </td>
+                        <td style="text-align: right;">
+                            <p style="font-size: 12px;font-weight: 700;text-align: right;">
+                                Fecha:  
+                                <span style="font-weight: 400;">
+                                    ${ moment(bitacora.fecha).format('LLL') }
+                                </span>
+                            </p>
+                        </td>
+                    </table>
+                    <h2 style="font-size: 18px;color:#56739B;">Descripción</h2>
+                    <p style="font-size: 12px;">
+                        ${bitacora.descripcion}
+                    </p>
+    
+                    <table style="width: 100%;">
+                            <tr> <h2 style="font-size: 16px; color: #56739B;">Información Especifica</h2> </tr>
+                            <tr> ${ bitacora.etapaId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Etapa:</span> ${ bitacora.etapa.dataValues.nombre } </p>` : '' } </tr>
+                            <tr> ${ bitacora.obraId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Obra:</span> ${ bitacora.obra.dataValues.nombre } </p> ` : '' } </tr>
+                            <tr> ${ bitacora.nivelId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Nivel:</span> ${ bitacora.nivele.dataValues.nombre } </p> ` : '' } </tr>
+                            <tr> ${ bitacora.zonaId !== 0 ? ` <p style="font-size: 12px;"><span style="font-weight: 700;">Zona:</span> ${ bitacora.zona.dataValues.nombre } </p> ` : '' } </tr>
+                            <tr> ${ bitacora.actividad ? ` <p style="font-size: 12px;"><span style="font-weight: 700;">Actividad:</span> ${ bitacora.actividad } </p> ` : '' } </tr>
+                    </table>
+                    <div style="width: 100%;">
+                    ${
+                        bitacora.participantes.length > 0 ?
+                        ` <h2 style="font-size: 16px; color: #56739B;">Participantes</h2>
+                            ${
+                                bitacora.participantes.map( (participante) => {
+                                    return `<p style="font-size: 12px; width:23%; display:inline-block; margin: 0px 2px "> - ${ participante.dataValues.nombre } ${ participante.dataValues.apellidoPaterno } </p>`
+                                }).join('')
+                            }
+                        </div> `
+                    : ''}
+                    
+                    ${
+                        imagenes ? `
+                            <h2 style="font-size: 16px; color: #56739B;">Evidencia</h2>
+                            <div style="width:100%">
+                                ${
+                                    bitacora.galeria_bitacoras.map( (imagen) => {
+                                        return `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" target="_blank">
+                                                    <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" style="width:100px; height: 100px; padding: 10px 10px;" />
+                                                </a>`
+                                    }).join('')
+                                }
+                            </div>
+                        `: ''
+                    }
+                </div>
+                
+            
+                
+    
+                ${ comentarios && bitacora.comentarios_bitacoras.length > 0 ? `
+                    <hr style="border-color: rgba(86, 115, 155, .3); margin: 40px 0; border-bottom: 0;">
+                    <div style="padding-bottom: 10px;">
+                        <div style="margin-left: 20px; padding-left: 15px; border-left: 1px solid rgba(100, 99, 117, .3);">
+                            <h2 style="font-size: 18px;color: #56739B;">Comentarios ( ${ bitacora.comentarios_bitacoras.length } )</h2>
+                            ${
+                                bitacora.comentarios_bitacoras.map( (comentario) => {
+                                    return `<div>
+                                                <p style="font-size: 12px;font-weight: 700;">
+                                                    Autor:
+                                                    <span style="font-weight: 400;">
+                                                        ${  comentario.user.nombre + ' ' + comentario.user.apellidoPaterno }
+                                                    </span>
+                                                </p>
+                                                <p style="font-size: 12px;">
+                                                    ${ comentario.dataValues.comentario }
+                                                </p>
+    
+                                                <p style="font-size: 12px;font-weight: 700;">
+                                                    Fecha:  
+                                                    <span style="font-weight: 400;">
+                                                        ${ moment(comentario.dataValues.fecha).format('LLL') }
+                                                    </span>
+                                                </p>
+                                            </div>
+                                           ${
+                                                imagenes ? 
+                                                ` <div style="display:flex; flex-direction:row; width:100%;">
+                                                    ${
+                                                        comentario.galeria_comentarios.map( (imagen) => {
+                                                            return `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" target="_blank">
+                                                                        <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" style="width:100px; height: 100px; padding:0 25px" />
+                                                                    </a>`
+                                                        }).join('')
+                                                    }
+                                                </div>` : ''
+                                           }
+                                            <hr style="border-color: rgba(86, 115, 155, .3); margin: 20px 0; border-bottom: 0;">`
+                                }).join('')
+                            }
+                        </div>
+                    </div>
+                    <hr style="border-color: rgba(86, 115, 155, .3); margin: 10px 0; border-bottom: 0;">
+                    `
+                : '' }
+                <!-- Loop reporte --> 
+                </div>
+                `) }
+                ). join('') }
+            
+        </body>
+        </html>

@@ -22,6 +22,7 @@ const ComentariosBitacora = require('./ComentarioBitacora')
 const GaleriaComentario = require('./GaleriaComentario')
 const Etapas = require('./Etapas')
 const PivotBitacoraUser = require('./PivotBitacoraUser')
+const Empresa = require('./Empresa')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -72,8 +73,11 @@ Role.hasMany(User, { foreignKey: 'tipoUsuario_id' })
 Prestamos.belongsTo(User, { foreignKey: 'deliverTo', as: 'residente' })
 Prestamos.belongsTo(User, { foreignKey: 'belongsTo', as: 'owner' })
 
+// User
 User.hasMany(Prestamos, { foreignKey: 'deliverTo', as: 'prestamosDeliver' })
 User.hasMany(Prestamos, { foreignKey: 'belongsTo', as: 'prestamosOwner' })
+
+User.belongsToMany(Empresa, { through: 'pivot_user_empresa', foreignKey: 'userId' })
 
 ValeSalida.hasOne(Prestamos, { foreignKey: 'valeSalidaId' })
 
@@ -99,13 +103,16 @@ Bitacora.belongsToMany(User, {
     through: PivotBitacoraUser,
     foreignKey: 'bitacoraId',
     otherKey: 'userId',
+    as: 'participantes'
 });
+
 
 Bitacora.belongsToMany(GaleriaBitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'bitacoraId'  });
 GaleriaBitacora.belongsToMany(Bitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'galeriaId'  });
 
 Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorInt' })
-Bitacora.belongsTo(Personal, { foreignKey: 'autorId', as: 'autorExt' })
+Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorExt' })
+Bitacora.belongsTo(User, { foreignKey: 'contratistaId', as: 'contratista' })
 
 Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
 ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' } )

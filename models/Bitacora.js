@@ -56,6 +56,9 @@ const Bitacora = db.define('bitacora', {
         type: Sequelize.INTEGER,
         allowNull: false,
     },
+    contratistaId:{
+        type: Sequelize.INTEGER,
+    },
     fecha: {
         type: Sequelize.DATE,
         allowNull: false,

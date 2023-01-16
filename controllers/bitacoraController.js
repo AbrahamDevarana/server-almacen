@@ -22,34 +22,25 @@ exports.getBitacoras = async (req, res) => {
     const { userId, obraId, nivelId, zonaId, actividad, fechaInicio, fechaFin, etapaId, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { limit, offset } = getPagination(page, size);
     const obraWhere = [
-        obraId ? {"$obra.id$" : obraId } : {},
+        obraId ? {"$obra.id$" : obraId } : {}
         // busqueda ? {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
     ]
     
     const nivelWhere = [
         nivelId ? {"$nivele.id$" : nivelId } : {},
-        // busqueda ? {"$nivele.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
     ]
 
     const zonaWhere = [
         zonaId ? {"$zona.id$" : zonaId } : {},
-        // busqueda ? {"$zona.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
     ]
 
     const userWhere = [
         userId ? {"$user.id$" : userId } : {},
-        // busqueda ? {"$personal.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
     ]
 
     const etapaWhere = [
         etapaId ? {"$etapa.id$" : etapaId } : {},
-        // busqueda ? {"$actividad.etapa$" : {[Op.like]: `%${busqueda}%`}} : {}
     ]
-
-    // const tipoBitacoraWhere = [
-    //     tipoBitacoraId ? {"$tipo_bitacora.id$" : tipoBitacoraId } : {},
-    //     busqueda ? {"$tipo_bitacora.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
-    // ]
 
 
     const busquedaWhere = busqueda ?
@@ -92,7 +83,7 @@ exports.getBitacoras = async (req, res) => {
                     where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
                 }, 
                 {
-                    model: Personal,
+                    model: User,
                     attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
                     as: 'autorExt',
                     required: false,
@@ -130,7 +121,7 @@ exports.getBitacora = async (req, res) => {
                     { model: Obra, attributes: ['id', 'nombre']},
                     { model: Nivel, attributes: ['id', 'nombre']},
                     { model: Zona, attributes: ['id', 'nombre']},
-                    { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ] },
+                    { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ], as: 'participantes' },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
                         { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
                         { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
@@ -143,7 +134,7 @@ exports.getBitacora = async (req, res) => {
                         where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
                     }, 
                     {
-                        model: Personal,
+                        model: User,
                         attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
                         as: 'autorExt',
                         required: false,
@@ -204,6 +195,24 @@ exports.createBitacora = async (req, res) => {
                 fecha: moment(new Date(fields.fecha)).format('YYYY-MM-DD HH:mm:ss'),
 
             }).then( async (bitacora) => {
+
+                await bitacora.setParticipantes(participantes).catch( (error) => {
+                    console.log(error);
+                    res.status(500).json({ message: "Error al vincular a los participantes", error })
+                })
+
+                    
+                if( participantes.length > 0 ){
+                    await User.findAll({
+                        where: { id: participantes }
+                    }).then( async (users) => {                            
+                        await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users)
+                    }).catch( (error) => {
+                        console.log(error);
+                        res.status(500).json({ message: "Error al enviar reporte bitacora", error })
+                    })
+                }
+
                 await uploadDynamicFiles(galeria, 'bitacoras').then( async (result) => {
                     await result.forEach( async (item) => {
                         await GaleriaBitacora.create({
@@ -216,26 +225,13 @@ exports.createBitacora = async (req, res) => {
                             res.status(500).json({ message: "Error syncronizar bitacora", error })
                         })
                     })     
-
-                    
-                    await bitacora.setUsers(participantes)
-                    
-                    if( participantes.length > 0 ){
-                        await User.findAll({
-                            where: { id: participantes }
-                        }).then( async (users) => {                            
-                            await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users)
-                        }).catch( (error) => {
-                            console.log(error);
-                            res.status(500).json({ message: "Error al enviar reporte bitacora", error })
-                        })
-                    }
+                   
                     
                     res.status(200).json({ message: "Bitacora creada correctamente", bitacora })   
 
                 }).catch( (error) => {
                     console.log(error);
-                    res.status(500).json({ message: "Error al subir archivos", error })
+                    res.status(500).json({ message: "Hubo un problema al subir los archivos, pero la bitácora se ha generado correctamente, Contacta a soporte", error })
                 })
 
                 
@@ -244,7 +240,7 @@ exports.createBitacora = async (req, res) => {
             console.log(error);              
             res.status(500).json({ message: "Error al crear la bitacora", error })
             // 
-        }
+        }html-pdf
     })
 }
 
@@ -296,31 +292,42 @@ exports.createComentario = async (req, res) => {
 // Generar reporte de bitacoras
 exports.generateReport = async (req, res) => {
     const { titulo, descripcion, comentarios, imagenes, selectedOption = [] } = req.body
-    
     try {
 
         await Bitacora.findAll({
             where: { uid: selectedOption },
             include: [
-                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'], as: 'autorInt' },
-                { model: Personal, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'], as: 'autorExt'},
-                { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
-                { model: ComentariosBitacora, attributes: ['id', 'comentario', 'createdAt'], 
-                    include: [
-                        { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] }, 
-                        { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
-                    ]
-                },
                 { model: TipoBitacora, attributes: ['id', 'nombre'] },
-                { model: Obra, attributes: ['id', 'nombre'] },
-                { model: Nivel, attributes: ['id', 'nombre'] },
-                { model: Zona, attributes: ['id', 'nombre'], as: 'zona'},
+                    { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
+                    //  where id != 0
+                    { model: Obra, attributes: ['id', 'nombre']},
+                    { model: Nivel, attributes: ['id', 'nombre']},
+                    { model: Zona, attributes: ['id', 'nombre']},
+                    { model: Etapas, attributes: ['id', 'nombre']},                    
+                    { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ], as: 'participantes' },
+                    { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
+                        { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
+                        { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
+                    ] },
+                    {
+                        model: User,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'autorInt',
+                        required: false,
+                        where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
+                    }, 
+                    {
+                        model: User,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'autorExt',
+                        required: false,
+                        where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
+                    }, 
 
                 
             ]
         }).then( async (bitacoras) => {
-            generatePdf(res, bitacoras,  titulo, descripcion, comentarios, imagenes)
-          
+            await generatePdf(res, bitacoras,  titulo, descripcion, comentarios, imagenes)
         })
         
         
@@ -341,10 +348,10 @@ exports.updateBitacoraView = async (req, res) => {
         await Bitacora.findOne({
             where: { uid },
             include: [
-                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] }
+                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'], as: 'participantes' }
             ]
         }).then( async (bitacora) => {
-            const participantes = bitacora.users.map( item => item.id )
+            const participantes = bitacora.participantes.map( item => item.id )
             if ( participantes.includes(id) ) {
                 await PivotBitacoraUser.update({ visited: true }, { where: { bitacoraId: bitacora.id, userId: id } })
             }
@@ -365,10 +372,10 @@ exports.updateBitacoraConfirm = async (req, res) => {
         await Bitacora.findOne({
             where: { uid },
             include: [
-                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'] }
+                { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno'], as: 'participantes' }
             ]
         }).then( async (bitacora) => {
-            const participantes = bitacora.users.map( item => item.id )
+            const participantes = bitacora.participantes.map( item => item.id )
             if ( participantes.includes(id) ) {
                 await PivotBitacoraUser.update({ confirmed: true }, { where: { bitacoraId: bitacora.id, userId: id } })
             }
@@ -437,79 +444,193 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
     const logoBase64 = logo.toString('base64')
 
     // print first bitacoras
-    const bitacora = bitacoras[0].dataValues
     const content = `
     <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;700&family=Playfair+Display&display=swap" rel="stylesheet">
+            <link href="${'../static/fonts/Mulish-Regular.ttf'}" rel="stylesheet">
+            <link href="${'../static/fonts/PlayfairDisplay-Regular.ttf'}" rel="stylesheet">
+            <style>
+                @font-face {
+                    font-family: 'Mulish';
+                    src: url('/static/Mulis-Regular.ttf');
+                }
+                @font-face {
+                    font-family: 'Playfair Display';
+                    src: url('/static/PlayfairDisplay-Regular.ttf');
+                }
 
-        <style>
-            p {
-                color: #646375;
-                font-family: 'Roboto', sans-serif;
-            }
-        </style>
-    </head>
-        <table style="width: 100%; font-size: 8px; id="pageHeader">
-            <tr>
-                <td style="width:10%">
-                    <img src="data:image/png;base64,${logoBase64}" style="width: 50px; height: 50px; padding:0 25%" />
-                    </td>
-                    <td style="width: 50%; text-align: right;">
-                </td>
-            </tr>
-        </table>
-    <body>
-
-            <div>
-                <h1 style="font-size: 20px;">${titulo}</h1>
-                ${descripcion ? `<p style="font-size: 12px;">${descripcion}</p>` : ''}
-            </div>
-
-            <div>
-                <h2 style="font-size: 16px;">Fecha: ${moment(bitacora.fecha).format('LLL') } </h2>
-            </div>
-            <div>
+                p, li, span {
+                    color: #646375;
+                    // font-family: 'Mulish', sans-serif;
+                    
+                }
+                h1, h2, h3, h4, h5, h6 {
+                    // font-family: 'Playfair Display', serif;
+                    color: #56739B;
+                }
+            </style>
+        </head>
             
-            <h3 style="font-size: 14px;">${ bitacora.obraId === 0 ? '' : `${bitacora.obra.dataValues.nombre} - ${ bitacora.nivelId === 0 ? '' : `${bitacora.nivel.dataValues.nombre} - ` } ${bitacora.zonaId === 0 ? '' : `${bitacora.zona.dataValues.nombre}` }` }</h3>    
-                <p>
-                    ${bitacora.descripcion}
+        <body>
+            <table style="width: 100%; font-size: 8px; border-bottom: 1px solid rgba(100, 99, 117, .3);";>
+                <tr>
+                    <td style="width:10%">
+                        <img src="data:image/png;base64,${logoBase64}" style="width: 50px; height: 50px; padding:0 25%" />
+                    </td>
+                    <td style="width: 80%;">
+                        <h1 style="font-size: 24px;color:#56739B;text-align: center;">
+                            ${titulo}
+                        </h1>
+                    </td>
+                    <td style="width: 10%;">
+                    </td>
+                </tr>
+            </table>
+            
+            <div style="padding: 0 0 10px; ">
+                <p style="font-size: 14px;">
+                    ${descripcion}
                 </p>
             </div>
 
-            <div>
-                ${ comentarios ? 
-                    bitacora.comentarios_bitacoras.map( (comentario) => {
-                        return `
-                        <div>
-                            <p style="font-size: 12px;">Autor: ${comentario.dataValues.user.nombre} ${comentario.dataValues.user.apellidoPaterno } </p>
-                            <p style="font-size: 12px;">${comentario.dataValues.comentario}</p>
+            ${
+                bitacoras.map( (values) => {
+                
+                const bitacora = values.dataValues
+                
+                return (` 
+                
+                <div style="padding: 0 0 25px; ">
 
-                            <p style="font-size: 12px;">Fecha: ${moment(bitacora.fecha).format('LLL') } </p>
-                        </div>
-                        <div style="display:flex; flex-direction:row; width:100%;">
-                            ${ imagenes ?
-                                comentario.galeria_comentarios.map( (imagen) => {
-                                    return `
-                                        <a href="https://spaces.erp-devarana.mx/${imagen.dataValues.url}" target="_blank">
-                                            <img src="https://spaces.erp-devarana.mx/${imagen.dataValues.url}" style="width:50px; height: 50px; padding:0 25%" />
-                                        </a>
-                                    `
-                                }).join('') : ''
+                <table style="background-color: #56739B; width: 100%;">
+                    <td>
+                        <p style="color: white; font-size: 16spx; font-weight: 600; padding: 0px 10px;"> ${bitacora.titulo} </p>
+                    </td>
+                    <td>
+                        <p style="color: white; font-size: 16spx; font-weight: 600; margin-left: auto; padding: 0 20px; text-align:right;">Folio: RV-${bitacora.id}</p>                
+                    </td>
+                </table>
+                <div style="padding: 0px 10px;">
+                    <table style="width: 100%;">
+                        <td>
+                            <p style="font-size: 12px;"><span style="font-weight: 700;">Autor:</span>  
+                                ${
+                                    bitacora.autorInt? bitacora.autorInt.dataValues.nombre + ' ' + bitacora.autorInt.dataValues.apellidoPaterno : bitacora.autorExt.dataValues.nombre + ' ' + bitacora.autorExt.dataValues.apellidoPaterno
+                                }
+                            </p>
+                        </td>
+                        <td style="text-align: right;">
+                            <p style="font-size: 12px;font-weight: 700;text-align: right;">
+                                Fecha:  
+                                <span style="font-weight: 400;">
+                                    ${ moment(bitacora.fecha).format('LLL') }
+                                </span>
+                            </p>
+                        </td>
+                    </table>
+                    <h2 style="font-size: 18px;color:#56739B;">Descripción</h2>
+                    <p style="font-size: 12px;">
+                        ${bitacora.descripcion}
+                    </p>
+    
+                    <table style="width: 100%;">
+                            <tr> <h2 style="font-size: 16px; color: #56739B;">Información Especifica</h2> </tr>
+                            <tr> ${ bitacora.etapaId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Etapa:</span> ${ bitacora.etapa.dataValues.nombre } </p>` : '' } </tr>
+                            <tr> ${ bitacora.obraId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Obra:</span> ${ bitacora.obra.dataValues.nombre } </p> ` : '' } </tr>
+                            <tr> ${ bitacora.nivelId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Nivel:</span> ${ bitacora.nivele.dataValues.nombre } </p> ` : '' } </tr>
+                            <tr> ${ bitacora.zonaId !== 0 ? ` <p style="font-size: 12px;"><span style="font-weight: 700;">Zona:</span> ${ bitacora.zona.dataValues.nombre } </p> ` : '' } </tr>
+                            <tr> ${ bitacora.actividad ? ` <p style="font-size: 12px;"><span style="font-weight: 700;">Actividad:</span> ${ bitacora.actividad } </p> ` : '' } </tr>
+                    </table>
+                    <div style="width: 100%;">
+                    ${
+                        bitacora.participantes.length > 0 ?
+                        ` <h2 style="font-size: 16px; color: #56739B;">Participantes</h2>
+                            ${
+                                bitacora.participantes.map( (participante) => {
+                                    return `<p style="font-size: 12px; width:23%; display:inline-block; margin: 0px 2px "> - ${ participante.dataValues.nombre } ${ participante.dataValues.apellidoPaterno } </p>`
+                                }).join('')
                             }
-                        <div>
-                        `
-                    }).join('') : ''
-                }
-            </div>
-                <p style="font-size: 12px;">${bitacora.autorInt ? bitacora.autorInt.nombre : bitacora.autorExt.nombre } ${bitacora.autorInt ? bitacora.autorInt.apellidoPaterno : bitacora.autorExt.apellidoPaterno } </p>
-            </div>
-
-    </body>
-    </html>
+                        </div> `
+                    : ''}
+                    
+                    ${
+                        imagenes ? `
+                            <h2 style="font-size: 16px; color: #56739B;">Evidencia</h2>
+                            <div style="width:100%">
+                                ${
+                                    bitacora.galeria_bitacoras.map( (imagen) => {
+                                        return `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" target="_blank">
+                                                    <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" style="width:100px; height: 100px; padding: 10px 10px;" />
+                                                </a>`
+                                    }).join('')
+                                }
+                            </div>
+                        `: ''
+                    }
+                </div>
+                
+            
+                
+    
+                ${ comentarios && bitacora.comentarios_bitacoras.length > 0 ? `
+                    <hr style="border-color: rgba(86, 115, 155, .3); margin: 40px 0; border-bottom: 0;">
+                    <div style="padding-bottom: 10px;">
+                        <div style="margin-left: 20px; padding-left: 15px; border-left: 1px solid rgba(100, 99, 117, .3);">
+                            <h2 style="font-size: 18px;color: #56739B;">Comentarios ( ${ bitacora.comentarios_bitacoras.length } )</h2>
+                            ${
+                                bitacora.comentarios_bitacoras.map( (comentario) => {
+                                    return `<div>
+                                                <p style="font-size: 12px;font-weight: 700;">
+                                                    Autor:
+                                                    <span style="font-weight: 400;">
+                                                        ${  comentario.user.nombre + ' ' + comentario.user.apellidoPaterno }
+                                                    </span>
+                                                </p>
+                                                <p style="font-size: 12px;">
+                                                    ${ comentario.dataValues.comentario }
+                                                </p>
+    
+                                                <p style="font-size: 12px;font-weight: 700;">
+                                                    Fecha:  
+                                                    <span style="font-weight: 400;">
+                                                        ${ moment(comentario.dataValues.fecha).format('LLL') }
+                                                    </span>
+                                                </p>
+                                            </div>
+                                           ${
+                                                imagenes ? 
+                                                ` <div style="display:flex; flex-direction:row; width:100%;">
+                                                    ${
+                                                        comentario.galeria_comentarios.map( (imagen) => {
+                                                            return `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" target="_blank">
+                                                                        <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" style="width:100px; height: 100px; padding:0 25px" />
+                                                                    </a>`
+                                                        }).join('')
+                                                    }
+                                                </div>` : ''
+                                           }
+                                            <hr style="border-color: rgba(86, 115, 155, .3); margin: 20px 0; border-bottom: 0;">`
+                                }).join('')
+                            }
+                        </div>
+                    </div>
+                    <hr style="border-color: rgba(86, 115, 155, .3); margin: 10px 0; border-bottom: 0;">
+                    `
+                : '' }
+                <!-- Loop reporte --> 
+                </div>
+                `) }
+                ). join('') }
+            
+        </body>
+        </html>
     `  
         pdf.create(
             content,
@@ -517,21 +638,27 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                 format: 'A4',
                 orientation: 'portrait',
                 border: {
-                    top: '0.1in',
                     right: '0.2in',
-                    bottom: '0.1in',
-                    left: '0.2in'
+                    left: '0.2in',
+                    top: '0.5in',
+                    bottom: '0.2in'
                 },
                 footer: {
-                    height: '0.5in',
+                    height: '0.3in',
                     contents: {
-                        default: '<span style="color: #646375;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-                        first: '<span style="color: #646375;">{{page}}</span>/<span>{{pages}}</span>',
-                        2: '<span style="color: #646375;">{{page}}</span>/<span>{{pages}}</span>',
-                        last: '<span style="color: #646375;">{{page}}</span>/<span>{{pages}}</span>'
+                        default: `
+                            <div style="text-align:right;color: rgba(86, 115, 155, .8);">
+                                <span>
+                                    {{page}}
+                                </span>
+                                    de
+                                <span>
+                                    {{pages}}
+                                </span>
+                            </div>
+                        `, // fallback value                        
                     }
-                }
-
+                }, 
             }
         ).toFile(`./public/pdf/Reporte-${moment().format('DD-MM-YYYY-hh-mm')}.pdf`, (err, res) => {
             if (err) return console.log(err);
