@@ -5,13 +5,14 @@ const { mailNewUser } = require('../email/Users')
 const Permisos = require('../models/Permisos')
 const bcrypt = require('bcrypt')
 const { Op } = require('sequelize')
+const Empresa = require('../models/Empresa')
 
 
 exports.getUser = async (req, res) => {
     const {id} = req.params
     try {
 
-        const usuario = await Users.findOne({ where: { id, status: true } }).catch(error => {
+        const usuario = await Users.findOne({ where: { id, status: true }, include: [{ model: Empresa}] }).catch(error => {
             res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
         })
 
@@ -27,7 +28,7 @@ exports.getUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
 
-    const { search } = req.query
+    const { search, esInterno } = req.query
     const where = search ? 
     {
         [Op.or]: [
@@ -43,10 +44,29 @@ exports.getUsers = async (req, res) => {
     : 
     {}
     
+    switch (esInterno) {
+        case "1":
+            where.esInterno = true
+        break;
+        case "0":
+            where.esInterno = false
+            break;
+        default:
+            delete where.esInterno
+            break;
+    }
+
     where.status = true
 
+
     try {
-        await Users.findAll( { where, include: { model: Role, include: Permisos } } ).then(usuarios => {
+        //  include Model ROle, and Model Permisos
+        // include model Empresa pivot table
+
+        await Users.findAll( { where, include: [
+            {  model: Role, include: Permisos },
+            {  model: Empresa }
+        ]}).then(usuarios => {
             res.status(200).json({ usuarios })
         }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los usuarios', error: error.message })
@@ -65,7 +85,7 @@ exports.createUser = async (req, res) => {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
     }
 
-    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, password, esInterno} = req.body
+    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, password, esInterno, empresa} = req.body
 
     const dummyPassword = 'notPassword'
     const safePassword = password ? bcrypt.hashSync(password, 10) : bcrypt.hashSync(dummyPassword, 10)
@@ -93,11 +113,12 @@ exports.createUser = async (req, res) => {
                 res.status(500).json({ message: 'Error al crear el usuario', error: error.message })
             })
             if(usuario){
+                if(empresa && !esInterno){
+                    await usuario.setEmpresas(empresa)
+                }
                 delete usuario.dataValues.password
-                usuario.getDataValue('Role', await usuario.getRole())
-                
+                usuario.getDataValue('Role', await usuario.getRole())                
                 mailNewUser(usuario)
-
                 const userLoaded = await Users.findOne({ where: { id: usuario.id }, include: Role }).catch(error => {
                     res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
                 })
@@ -119,7 +140,7 @@ exports.updateUser = async (req, res) => {
 
     
     const { id } = req.params
-    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, status, esInterno, password } = req.body
+    const { nombre, apellidoPaterno, apellidoMaterno, email, telefono, tipoUsuario_id, puesto, status, password, empresa } = req.body
     
     const safePassword = password ? bcrypt.hashSync(password, 10) : null
     try {
@@ -140,8 +161,14 @@ exports.updateUser = async (req, res) => {
             usuario.password = safePassword ?? usuario.password
 
             await usuario.save().catch(error => {
+
+                
                 res.status(500).json({ message: 'Error al actualizar el usuario', error: error.message })
             })
+
+            if (empresa && !usuario.esInterno) {
+                await usuario.setEmpresas(empresa)
+            }
             
             res.status(200).json({ usuario })
         }

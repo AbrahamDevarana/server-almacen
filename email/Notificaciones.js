@@ -76,7 +76,7 @@ async function solicitarPrestamo ( responsable, actividad, usuario ){
 }
 
 
-async function reporteBitacora ( autor, tipoBitacora, involucrados ){
+async function reporteBitacora ( autor, tipoBitacora, involucrados, uid ){
 
     const body = `
                 <div style="margin:auto; max-width:600px; width:100%; padding:15px;">
@@ -87,13 +87,16 @@ async function reporteBitacora ( autor, tipoBitacora, involucrados ){
                         ${involucrados.map( usuario => `<li style="color:#646375;padding: 5px 0;font-size: 16px;">${usuario.nombre} ${usuario.apellidoPaterno}</li>`).join('')}
                     </ul>
                     <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Puedes ver el reporte en la plataforma </p>
-                    <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/bitacoras">Ingresa Aquí</a>                    
+                    <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/bitacora/${uid}">Ingresa Aquí</a>                    
                 </div>
     `
     const html = createHTML(body)
-
+    
+    
     involucrados.push(autor)
-    involucrados.forEach( usuario => {
+    involucrados.forEach( async usuario => {
+        
+        
         mailSender(usuario.email, `Reporte de ${tipoBitacora}`, html )
     })
 }

@@ -112,7 +112,7 @@ GaleriaBitacora.belongsToMany(Bitacora, {  through: 'pivot_bitacora_galeria', fo
 
 Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorInt' })
 Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorExt' })
-Bitacora.belongsTo(User, { foreignKey: 'contratistaId', as: 'contratista' })
+Bitacora.belongsTo(User, { foreignKey: 'externoId', as: 'contratista' })
 
 Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
 ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' } )

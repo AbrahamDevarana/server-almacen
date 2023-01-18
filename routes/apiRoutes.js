@@ -15,6 +15,7 @@ router.use('/prestamos', require('./apiRoutes/prestamoRoute'))
 router.use('/reportes', require('./apiRoutes/reportesRoute'))
 router.use('/bitacora', require('./apiRoutes/bitacoraRoute'))
 router.use('/etapas', require('./apiRoutes/etapaRoute'))
+router.use('/empresas', require('./apiRoutes/empresaRoute'))
 
 
 

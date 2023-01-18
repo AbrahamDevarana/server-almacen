@@ -8,7 +8,10 @@ const Empresa = db.define('empresa', {
         autoIncrement: true,
         unique: true
     },
-    nombre: {
+    nombreCompleto: {
+        type: Sequelize.STRING,
+    },
+    nombreCorto: {
         type: Sequelize.STRING,
     },
     rfc: {
@@ -20,6 +23,10 @@ const Empresa = db.define('empresa', {
     },
     telefono: {
         type: Sequelize.STRING,
+    },
+    status: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
     },
     createdAt: {
         type: Sequelize.DATE,

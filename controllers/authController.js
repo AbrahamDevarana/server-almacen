@@ -66,8 +66,9 @@ exports.loginWithPassword = async (req, res) => {
     try {
         const user = await Users.findOne({ where: { email }, attributes: ['id', 'email', 'password'] })
         if(user){
-            const isPasswordValid = bcrypt.compareSync(password, user.dataValues.password)           
+            const isPasswordValid = bcrypt.compareSync(password, user.dataValues.password)
             if(isPasswordValid){
+                delete user.dataValues.password
                 const accessToken = jwt.createAccessToken(user)
                 const refreshToken = jwt.createRefreshToken(user)
                 res.status(200).json({

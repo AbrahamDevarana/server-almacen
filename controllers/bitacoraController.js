@@ -1,4 +1,4 @@
-const { Obra, Nivel, Zona, Personal, Bitacora, TipoBitacora, GaleriaBitacora, Actividad, User} = require('../models')
+const { Obra, Nivel, Zona, Personal, Bitacora, TipoBitacora, GaleriaBitacora, Actividad, User, Role} = require('../models')
 const moment = require('moment')
 const formidable = require('formidable-serverless')
 const { s3Client } = require('../utils/s3Client')
@@ -14,6 +14,8 @@ const { Op, Sequelize } = require('sequelize')
 const { reporteBitacora } = require('../email/Notificaciones')
 const Etapas = require('../models/Etapas')
 const PivotBitacoraUser = require('../models/PivotBitacoraUser')
+const Users = require('../models/Users')
+const Permisos = require('../models/Permisos')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
@@ -21,6 +23,9 @@ moment.locale('es-mx')
 exports.getBitacoras = async (req, res) => {
     const { userId, obraId, nivelId, zonaId, actividad, fechaInicio, fechaFin, etapaId, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { limit, offset } = getPagination(page, size);
+    const { id } = req.user
+
+
     const obraWhere = [
         obraId ? {"$obra.id$" : obraId } : {}
         // busqueda ? {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
@@ -65,44 +70,74 @@ exports.getBitacoras = async (req, res) => {
         fechaFin ? {"fecha" : {[Op.lte]: moment(fechaFin).endOf('day').format('YYYY-MM-DD HH:mm:ss')}} : {}
     ]
    
+    
 
     try {
-        const bitacoras = await Bitacora.findAndCountAll({
-            include: [
-                { model: TipoBitacora, attributes: ['nombre'] },
-                { model: GaleriaBitacora, attributes: ['url', 'type'] },
-                { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere },
-                { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere},
-                { model: Zona, attributes: ['nombre'], where: zonaWhere},
-                { model: Etapas, attributes: ['nombre'], where: etapaWhere},
-                {
-                    model: User,
-                    attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
-                    as: 'autorInt',
-                    required: false,
-                    where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
-                }, 
-                {
-                    model: User,
-                    attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
-                    as: 'autorExt',
-                    required: false,
-                    where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
-                }, 
-            ],
-            order: [
-                ['id', ordenSolicitado]
-            ],
-            // limit,
-            // offset,
-            distinct: true,
-            where: {[Op.and] : [fechaWhere, busquedaWhere]},
-            logging: console.log
 
-        })
+        const user = await Users.findOne({ where: { id }, include: [{ model: Role, include: Permisos}] })
+        let whereAutor = {}
 
-        const response = getPagingData(bitacoras, page, limit);
-        res.status(200).json({bitacoras:response})
+        if (user.role.permisos.some( item => item.permisos === 'crear bitacora' ))  {
+
+            
+
+            if( user.role.permisos.some( item => item.permisos === 'ver bitacora de otros' ) ) {
+
+                whereAutor = {}
+
+            }else{
+                whereAutor = {
+                    [Op.or]: [
+                        { autorId: id },
+                        {
+                            '$participantes.pivot_bitacora_users.userId$': id,
+                        },
+                        {
+                            externoId: id,
+                        }
+                    ]
+                }
+            }
+
+            const bitacoras = await Bitacora.findAndCountAll({
+                include: [
+                    { model: TipoBitacora, attributes: ['nombre'] },
+                    { model: GaleriaBitacora, attributes: ['url', 'type'] },
+                    { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere },
+                    { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere},
+                    { model: Zona, attributes: ['nombre'], where: zonaWhere},
+                    { model: Etapas, attributes: ['nombre'], where: etapaWhere},
+                    {
+                        model: User,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'autorInt',
+                        required: false,
+                        where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
+                    }, 
+                    {
+                        model: User,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'autorExt',
+                        required: false,
+                        where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
+                    }, 
+                    { model: User, attributes: ['id'], as: 'participantes' },
+                ],
+                order: [
+                    ['id', ordenSolicitado]
+                ],
+                // limit,
+                // offset,
+                distinct: true,
+                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor]},
+                logging: console.log
+
+            })
+            const response = getPagingData(bitacoras, page, limit);
+           res.status(200).json({bitacoras:response})
+        }else {
+            res.status(200).json({bitacoras:[]})
+        }
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Error al obtener las bitacoras", error})
@@ -140,6 +175,12 @@ exports.getBitacora = async (req, res) => {
                         required: false,
                         where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
                     }, 
+                    {
+                        model: User,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'contratista',
+                        required: false,
+                    }
                 ]
             }).then( bitacora => {
                 if(!bitacora) {
@@ -173,7 +214,6 @@ exports.createBitacora = async (req, res) => {
         if (err) return res.status(500).json({ message: "Error al subir la bitacora", err });
 
         const galeria = Object.values(files)
-
         try {
 
             const tipoBitacora = await TipoBitacora.findOne({ where: { id: fields.tipoBitacoraId } })
@@ -189,6 +229,7 @@ exports.createBitacora = async (req, res) => {
                 externoId: fields.externoId,
                 tipoBitacoraId: fields.tipoBitacoraId,
                 autorId: req.user.id,
+                externoId: fields.externoId,
 
                 actividad: fields.actividad,
                 esInterno: fields.esInterno,                
@@ -204,9 +245,14 @@ exports.createBitacora = async (req, res) => {
                     
                 if( participantes.length > 0 ){
                     await User.findAll({
-                        where: { id: participantes }
+                        where: { 
+                            [Op.or]: [
+                                { id: participantes },
+                                { id : bitacora.externoId }
+                            ]
+                        }
                     }).then( async (users) => {                            
-                        await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users)
+                        await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users, bitacora.dataValues.uid)
                     }).catch( (error) => {
                         console.log(error);
                         res.status(500).json({ message: "Error al enviar reporte bitacora", error })
@@ -240,7 +286,7 @@ exports.createBitacora = async (req, res) => {
             console.log(error);              
             res.status(500).json({ message: "Error al crear la bitacora", error })
             // 
-        }html-pdf
+        }   
     })
 }
 
@@ -304,7 +350,7 @@ exports.generateReport = async (req, res) => {
                     { model: Nivel, attributes: ['id', 'nombre']},
                     { model: Zona, attributes: ['id', 'nombre']},
                     { model: Etapas, attributes: ['id', 'nombre']},                    
-                    { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ], as: 'participantes' },
+                    { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'esInterno' ], as: 'participantes' },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
                         { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
                         { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
@@ -322,7 +368,14 @@ exports.generateReport = async (req, res) => {
                         as: 'autorExt',
                         required: false,
                         where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
-                    }, 
+                    },
+                    {
+                        model: User,
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        as: 'contratista',
+                        required: false,
+                    }
+                
 
                 
             ]
@@ -443,6 +496,8 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
     const logo = fs.readFileSync(path.resolve(__dirname, '../static/img/logo.png'))
     const logoBase64 = logo.toString('base64')
 
+    console.log(bitacoras);
+
     // print first bitacoras
     const content = `
     <!DOCTYPE html>
@@ -511,6 +566,9 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
 
                 <table style="background-color: #56739B; width: 100%;">
                     <td>
+                        <p style="color: white; font-size: 16spx; font-weight: 600; padding: 0px 10px;"> Tipo: ${bitacora.tipo_bitacora.dataValues.nombre} </p>
+                    </td>
+                    <td>
                         <p style="color: white; font-size: 16spx; font-weight: 600; padding: 0px 10px;"> ${bitacora.titulo} </p>
                     </td>
                     <td>
@@ -535,6 +593,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                             </p>
                         </td>
                     </table>
+   
                     <h2 style="font-size: 18px;color:#56739B;">Descripción</h2>
                     <p style="font-size: 12px;">
                         ${bitacora.descripcion}
@@ -542,11 +601,13 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
     
                     <table style="width: 100%;">
                             <tr> <h2 style="font-size: 16px; color: #56739B;">Información Especifica</h2> </tr>
-                            <tr> ${ bitacora.etapaId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Etapa:</span> ${ bitacora.etapa.dataValues.nombre } </p>` : '' } </tr>
-                            <tr> ${ bitacora.obraId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Obra:</span> ${ bitacora.obra.dataValues.nombre } </p> ` : '' } </tr>
-                            <tr> ${ bitacora.nivelId !== 0 ? `<p style="font-size: 12px;"><span style="font-weight: 700;">Nivel:</span> ${ bitacora.nivele.dataValues.nombre } </p> ` : '' } </tr>
-                            <tr> ${ bitacora.zonaId !== 0 ? ` <p style="font-size: 12px;"><span style="font-weight: 700;">Zona:</span> ${ bitacora.zona.dataValues.nombre } </p> ` : '' } </tr>
-                            <tr> ${ bitacora.actividad ? ` <p style="font-size: 12px;"><span style="font-weight: 700;">Actividad:</span> ${ bitacora.actividad } </p> ` : '' } </tr>
+                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Etapa:</span> ${ bitacora.etapa?.dataValues?.nombre || '' } </p>  </tr>
+                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Obra:</span> ${ bitacora.obra?.dataValues?.nombre || '' } </p>   </tr>
+                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Nivel:</span> ${ bitacora.nivele?.dataValues?.nombre || '' } </p>   </tr>
+                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Zona:</span> ${ bitacora.zona?.dataValues?.nombre || '' } </p>   </tr>
+                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Actividad:</span> ${ bitacora.actividad || '' } </p>   </tr>
+                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Contratista:</span> ${ bitacora.contratista?.dataValues?.nombre || '' } </p>   </tr> 
+                            
                     </table>
                     <div style="width: 100%;">
                     ${
@@ -554,7 +615,12 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                         ` <h2 style="font-size: 16px; color: #56739B;">Participantes</h2>
                             ${
                                 bitacora.participantes.map( (participante) => {
-                                    return `<p style="font-size: 12px; width:23%; display:inline-block; margin: 0px 2px "> - ${ participante.dataValues.nombre } ${ participante.dataValues.apellidoPaterno } </p>`
+                                    return `<p style="font-size: 12px; width:23%; display:inline-block; margin: 0px 2px "> - 
+                                    ${ participante.dataValues.nombre } 
+                                    ${ participante.dataValues.apellidoPaterno }
+                                    ${ participante.dataValues.esInterno ? '' : ' (Externo)' }
+
+                                    </p>`
                                 }).join('')
                             }
                         </div> `

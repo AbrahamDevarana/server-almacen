@@ -41,7 +41,7 @@ exports.getEtapa = async (req, res) => {
 exports.createEtapa = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.array() });
     }
 
     const { nombre, descripcion } = req.body
@@ -65,7 +65,7 @@ exports.updateEtapa = async (req, res) => {
     
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.map() });
+        return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.array() });
     }
 
     const { id } = req.params
