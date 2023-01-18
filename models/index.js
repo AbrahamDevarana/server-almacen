@@ -93,10 +93,10 @@ DetalleSalida.belongsTo( Prestamos, {foreignKey: 'prestamoId'} )
 // Bitacora
 
 
-Bitacora.belongsTo(Etapas, { foreignKey: 'etapaId' })
-Bitacora.belongsTo(Obra, { foreignKey: 'obraId' })
-Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId' })
-Bitacora.belongsTo(Zona, { foreignKey: 'zonaId' })
+Bitacora.belongsTo(Etapas, { foreignKey: 'etapaId', allowNull: true })
+Bitacora.belongsTo(Obra, { foreignKey: 'obraId', allowNull: true })
+Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId', allowNull: true })
+Bitacora.belongsTo(Zona, { foreignKey: 'zonaId', allowNull: true })
 Bitacora.belongsTo(TipoBitacora, { foreignKey: 'tipoBitacoraId' })
 
 Bitacora.belongsToMany(User, {
@@ -110,9 +110,9 @@ Bitacora.belongsToMany(User, {
 Bitacora.belongsToMany(GaleriaBitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'bitacoraId'  });
 GaleriaBitacora.belongsToMany(Bitacora, {  through: 'pivot_bitacora_galeria', foreignKey: 'galeriaId'  });
 
-Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorInt' })
-Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorExt' })
-Bitacora.belongsTo(User, { foreignKey: 'externoId', as: 'contratista' })
+Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorInt', allowNull: true })
+Bitacora.belongsTo(User, { foreignKey: 'autorId', as: 'autorExt', allowNull: true })
+Bitacora.belongsTo(User, { foreignKey: 'externoId', as: 'contratista', allowNull: true })
 
 Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
 ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' } )

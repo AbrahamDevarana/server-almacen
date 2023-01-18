@@ -79,8 +79,6 @@ exports.getBitacoras = async (req, res) => {
 
         if (user.role.permisos.some( item => item.permisos === 'crear bitacora' ))  {
 
-            
-
             if( user.role.permisos.some( item => item.permisos === 'ver bitacora de otros' ) ) {
 
                 whereAutor = {}
@@ -103,9 +101,9 @@ exports.getBitacoras = async (req, res) => {
                 include: [
                     { model: TipoBitacora, attributes: ['nombre'] },
                     { model: GaleriaBitacora, attributes: ['url', 'type'] },
-                    { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere },
-                    { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere},
-                    { model: Zona, attributes: ['nombre'], where: zonaWhere},
+                    { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere , required: false},
+                    { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere, required: false},
+                    { model: Zona, attributes: ['nombre'], where: zonaWhere, required: false},
                     { model: Etapas, attributes: ['nombre'], where: etapaWhere},
                     {
                         model: User,
@@ -129,12 +127,11 @@ exports.getBitacoras = async (req, res) => {
                 // limit,
                 // offset,
                 distinct: true,
-                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor]},
-                logging: console.log
+                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor]}
 
             })
             const response = getPagingData(bitacoras, page, limit);
-           res.status(200).json({bitacoras:response})
+            res.status(200).json({bitacoras:response})
         }else {
             res.status(200).json({bitacoras:[]})
         }
@@ -495,9 +492,6 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
 
     const logo = fs.readFileSync(path.resolve(__dirname, '../static/img/logo.png'))
     const logoBase64 = logo.toString('base64')
-
-    console.log(bitacoras);
-
     // print first bitacoras
     const content = `
     <!DOCTYPE html>

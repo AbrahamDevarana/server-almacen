@@ -28,22 +28,18 @@ const Bitacora = db.define('bitacora', {
     },
     obraId: {
         type: Sequelize.INTEGER,
-        defaultValue: 0,
     },
     nivelId: {
         type: Sequelize.INTEGER,
-        defaultValue: 0,
     },
     zonaId: {
         type: Sequelize.INTEGER,
-        defaultValue: 0,
     },
     actividad: {
         type: Sequelize.TEXT,
     },
     externoId: {
         type: Sequelize.INTEGER,
-        defaultValue: 0,
     },
     autorId: {
         type: Sequelize.INTEGER,
