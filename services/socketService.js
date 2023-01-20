@@ -9,7 +9,7 @@ const socketService = (server) => {
 
     io.attach(server, {
         cors: {
-            origin: process.env.CLIENT_URL,
+            origin: '*'
         }
     });
 
