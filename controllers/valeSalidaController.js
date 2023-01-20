@@ -13,9 +13,12 @@ const db = require('../config/db')
 const { Obra, Nivel, Zona, Personal, Actividad } = require('../models')
 const Actividades = require('../models/Actividad')
 const { getPagination, getPagingData } = require('../utils/paginacion')
+const { io } = require('../services/socketService')
 
 
 exports.getValeSalida = async (req, res) => {
+
+ 
     try {
         const { statusVale } = req.query
         const {id} = req.user
@@ -311,6 +314,9 @@ exports.createValeSalida = async (req, res) => {
                     .catch(error => {
                         console.log(error.message);
                     })
+
+                    
+                    io.emit('nuevo-vale', ( valeSalida ))
                     res.status(200).json({ valeSalida })
                 })
                 .catch(error => {

@@ -8,6 +8,7 @@ const cookieSession = require('express-session');
 const router = require('./routes')
 require('./utils/cronSchedule')
 const fs = require('fs')
+const { configureSockets, socketService } = require('./services/socketService')
 
 require('dotenv').config()
 require('./services/googleStrategy')
@@ -39,18 +40,16 @@ app.set("trust proxy", 1);
 app.use('/api', router)
 
 
-
 dbConfig.sync()
-    .then( () => console.log('Conectado al servidor'))
-    .catch( err => {
-        const errorinfo = `${new Date(Date.now()).toLocaleString()} - ${err} \n`
-        console.log(errorinfo);
-        fs.appendFile('logs/error.log', errorinfo, function (err) {
-            if (err) throw err;
-            process.exit(1);
-        })
+.then( () => console.log('Conectado al servidor'))
+.catch( err => {
+    const errorinfo = `${new Date(Date.now()).toLocaleString()} - ${err} \n`
+    console.log(errorinfo);
+    fs.appendFile('logs/error.log', errorinfo, function (err) {
+        if (err) throw err;
+        process.exit(1);
     })
-
+})
 
 
 process.on('uncaughtException', (err) => {
@@ -72,8 +71,6 @@ process.on('unhandledRejection', (err) => {
 });
 
 
-
-
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || "127.0.0.1"
 
@@ -82,7 +79,9 @@ const server = app.listen(PORT, HOST, () => {
     console.log(server.address())
 });
 
-// sockets.connect(server)
+
+
+socketService(server)
 
 
 

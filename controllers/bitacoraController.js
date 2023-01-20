@@ -16,6 +16,7 @@ const Etapas = require('../models/Etapas')
 const PivotBitacoraUser = require('../models/PivotBitacoraUser')
 const Users = require('../models/Users')
 const Permisos = require('../models/Permisos')
+const { io } = require('../services/socketService')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
@@ -135,6 +136,7 @@ exports.getBitacoras = async (req, res) => {
         }else {
             res.status(200).json({bitacoras:[]})
         }
+        
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Error al obtener las bitacoras", error})
@@ -269,7 +271,7 @@ exports.createBitacora = async (req, res) => {
                         })
                     })     
                    
-                    
+                    io.emit('nueva-bitacora', bitacora )                    
                     res.status(200).json({ message: "Bitacora creada correctamente", bitacora })   
 
                 }).catch( (error) => {
