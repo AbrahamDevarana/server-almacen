@@ -64,7 +64,7 @@ exports.loginWithPassword = async (req, res) => {
     // if(email.match(/@devarana.mx/)) return res.status(400).json({ message: 'Debes iniciar sesión con tu cuenta de Google' })
 
     try {
-        const user = await Users.findOne({ where: { email }, attributes: ['id', 'email', 'password'] })
+        const user = await Users.findOne({ where: { email }, attributes: ['id', 'email', 'password', 'esInterno'] })
         if(user){
             const isPasswordValid = bcrypt.compareSync(password, user.dataValues.password)
             if(isPasswordValid){

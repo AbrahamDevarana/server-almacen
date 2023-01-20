@@ -209,13 +209,16 @@ exports.createBitacora = async (req, res) => {
         //  obtener todos los participantesId del objeto fields
         const participantesId = Object.keys(fields).filter( (key) => key.includes('participantesId') )
         const participantes = participantesId.map( (key) => Number(fields[key]) )
-       
+        
+
         if (err) return res.status(500).json({ message: "Error al subir la bitacora", err });
 
         const galeria = Object.values(files)
         try {
 
             const tipoBitacora = await TipoBitacora.findOne({ where: { id: fields.tipoBitacoraId } })
+
+        
 
             await Bitacora.create({
                 titulo: fields.titulo,
@@ -240,17 +243,23 @@ exports.createBitacora = async (req, res) => {
                     console.log(error);
                     res.status(500).json({ message: "Error al vincular a los participantes", error })
                 })
-
                     
                 if( participantes.length > 0 ){
-                    await User.findAll({
-                        where: { 
+
+                    let where = { id: participantes }
+
+                    if( bitacora.externoId ){
+                        where = {
                             [Op.or]: [
                                 { id: participantes },
                                 { id : bitacora.externoId }
                             ]
                         }
-                    }).then( async (users) => {                            
+                    }
+
+                    await User.findAll({
+                        where,
+                    }).then( async (users) => {                          
                         await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users, bitacora.dataValues.uid)
                     }).catch( (error) => {
                         console.log(error);
