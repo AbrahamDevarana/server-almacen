@@ -28,7 +28,8 @@ const db = new Sequelize(
             idle: 10000
         },
         timezone: '-05:00',
-        logging: process.env.NODE_ENV === 'production' ? false : console.log
+        // logging: process.env.NODE_ENV === 'production' ? false : console.log
+        logging: false
     }
 )
 

@@ -25,7 +25,8 @@ exports.getBitacoras = async (req, res) => {
     const { userId, obraId, nivelId, zonaId, actividad, fechaInicio, fechaFin, etapaId, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { limit, offset } = getPagination(page, size);
     const { id } = req.user
-
+    
+    console.log(req.query);
 
     const obraWhere = [
         obraId ? {"$obra.id$" : obraId } : {}
@@ -41,17 +42,30 @@ exports.getBitacoras = async (req, res) => {
     ]
 
     const userWhere = [
-        userId ? {"$user.id$" : userId } : {},
+
+        userId ? {
+            [Op.or]: [
+                {"autorId" : Number(userId) },
+                {"$autorInt.id$" : Number(userId) },
+                {"$autorExt.id$" : Number(userId) },
+                {"$participantes.pivot_bitacora_users.userId$" : Number(userId) },
+            ]
+        }     
+        :
+        {} 
+        
     ]
 
     const etapaWhere = [
         etapaId ? {"$etapa.id$" : etapaId } : {},
     ]
 
+    console.log(busqueda);
 
     const busquedaWhere = busqueda ?
         {
             [Op.or]: [
+                {"titulo" : {[Op.like]: `%${busqueda}%`}},
                 {"$tipo_bitacora.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$nivele.nombre$" : {[Op.like]: `%${busqueda}%`}},
@@ -93,7 +107,12 @@ exports.getBitacoras = async (req, res) => {
                         },
                         {
                             externoId: id,
-                        }
+                        },
+
+                        // userId ? {"autorId" : Number(userId) } : {},
+                        // userId ? {"$autorInt.id$" : Number(userId) } : {},
+                        // userId ? {"$autorExt.id$" : Number(userId) } : {},
+                        // userId ? {"$participantes.pivot_bitacora_users.userId$" : Number(userId) } : {},
                     ]
                 }
             }
@@ -127,8 +146,9 @@ exports.getBitacoras = async (req, res) => {
                 ],
                 // limit,
                 // offset,
+                logging: console.log,
                 distinct: true,
-                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor]}
+                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor, userWhere]}
 
             })
             const response = getPagingData(bitacoras, page, limit);
