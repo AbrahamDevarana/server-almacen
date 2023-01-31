@@ -76,7 +76,9 @@ async function solicitarPrestamo ( responsable, actividad, usuario ){
 }
 
 
-async function reporteBitacora ( autor, tipoBitacora, involucrados, uid ){
+async function reporteBitacora ( autor, tipoBitacora, involucrados, uid, correos){
+
+    console.log('correos', correos);
 
     const body = `
                 <div style="margin:auto; max-width:600px; width:100%; padding:15px;">
@@ -84,7 +86,11 @@ async function reporteBitacora ( autor, tipoBitacora, involucrados, uid ){
                     <p style="color:#646375;padding: 5px 0;font-size: 16px;"> El usuario <span style="color:#d64767; font-weight:800">${autor.nombre} ${autor.apellidoPaterno}</span> ha creado un reporte de ${tipoBitacora} </p>
                     <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Los siguientes usuarios han sido involucrados en el reporte: </p>
                     <ul>
-                        ${involucrados.map( usuario => `<li style="color:#646375;padding: 5px 0;font-size: 16px;">${usuario.nombre} ${usuario.apellidoPaterno}</li>`).join('')}
+                        ${ involucrados.length > 0 ?  involucrados.map( usuario => `<li style="color:#646375;padding: 5px 0;font-size: 16px;">${usuario.nombre} ${usuario.apellidoPaterno}</li>`).join('') : '' }
+                        ${
+                            correos && correos.length > 0 ? 
+                            correos.map( correo => `<li style="color:#646375;padding: 5px 0;font-size: 16px;">${correo}</li>`).join('') : ''
+                        }
                     </ul>
                     <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Puedes ver el reporte en la plataforma </p>
                     <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/bitacora/${uid}">Ingresa Aquí</a>                    
@@ -98,6 +104,12 @@ async function reporteBitacora ( autor, tipoBitacora, involucrados, uid ){
         
         
         mailSender(usuario.email, `Reporte de ${tipoBitacora}`, html )
+
+        if( correos.length > 0 ){
+            correos.forEach( correo => {
+                mailSender(correo, `Reporte de ${tipoBitacora}`, html )
+            })
+        }
     })
 }
 

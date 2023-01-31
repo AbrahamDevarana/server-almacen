@@ -229,7 +229,11 @@ exports.createBitacora = async (req, res) => {
         //  obtener todos los participantesId del objeto fields
         const participantesId = Object.keys(fields).filter( (key) => key.includes('participantesId') )
         const participantes = participantesId.map( (key) => Number(fields[key]) )
-        
+
+        const correos = Object.keys(fields).filter( (key) => key.includes('correos') )
+        const correosParticipantes = correos.map( (key) => fields[key] )
+
+
 
         if (err) return res.status(500).json({ message: "Error al subir la bitacora", err });
 
@@ -264,27 +268,32 @@ exports.createBitacora = async (req, res) => {
                     res.status(500).json({ message: "Error al vincular a los participantes", error })
                 })
                     
-                if( participantes.length > 0 ){
+                if( participantes.length > 0  || correosParticipantes.length > 0){
 
                     let where = { id: participantes }
+                    let users = []
 
-                    if( bitacora.externoId ){
-                        where = {
-                            [Op.or]: [
-                                { id: participantes },
-                                { id : bitacora.externoId }
-                            ]
+                    if( participantes.length > 0  ){
+                        if( bitacora.externoId ){
+                            where = {
+                                [Op.or]: [
+                                    { id: participantes },
+                                    { id: bitacora.externoId }
+                                ]
+                            }
                         }
+    
+                        const usuariosParticipantes = await User.findAll({
+                            where,
+                        });
+    
+                        users = usuariosParticipantes.map( (user) => user.dataValues )
                     }
+                    
 
-                    await User.findAll({
-                        where,
-                    }).then( async (users) => {                          
-                        await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users, bitacora.dataValues.uid)
-                    }).catch( (error) => {
-                        console.log(error);
-                        res.status(500).json({ message: "Error al enviar reporte bitacora", error })
-                    })
+                   
+
+                    await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users, bitacora.dataValues.uid, correosParticipantes)
                 }
 
                 await uploadDynamicFiles(galeria, 'bitacoras').then( async (result) => {
