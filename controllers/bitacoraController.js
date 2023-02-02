@@ -17,29 +17,15 @@ const PivotBitacoraUser = require('../models/PivotBitacoraUser')
 const Users = require('../models/Users')
 const Permisos = require('../models/Permisos')
 const { io } = require('../services/socketService')
+const Proyectos = require('../models/Proyectos')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
 
 exports.getBitacoras = async (req, res) => {
-    const { userId, obraId, nivelId, zonaId, actividad, fechaInicio, fechaFin, etapaId, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
+    const { userId, proyectoId, actividad, fechaInicio, fechaFin, etapaId, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { limit, offset } = getPagination(page, size);
     const { id } = req.user
-    
-    console.log(req.query);
-
-    const obraWhere = [
-        obraId ? {"$obra.id$" : obraId } : {}
-        // busqueda ? {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}} : {}
-    ]
-    
-    const nivelWhere = [
-        nivelId ? {"$nivele.id$" : nivelId } : {},
-    ]
-
-    const zonaWhere = [
-        zonaId ? {"$zona.id$" : zonaId } : {},
-    ]
 
     const userWhere = [
 
@@ -60,16 +46,16 @@ exports.getBitacoras = async (req, res) => {
         etapaId ? {"$etapa.id$" : etapaId } : {},
     ]
 
-    console.log(busqueda);
+    const proyectoWhere = [
+        proyectoId ? {"$proyecto.proyectoId$" : proyectoId } : {},
+    ]
 
     const busquedaWhere = busqueda ?
         {
             [Op.or]: [
                 {"titulo" : {[Op.like]: `%${busqueda}%`}},
                 {"$tipo_bitacora.nombre$" : {[Op.like]: `%${busqueda}%`}},
-                {"$obra.nombre$" : {[Op.like]: `%${busqueda}%`}},
-                {"$nivele.nombre$" : {[Op.like]: `%${busqueda}%`}},
-                {"$zona.nombre$" : {[Op.like]: `%${busqueda}%`}},
+                {"$proyecto.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$autorExt.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$autorInt.nombre$" : {[Op.like]: `%${busqueda}%`}},
                 {"$autorExt.apellidoPaterno$" : {[Op.like]: `%${busqueda}%`}},
@@ -108,22 +94,15 @@ exports.getBitacoras = async (req, res) => {
                         {
                             externoId: id,
                         },
-
-                        // userId ? {"autorId" : Number(userId) } : {},
-                        // userId ? {"$autorInt.id$" : Number(userId) } : {},
-                        // userId ? {"$autorExt.id$" : Number(userId) } : {},
-                        // userId ? {"$participantes.pivot_bitacora_users.userId$" : Number(userId) } : {},
                     ]
                 }
             }
 
             const bitacoras = await Bitacora.findAndCountAll({
                 include: [
+                    { model: Proyectos, attributes: ['id', 'nombre'], where: proyectoWhere },
                     { model: TipoBitacora, attributes: ['nombre'] },
                     { model: GaleriaBitacora, attributes: ['url', 'type'] },
-                    { model: Obra, attributes: ['id', 'nombre', 'centroCosto'], where: obraWhere , required: false},
-                    { model: Nivel, attributes: ['id', 'nombre'], where: nivelWhere, required: false},
-                    { model: Zona, attributes: ['nombre'], where: zonaWhere, required: false},
                     { model: Etapas, attributes: ['nombre'], where: etapaWhere},
                     {
                         model: User,
@@ -169,12 +148,10 @@ exports.getBitacora = async (req, res) => {
         await Bitacora.findOne({
                 where: { uid: req.params.uid },
                 include: [
+                    { model: Proyectos, attributes: ['id', 'nombre'] },
                     { model: TipoBitacora, attributes: ['id', 'nombre'] },
                     { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
-                    //  where id != 0
-                    { model: Obra, attributes: ['id', 'nombre']},
-                    { model: Nivel, attributes: ['id', 'nombre']},
-                    { model: Zona, attributes: ['id', 'nombre']},
+                    { model: Etapas, attributes: ['nombre']},
                     { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ], as: 'participantes' },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
                         { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
@@ -182,14 +159,14 @@ exports.getBitacora = async (req, res) => {
                     ] },
                     {
                         model: User,
-                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ],
                         as: 'autorInt',
                         required: false,
                         where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
                     }, 
                     {
                         model: User,
-                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture'],
                         as: 'autorExt',
                         required: false,
                         where: Sequelize.where(Sequelize.col('bitacora.esInterno'), false),
@@ -242,26 +219,26 @@ exports.createBitacora = async (req, res) => {
 
             const tipoBitacora = await TipoBitacora.findOne({ where: { id: fields.tipoBitacoraId } })
 
-        
+            const { clave } = await Proyectos.findOne({ where: { id: fields.proyectoId } })
 
             await Bitacora.create({
                 titulo: fields.titulo,
                 descripcion: fields.descripcion,
-                
-                etapaId: fields.etapaId,
-                obraId: fields.obraId,
-                nivelId: fields.nivelId,
-                zonaId: fields.zonaId,
+                proyectoId: fields.proyectoId,
+                etapaId: fields.etapaId,                
                 externoId: fields.externoId,
                 tipoBitacoraId: fields.tipoBitacoraId,
                 autorId: req.user.id,
                 externoId: fields.externoId,
-
                 actividad: fields.actividad,
-                esInterno: fields.esInterno,                
+                esInterno: fields.esInterno,
                 fecha: moment(new Date(fields.fecha)).format('YYYY-MM-DD HH:mm:ss'),
 
             }).then( async (bitacora) => {
+
+                bitacora.update({
+                    folio: `${clave}-${bitacora.id}`
+                })
 
                 await bitacora.setParticipantes(participantes).catch( (error) => {
                     console.log(error);
@@ -382,10 +359,6 @@ exports.generateReport = async (req, res) => {
             include: [
                 { model: TipoBitacora, attributes: ['id', 'nombre'] },
                     { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
-                    //  where id != 0
-                    { model: Obra, attributes: ['id', 'nombre']},
-                    { model: Nivel, attributes: ['id', 'nombre']},
-                    { model: Zona, attributes: ['id', 'nombre']},
                     { model: Etapas, attributes: ['id', 'nombre']},                    
                     { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'esInterno' ], as: 'participantes' },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
@@ -489,26 +462,32 @@ const uploadDynamicFiles = async (files, folderName) => {
 
     return new Promise( async (resolve, reject) => {
             
-            await Promise.all(files.map(async (picture) => {
+            await Promise.all(files.map(async (item) => {
                 
-            const contentType = picture.type
-            let file = picture.path
+            const contentType = item.type
+            let file = ''
             let folder = `${folderName}/files`
 
 
             if ( contentType === 'image/jpeg' || contentType === 'image/png' || contentType === 'image/jpg' ) {
-                let source = tinify.fromFile(picture.path);
+                let source = tinify.fromFile(item.path);
                 file = await source.toBuffer();
                 folder = `${folderName}/images`
+            }else{
+                file = fs.readFileSync(item.path)
             }
+            
+
 
             const uploadParams = {
                 Bucket: process.env.AWS_BUCKET_NAME,
                 Body: file,
                 Key: `${folder}/file-${ new Date().getTime() }`,
                 ACL: 'public-read',
-                ContentType: contentType
+                ContentType: contentType,
             }
+
+            console.log(uploadParams);
 
             const data = await s3Client.send(new PutObjectCommand(uploadParams))
             if(data) {
@@ -636,9 +615,6 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                     <table style="width: 100%;">
                             <tr> <h2 style="font-size: 16px; color: #56739B;">Información Especifica</h2> </tr>
                             <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Etapa:</span> ${ bitacora.etapa?.dataValues?.nombre || '' } </p>  </tr>
-                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Obra:</span> ${ bitacora.obra?.dataValues?.nombre || '' } </p>   </tr>
-                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Nivel:</span> ${ bitacora.nivele?.dataValues?.nombre || '' } </p>   </tr>
-                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Zona:</span> ${ bitacora.zona?.dataValues?.nombre || '' } </p>   </tr>
                             <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Actividad:</span> ${ bitacora.actividad || '' } </p>   </tr>
                             <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Contratista:</span> ${ bitacora.contratista?.dataValues?.nombre || '' } </p>   </tr> 
                             

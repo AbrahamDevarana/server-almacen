@@ -23,6 +23,7 @@ const GaleriaComentario = require('./GaleriaComentario')
 const Etapas = require('./Etapas')
 const PivotBitacoraUser = require('./PivotBitacoraUser')
 const Empresa = require('./Empresa')
+const Proyectos = require('./Proyectos')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -93,6 +94,7 @@ DetalleSalida.belongsTo( Prestamos, {foreignKey: 'prestamoId'} )
 // Bitacora
 
 
+Bitacora.belongsTo(Proyectos, { foreignKey: 'proyectoId', allowNull: true })
 Bitacora.belongsTo(Etapas, { foreignKey: 'etapaId', allowNull: true })
 Bitacora.belongsTo(Obra, { foreignKey: 'obraId', allowNull: true })
 Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId', allowNull: true })
@@ -117,6 +119,8 @@ Bitacora.belongsTo(User, { foreignKey: 'externoId', as: 'contratista', allowNull
 Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
 ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' } )
 ComentariosBitacora.hasMany(GaleriaComentario, { foreignKey: 'comentarioId' })
+
+
 
 
 

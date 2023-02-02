@@ -23,11 +23,11 @@ app.use(cors( { origin: process.env.CLIENT_URL, credentials:true } ));
 
 app.use(cookieSession({
     secret: COOKIE_SECRET,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours,
     saveUninitialized: true,
     resave: false,
-    name: 'dev-session',
+    name: 'erp-session',
     cookie: {
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours,
         sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
         secure: process.env.NODE_ENV === "production", // must be true if sameSite='none'
     }

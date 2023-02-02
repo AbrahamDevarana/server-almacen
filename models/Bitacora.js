@@ -14,6 +14,10 @@ const Bitacora = db.define('bitacora', {
         unique: true,
         defaultValue: Sequelize.UUIDV4        
     },
+    folio:{
+        type: Sequelize.STRING,
+        unique: true,
+    },
     titulo: {
         type: Sequelize.STRING,
         allowNull: false
@@ -26,15 +30,6 @@ const Bitacora = db.define('bitacora', {
         type: Sequelize.INTEGER,
         allowNull: false,
     },
-    obraId: {
-        type: Sequelize.INTEGER,
-    },
-    nivelId: {
-        type: Sequelize.INTEGER,
-    },
-    zonaId: {
-        type: Sequelize.INTEGER,
-    },
     actividad: {
         type: Sequelize.TEXT,
     },
@@ -43,6 +38,10 @@ const Bitacora = db.define('bitacora', {
     },
     autorId: {
         type: Sequelize.INTEGER,
+    },
+    proyectoId: {
+        type: Sequelize.INTEGER,
+        defaultValue: 1
     },
     esInterno:{
         type: Sequelize.BOOLEAN,
@@ -76,7 +75,20 @@ const Bitacora = db.define('bitacora', {
     hooks: {
         beforeUpdate: (bitacora) => {
             bitacora.updatedAt = new Date()
+        },
+        afterCreate: (bitacora) => {
+            // Obtener el la clave del proyecto y el id de la bitacora
+
+            bitacora.getProyecto().then(proyecto => {
+                // consultar el tipo de bitacora
+
+                bitacora.update({
+                    folio: `${proyecto.clave}-${bitacora.id}`
+                })
+            })          
         }
+            
+            
     }
 })
 
