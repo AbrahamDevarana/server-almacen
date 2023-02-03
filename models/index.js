@@ -24,6 +24,7 @@ const Etapas = require('./Etapas')
 const PivotBitacoraUser = require('./PivotBitacoraUser')
 const Empresa = require('./Empresa')
 const Proyectos = require('./Proyectos')
+const MailBitacora = require('./MailBitacora')
 
 // Este archivo genera las relacion que existen entre modelos, para evitar confictos en la generación de relaciones.
 
@@ -120,8 +121,7 @@ Bitacora.hasMany(ComentariosBitacora, { foreignKey: 'bitacoraId' })
 ComentariosBitacora.belongsTo(User, { foreignKey: 'autorId' } )
 ComentariosBitacora.hasMany(GaleriaComentario, { foreignKey: 'comentarioId' })
 
-
-
+Bitacora.hasMany(MailBitacora, { foreignKey: 'bitacoraId' })
 
 
 module.exports = {

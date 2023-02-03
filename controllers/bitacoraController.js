@@ -19,12 +19,13 @@ const Permisos = require('../models/Permisos')
 const { io } = require('../services/socketService')
 const Proyectos = require('../models/Proyectos')
 const db = require('../config/db')
+const MailBitacora = require('../models/MailBitacora')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
 
 exports.getBitacoras = async (req, res) => {
-    const { userId, proyectoId, fechaInicio, fechaFin, etapaId, tipoBitacoraId, busqueda = "", ordenSolicitado = "DESC" } = req.query
+    const { userId, proyectoId, fechaInicio, fechaFin, etapaId, tipoBitacoraId, isNew = 0,  busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { id } = req.user
 
     const userWhere = [
@@ -117,17 +118,27 @@ exports.getBitacoras = async (req, res) => {
             })
 
             const [[conteoBitacoras]] = await db.query(`
-                    SELECT COUNT(*) AS total,
-                    COUNT(CASE WHEN tipoBitacoraId = 1 THEN 1 END) AS incidencias,
-                    COUNT(CASE WHEN tipoBitacoraId = 2 THEN 1 END) AS acuerdos,
-                    COUNT(CASE WHEN tipoBitacoraId = 3 THEN 1 END) AS inicio,
-                    COUNT(CASE WHEN tipoBitacoraId = 4 THEN 1 END) AS cierre,
-                    COUNT(CASE WHEN pivot_bitacora_users.visited = 0 THEN 1 END) AS noVisto
+                    SELECT COUNT(DISTINCT bitacoras.id) as total,
+                    COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 1 THEN bitacoras.id END) AS incidencias,
+                    COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 2 THEN bitacoras.id END) AS acuerdos,
+                    COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 3 THEN bitacoras.id END) AS inicio,
+                    COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 4 THEN bitacoras.id END) AS cierre,
+                    SUM(CASE WHEN pivot_bitacora_users.visited = 0  and pivot_bitacora_users.userId = ${id} THEN 1 ELSE 0 END) AS noVisto
                     FROM bitacoras
                     LEFT JOIN pivot_bitacora_users ON pivot_bitacora_users.bitacoraId = bitacoras.id
                     WHERE ${whereCounter ? `1` : `autorId = ${id} or pivot_bitacora_users.userId = ${id}` }
                     
             `)
+
+            // every conteBitacoras value to number
+            Object.keys(conteoBitacoras).forEach( key => conteoBitacoras[key] = Number(conteoBitacoras[key]) )
+           
+            const whereNuevo = Number(isNew) === 1 ? {
+                [Op.and]: [
+                    { '$participantes.pivot_bitacora_users.visited$': 0 },
+                    { '$participantes.pivot_bitacora_users.userId$': id },
+                ]
+            } : {}
 
             const bitacoras = await Bitacora.findAll({
                 include: [
@@ -155,7 +166,8 @@ exports.getBitacoras = async (req, res) => {
                     ['id', ordenSolicitado]
                 ],
                 distinct: true,
-                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor, userWhere, tipoBitacoraWhere]}
+                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor, userWhere, tipoBitacoraWhere, whereNuevo]},
+                // logging: console.log
 
             })
             res.status(200).json({bitacoras, conteoBitacoras})
@@ -179,6 +191,7 @@ exports.getBitacora = async (req, res) => {
                     { model: TipoBitacora, attributes: ['id', 'nombre'] },
                     { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
                     { model: Etapas, attributes: ['nombre']},
+                    { model: MailBitacora, attributes: ['id', 'mail']},
                     { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ], as: 'participantes' },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
                         { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
@@ -294,6 +307,15 @@ exports.createBitacora = async (req, res) => {
                         users = usuariosParticipantes.map( (user) => user.dataValues )
                     }
                     
+                    if(correosParticipantes.length > 0){
+                        // agregarlos a la tabla ext_mailbitacoras con el modelo MailBitacora
+                        correosParticipantes.forEach( async (mail) => {
+                            await MailBitacora.create({
+                                mail,
+                                bitacoraId: bitacora.id
+                            })
+                        })
+                    }
 
                    
 
