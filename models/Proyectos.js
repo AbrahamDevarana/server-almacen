@@ -17,9 +17,13 @@ const Proyectos = db.define('proyectos', {
         type: Sequelize.STRING,
         allowNull: false,
     },
+    logo: {
+        type: Sequelize.STRING,
+    },
     status: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
+        defaultValue: true
     },
     createdAt: {
         type: Sequelize.DATE,

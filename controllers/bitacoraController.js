@@ -1,4 +1,4 @@
-const { Obra, Nivel, Zona, Personal, Bitacora, TipoBitacora, GaleriaBitacora, Actividad, User, Role} = require('../models')
+const { Bitacora, TipoBitacora, GaleriaBitacora, User, Role} = require('../models')
 const moment = require('moment')
 const formidable = require('formidable-serverless')
 const { s3Client } = require('../utils/s3Client')
@@ -18,13 +18,13 @@ const Users = require('../models/Users')
 const Permisos = require('../models/Permisos')
 const { io } = require('../services/socketService')
 const Proyectos = require('../models/Proyectos')
+const db = require('../config/db')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
 
 exports.getBitacoras = async (req, res) => {
-    const { userId, proyectoId, actividad, fechaInicio, fechaFin, etapaId, page, size, busqueda = "", ordenSolicitado = "DESC" } = req.query
-    const { limit, offset } = getPagination(page, size);
+    const { userId, proyectoId, fechaInicio, fechaFin, etapaId, tipoBitacoraId, busqueda = "", ordenSolicitado = "DESC" } = req.query
     const { id } = req.user
 
     const userWhere = [
@@ -47,7 +47,7 @@ exports.getBitacoras = async (req, res) => {
     ]
 
     const proyectoWhere = [
-        proyectoId ? {"$proyecto.proyectoId$" : proyectoId } : {},
+        proyectoId ? {"$proyecto.id$" : proyectoId } : {},
     ]
 
     const busquedaWhere = busqueda ?
@@ -71,6 +71,9 @@ exports.getBitacoras = async (req, res) => {
         fechaFin ? {"fecha" : {[Op.lte]: moment(fechaFin).endOf('day').format('YYYY-MM-DD HH:mm:ss')}} : {}
     ]
    
+    const tipoBitacoraWhere = [
+        tipoBitacoraId ? {"tipoBitacoraId" : tipoBitacoraId } : {},
+    ]
     
 
     try {
@@ -97,10 +100,38 @@ exports.getBitacoras = async (req, res) => {
                     ]
                 }
             }
+            
 
-            const bitacoras = await Bitacora.findAndCountAll({
+            // revisar permisos
+
+
+            const whereCounter = await Users.findOne({ where: { id }, include: [{ model: Role , include: Permisos}]})
+            .then( async user => {
+                
+                if( user.role.permisos.some( item => item.permisos === 'ver bitacora de otros' ) ){
+                    return true
+                }else{
+                    return false
+                    
+                }
+            })
+
+            const [[conteoBitacoras]] = await db.query(`
+                    SELECT COUNT(*) AS total,
+                    COUNT(CASE WHEN tipoBitacoraId = 1 THEN 1 END) AS incidencias,
+                    COUNT(CASE WHEN tipoBitacoraId = 2 THEN 1 END) AS acuerdos,
+                    COUNT(CASE WHEN tipoBitacoraId = 3 THEN 1 END) AS inicio,
+                    COUNT(CASE WHEN tipoBitacoraId = 4 THEN 1 END) AS cierre,
+                    COUNT(CASE WHEN pivot_bitacora_users.visited = 0 THEN 1 END) AS noVisto
+                    FROM bitacoras
+                    LEFT JOIN pivot_bitacora_users ON pivot_bitacora_users.bitacoraId = bitacoras.id
+                    WHERE ${whereCounter ? `1` : `autorId = ${id} or pivot_bitacora_users.userId = ${id}` }
+                    
+            `)
+
+            const bitacoras = await Bitacora.findAll({
                 include: [
-                    { model: Proyectos, attributes: ['id', 'nombre'], where: proyectoWhere },
+                    { model: Proyectos, attributes: ['id', 'nombre'], where: proyectoWhere},
                     { model: TipoBitacora, attributes: ['nombre'] },
                     { model: GaleriaBitacora, attributes: ['url', 'type'] },
                     { model: Etapas, attributes: ['nombre'], where: etapaWhere},
@@ -123,17 +154,13 @@ exports.getBitacoras = async (req, res) => {
                 order: [
                     ['id', ordenSolicitado]
                 ],
-                // limit,
-                // offset,
-                logging: console.log,
                 distinct: true,
-                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor, userWhere]}
+                where: {[Op.and] : [fechaWhere, busquedaWhere, whereAutor, userWhere, tipoBitacoraWhere]}
 
             })
-            const response = getPagingData(bitacoras, page, limit);
-            res.status(200).json({bitacoras:response})
+            res.status(200).json({bitacoras, conteoBitacoras})
         }else {
-            res.status(200).json({bitacoras:[]})
+            res.status(200).json({bitacoras:[], conteoBitacoras: {total: 0, incidencias: 0, acuerdos: 0, inicio: 0, cierre: 0, avance: 0, noVisto: 0}})
         }
         
     } catch (error) {
