@@ -618,7 +618,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
             }
             
             body{
-                font-size: 14px;
+                font-size: 12px;
             }
 
             h1, h2, h3, h4, h5, h6{
