@@ -625,7 +625,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
             p, li, span, a, td{
                 font-family: 'Mulish', sans-serif;
                 color:#646375;
-                font-size: 14px!important;
+                font-size: 12px!important;
                 margin: 0 0 10px;
             }
             td{
@@ -650,7 +650,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                 </th>
             </table>
 
-            <p style="font-size: 14px;padding: 25px 0 25px;">
+            <p style="font-size: 12px;padding: 25px 0 25px;">
                 ${descripcion}
             </p>
 
@@ -670,31 +670,31 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                     <div style="position:relative;float:left">
                         <div style="width:50%; float:left;">
                             <div>
-                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Fecha:</p>
+                                <p style="display:inline-block;font-size: 12px;font-weight: bold;">Fecha:</p>
                                 <p style="display:inline-block;">${ moment(fecha).format('LLL') }</p>
                             </div>
                             
                             <div>
-                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Autor:</p>
+                                <p style="display:inline-block;font-size: 12px;font-weight: bold;">Autor:</p>
                                 <p style="display:inline-block;">${ autorInt ? `${autorInt.nombre} ${autorInt.apellidoPaterno} ${autorInt.apellidoMaterno}` : `${autorExt.nombre} ${autorExt.apellidoPaterno} ${autorExt.apellidoMaterno}` }</p>
                             </div>
                             <div>
-                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Proyecto:</p>
+                                <p style="display:inline-block;font-size: 12px;font-weight: bold;">Proyecto:</p>
                                 <p style="display:inline-block;">${proyecto.nombre}</p>
                             </div>
                             <div>
-                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Etapa:</p>
+                                <p style="display:inline-block;font-size: 12px;font-weight: bold;">Etapa:</p>
                                 <p style="display:inline-block;">${etapa.nombre}</p>
                             </div>
                             <div>
-                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Actividad:</p>
+                                <p style="display:inline-block;font-size: 12px;font-weight: bold;">Actividad:</p>
                                 <p style="display:inline-block;">${actividad}</p>
                             </div>
 
                             ${
                                 contratista ? `
                                 <div>
-                                    <p style="display:inline-block;font-size: 14px;font-weight: bold;">Contratista:</p>
+                                    <p style="display:inline-block;font-size: 12px;font-weight: bold;">Contratista:</p>
                                     <p style="display:inline-block;">${contratista.nombre}</p>
                                 </div>
                                 ` : ''
@@ -702,7 +702,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                             ${ 
                                 participantes.length > 0 ? `
                                 <div>
-                                    <p style="display:inline-block;font-size: 14px;font-weight: bold;">Participantes:</p>
+                                    <p style="display:inline-block;font-size: 12px;font-weight: bold;">Participantes:</p>
                                     ${
                                         participantes.map( participante => {
                                             return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${participante.nombre} ${participante.apellidoPaterno} ${participante.apellidoMaterno}</p>`
@@ -714,7 +714,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                             ${ 
                                 ext_mail_bitacoras && ext_mail_bitacoras.length > 0 ? `
                                 <div>
-                                    <p style="display:inline-block;font-size: 14px;font-weight: bold;">Notificados:</p>
+                                    <p style="display:inline-block;font-size: 12px;font-weight: bold;">Notificados:</p>
                                     ${
                                         ext_mail_bitacoras.map( notificado => {
                                             return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${notificado.mail}</p>`
@@ -727,11 +727,11 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                         </div>
                         <div style="width:50%; float:left;">
                             <div>
-                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Título:</p>
+                                <p style="display:inline-block;font-size: 12px;font-weight: bold;">Título:</p>
                                 <p style="display:inline-block;"> ${titulo} </p>
                             </div>
                             <div>
-                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Descripción:</p>
+                                <p style="display:inline-block;font-size: 12px;font-weight: bold;">Descripción:</p>
                                 <p style="display:inline-block;"> ${ descripcion } </p>
                             </div>
                         </div>
@@ -740,7 +740,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                     ${
                         imagenes && galeria_bitacoras ? `
                         <div style="padding: 10px 0">
-                            <p style="font-size: 14px;font-weight: bold">Evidencia:</p>
+                            <p style="font-size: 12px;font-weight: bold">Evidencia:</p>
                             ${
                                 galeria_bitacoras.map( evidencia => {
                                     if(evidencia.type === 'application/pdf'){
@@ -766,7 +766,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                    ${
                      comentarios && comentarios_bitacoras.length > 0 ? `
                      <div>
-                        <p style="width: 100%;font-size: 14px;font-weight: bold">Comentarios ( ${comentarios_bitacoras.length} )</p>
+                        <p style="width: 100%;font-size: 12px;font-weight: bold">Comentarios ( ${comentarios_bitacoras.length} )</p>
                         ${
                             comentarios_bitacoras.map( comentario => {
                                 return (`
@@ -774,22 +774,22 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                                         <div style="width: 7px;height: 7px;background-color: rgba(0, 0, 0, .3)"></div>
                                         <div style="width: calc( 100% - 30px);display: inline-block;border-left: 1px solid rgba(0, 0, 0, .1);padding-left: 5px;">
                                             <div style="padding-left: 5px;">
-                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 14px;font-weight: bold;">Fecha:</p>
+                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 12px;font-weight: bold;">Fecha:</p>
                                                 <p style="display: inline-block;margin: 5px 0 0;"> ${ moment(comentario.createdAt).format('LLL') } </p>
                                             </div>
                                             <div style="padding-left: 5px;">
-                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 14px;font-weight: bold;">Autor:</p>
+                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 12px;font-weight: bold;">Autor:</p>
                                                 <p style="display: inline-block;margin: 5px 0 0;"> ${comentario.user.nombre + ' ' + comentario.user.apellidoPaterno + ' ' + comentario.user.apellidoMaterno} </p>
                                             </div>
                                             <div style="padding-left: 5px;">
-                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 14px;font-weight: bold;">Comentario:</p>
+                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 12px;font-weight: bold;">Comentario:</p>
                                                 <p style="display: inline-block;margin: 5px 0 0;"> ${comentario.comentario} </p>
                                             </div>
                                             ${
                                                 imagenes && comentario.galeria_comentarios && comentario.galeria_comentarios.length > 0 ? `
                                                 <div style="padding: 10px 5px">
                                                     <div style="padding: 10px 0">
-                                                        <p style="font-size: 14px;font-weight: bold">Evidencia:</p>
+                                                        <p style="font-size: 12px;font-weight: bold">Evidencia:</p>
                                                         ${
                                                             comentario.galeria_comentarios.map( evidencia => ( 
                                                                 evidencia.type === 'application/pdf' ?
