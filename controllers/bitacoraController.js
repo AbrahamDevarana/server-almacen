@@ -625,7 +625,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
             p, li, span, a, td{
                 font-family: 'Mulish', sans-serif;
                 color:#646375;
-                font-size: 14px;
+                font-size: 14px!important;
                 margin: 0 0 10px;
             }
             td{
