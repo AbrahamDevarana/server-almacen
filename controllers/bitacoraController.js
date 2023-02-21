@@ -703,31 +703,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                                 </div>
                                 ` : ''
                             }
-                            ${ 
-                                participantes.length > 0 ? `
-                                <div>
-                                    <p style="display:inline-block;font-size: 1em;font-weight: bold;">Participantes:</p>
-                                    ${
-                                        participantes.map( participante => {
-                                            return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${participante.nombre} ${participante.apellidoPaterno} ${participante.apellidoMaterno}</p>`
-                                        }).join('')
-                                    }
-                                </div>
-                                ` : ''
-                            }
-                            ${ 
-                                ext_mail_bitacoras && ext_mail_bitacoras.length > 0 ? `
-                                <div>
-                                    <p style="display:inline-block;font-size: 1em;font-weight: bold;">Notificados:</p>
-                                    ${
-                                        ext_mail_bitacoras.map( notificado => {
-                                            return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${notificado.mail}</p>`
-                                        }).join('')
-                                    }  
-                                </div>
-                                ` : ''
                             
-                            }
                         </div>
                         <div style="width:50%; float:left;">
                             <div>
@@ -741,6 +717,33 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                         </div>
                     </div>
                     <div style="clear:both;"></div>
+                    <div>
+                    ${ 
+                        participantes.length > 0 ? `
+                        <div>
+                            <p style="display:inline-block;font-size: 1em;font-weight: bold;">Participantes:</p>
+                            ${
+                                participantes.map( participante => {
+                                    return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${participante.nombre} ${participante.apellidoPaterno} ${participante.apellidoMaterno}</p>`
+                                }).join('')
+                            }
+                        </div>
+                        ` : ''
+                    }
+                    ${ 
+                        ext_mail_bitacoras && ext_mail_bitacoras.length > 0 ? `
+                        <div>
+                            <p style="display:inline-block;font-size: 1em;font-weight: bold;">Notificados:</p>
+                            ${
+                                ext_mail_bitacoras.map( notificado => {
+                                    return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${notificado.mail}</p>`
+                                }).join('')
+                            }  
+                        </div>
+                        ` : ''
+                    
+                    }
+                    </div>
                     ${
                         imagenes && galeria_bitacoras ? `
                         <div style="padding: 10px 0">
@@ -829,12 +832,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
             }
             
         </body>
-        <style>
-        * {
-                
-                text-transform: none!important;
-            }
-        </style>
+
         </html>
         <div id="pageFooter" style="text-align: center; height:30px;">
             <div style="display: inline-block;"><span style="margin:0;">Página {{page}} de {{pages}}</span></div>
