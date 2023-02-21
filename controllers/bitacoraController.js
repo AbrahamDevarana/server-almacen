@@ -853,7 +853,8 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                 },
                 footer: {
                     height: '40px',
-                }
+                },
+                zoomFactor: '1',
 
                     
             }
