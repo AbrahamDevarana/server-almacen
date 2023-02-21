@@ -410,6 +410,8 @@ exports.generateReport = async (req, res) => {
                     { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
                     { model: Etapas, attributes: ['id', 'nombre']},                    
                     { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'esInterno' ], as: 'participantes' },
+                    { model: Proyectos, attributes: ['id', 'nombre']  },
+                    { model: MailBitacora, attributes: ['id', 'mail']},
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
                         { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
                         { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
@@ -560,6 +562,14 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
 
     const logo = fs.readFileSync(path.resolve(__dirname, '../static/img/logo.png'))
     const logoBase64 = logo.toString('base64')
+
+    const pdfIcon = fs.readFileSync(path.resolve(__dirname, '../static/img/pdf-icon.png'))
+    const logoPdfBase64 = pdfIcon.toString('base64')
+
+    const fullLogo = fs.readFileSync(path.resolve(__dirname, '../static/img/full-logo.png'))
+    const logoFullBase64 = fullLogo.toString('base64')
+
+    
     // print first bitacoras
     const content = `
     <!DOCTYPE html>
@@ -568,222 +578,282 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
             <meta charset="UTF-8">
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;700&family=Playfair+Display&display=swap" rel="stylesheet">
-            <link href="${'../static/fonts/Mulish-Regular.ttf'}" rel="stylesheet">
-            <link href="${'../static/fonts/PlayfairDisplay-Regular.ttf'}" rel="stylesheet">
-            <style>
-                @font-face {
-                    font-family: 'Mulish';
-                    src: url('/static/Mulis-Regular.ttf');
-                }
-                @font-face {
-                    font-family: 'Playfair Display';
-                    src: url('/static/PlayfairDisplay-Regular.ttf');
-                }
-
-                p, li, span {
-                    color: #646375;
-                    // font-family: 'Mulish', sans-serif;
-                    
-                }
-                h1, h2, h3, h4, h5, h6 {
-                    // font-family: 'Playfair Display', serif;
-                    color: #56739B;
-                }
-            </style>
         </head>
-            
+
+        <style>
+            @font-face {
+                font-family: 'Mulish';
+                font-style: normal;
+                font-weight: 300;
+                font-display: swap;
+                src: url(https://fonts.gstatic.com/s/mulish/v12/1Ptvg83HX_SGhgqk3wot.woff2) format('woff2');
+                unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+            @font-face {
+                font-family: 'Mulish';
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url(https://fonts.gstatic.com/s/mulish/v12/1Ptvg83HX_SGhgqk3wot.woff2) format('woff2');
+                unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+            @font-face {
+                font-family: 'Mulish';
+                font-style: normal;
+                font-weight: 700;
+                font-display: swap;
+                src: url(https://fonts.gstatic.com/s/mulish/v12/1Ptvg83HX_SGhgqk3wot.woff2) format('woff2');
+                unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+            @font-face {
+                font-family: 'Playfair Display';
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url(https://fonts.gstatic.com/s/playfairdisplay/v30/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtM.woff2) format('woff2');
+                unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+            }
+
+            h1, h2, h3, h4, h5, h6{
+                font-family: 'Playfair Display', sans-serif;
+                color:#646375;
+                font-weight: 400!important;
+            }
+            p, li, span, a, td{
+                font-family: 'Mulish', sans-serif;
+                color:#646375;
+                font-size: 14px;
+                margin: 0 0 10px;
+            }
+            td{
+                color:#646375;
+            }
+            * {
+                
+                text-transform: none!important;
+            }
+        </style>
         <body>
-            <table style="width: 100%; font-size: 8px; border-bottom: 1px solid rgba(100, 99, 117, .3);";>
-                <tr>
-                    <td style="width:10%">
-                        <img src="data:image/png;base64,${logoBase64}" style="width: 50px; height: 50px; padding:0 25%" />
-                    </td>
-                    <td style="width: 80%;">
-                        <h1 style="font-size: 24px;color:#56739B;text-align: center;">
-                            ${titulo}
-                        </h1>
-                    </td>
-                    <td style="width: 10%;">
-                    </td>
-                </tr>
+
+            <table style="width: 100%;border-spacing: 0;">
+                <th style="width:20%;text-align:center;border: 1px solid rgba(0, 0, 0, .1);position:relative;">
+                    <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/iconos%2Fdevarana-logo.png" style="z-index:109321390123;position:absolute; width:calc(90% - 10px); top:0 ;left:0;right:0;bottom:0;margin:auto;">
+                </th>
+                <th style="width:60%;border: 1px solid rgba(0, 0, 0, .1);padding-bottom:5px;">
+                    <h1 style="color:#d64767;text-align: center;font-size:16px;margin:0>">Reporte ${titulo} </h1>
+                </th>
+                <th style="width:20%;text-align:center;border: 1px solid rgba(0, 0, 0, .1);">
+                    <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/iconos%2Froyalview-logo.png" style="width:calc(90% - 10px); padding-top:3px;margin:0;padding-bottom:0;">
+                </th>
             </table>
-            
-            <div style="padding: 0 0 10px; ">
-                <p style="font-size: 14px;">
-                    ${descripcion}
-                </p>
-            </div>
+
+            <p style="font-size: 14px;padding: 25px 0 25px;">
+                ${descripcion}
+            </p>
+
+            <hr style="border: 1px solid rgba(0, 0, 0, .1);padding: 0 25px;">
 
             ${
-                bitacoras.map( (values) => {
-                
-                const bitacora = values.dataValues
-                
-                return (` 
-                
-                <div style="padding: 0 0 25px; ">
+                bitacoras.map( (bitacora, index) => {
 
-                <table style="background-color: #56739B; width: 100%;">
-                    <td>
-                        <p style="color: white; font-size: 16spx; font-weight: 600; padding: 0px 10px;"> Tipo: ${bitacora.tipo_bitacora.dataValues.nombre} </p>
-                    </td>
-                    <td>
-                        <p style="color: white; font-size: 16spx; font-weight: 600; padding: 0px 10px;"> ${bitacora.titulo} </p>
-                    </td>
-                    <td>
-                        <p style="color: white; font-size: 16spx; font-weight: 600; margin-left: auto; padding: 0 20px; text-align:right;">Folio: RV-${bitacora.id}</p>                
-                    </td>
-                </table>
-                <div style="padding: 0px 10px;">
-                    <table style="width: 100%;">
-                        <td>
-                            <p style="font-size: 12px;"><span style="font-weight: 700;">Autor:</span>  
-                                ${
-                                    bitacora.autorInt? bitacora.autorInt.dataValues.nombre + ' ' + bitacora.autorInt.dataValues.apellidoPaterno : bitacora.autorExt.dataValues.nombre + ' ' + bitacora.autorExt.dataValues.apellidoPaterno
-                                }
-                            </p>
-                        </td>
-                        <td style="text-align: right;">
-                            <p style="font-size: 12px;font-weight: 700;text-align: right;">
-                                Fecha:  
-                                <span style="font-weight: 400;">
-                                    ${ moment(bitacora.fecha).format('LLL') }
-                                </span>
-                            </p>
-                        </td>
-                    </table>
-   
-                    <h2 style="font-size: 18px;color:#56739B;">Descripción</h2>
-                    <p style="font-size: 12px;">
-                        ${bitacora.descripcion}
-                    </p>
-    
-                    <table style="width: 100%;">
-                            <tr> <h2 style="font-size: 16px; color: #56739B;">Información Especifica</h2> </tr>
-                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Etapa:</span> ${ bitacora.etapa?.dataValues?.nombre || '' } </p>  </tr>
-                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Actividad:</span> ${ bitacora.actividad || '' } </p>   </tr>
-                            <tr> <p style="font-size: 12px;"><span style="font-weight: 700;">Contratista:</span> ${ bitacora.contratista?.dataValues?.nombre || '' } </p>   </tr> 
-                            
-                    </table>
-                    <div style="width: 100%;">
-                    ${
-                        bitacora.participantes.length > 0 ?
-                        ` <h2 style="font-size: 16px; color: #56739B;">Participantes</h2>
-                            ${
-                                bitacora.participantes.map( (participante) => {
-                                    return `<p style="font-size: 12px; width:23%; display:inline-block; margin: 0px 2px "> - 
-                                    ${ participante.dataValues.nombre } 
-                                    ${ participante.dataValues.apellidoPaterno }
-                                    ${ participante.dataValues.esInterno ? '' : ' (Externo)' }
+                    const { folio, titulo, descripcion, actividad, fecha, tipo_bitacora, autorInt, autorExt, proyecto, etapa, contratista, participantes, galeria_bitacoras, comentarios_bitacoras, ext_mail_bitacoras } = bitacora
+                    const { nombre:nombreTipoBitacora } = tipo_bitacora
 
-                                    </p>`
-                                }).join('')
-                            }
-                        </div> `
-                    : ''}
-                    
-                    ${
-                        imagenes ? `
-                            <h2 style="font-size: 16px; color: #56739B;">Evidencia</h2>
-                            <div style="width:100%">
-                                ${
-                                    bitacora.galeria_bitacoras.map( (imagen) => {
-                                        return `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" target="_blank">
-                                                    <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" style="width:100px; height: 100px; padding: 10px 10px;" />
-                                                </a>`
-                                    }).join('')
-                                }
+                    return (`
+                    <div style="background-color:#56739B;margin-top:10px;">
+                        <p style="padding: 5px 20px;color:white;font-weight: 700;">Folio: ${folio} | ${ nombreTipoBitacora } </p>
+                    </div>
+
+                    <div style="position:relative;float:left">
+                        <div style="width:50%; float:left;">
+                            <div>
+                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Fecha:</p>
+                                <p style="display:inline-block;">${ moment(fecha).format('LLL') }</p>
                             </div>
-                        `: ''
-                    }
-                </div>
-                
-            
-                
-    
-                ${ comentarios && bitacora.comentarios_bitacoras.length > 0 ? `
-                    <hr style="border-color: rgba(86, 115, 155, .3); margin: 40px 0; border-bottom: 0;">
-                    <div style="padding-bottom: 10px;">
-                        <div style="margin-left: 20px; padding-left: 15px; border-left: 1px solid rgba(100, 99, 117, .3);">
-                            <h2 style="font-size: 18px;color: #56739B;">Comentarios ( ${ bitacora.comentarios_bitacoras.length } )</h2>
+                            
+                            <div>
+                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Autor:</p>
+                                <p style="display:inline-block;">${ autorInt ? `${autorInt.nombre} ${autorInt.apellidoPaterno} ${autorInt.apellidoMaterno}` : `${autorExt.nombre} ${autorExt.apellidoPaterno} ${autorExt.apellidoMaterno}` }</p>
+                            </div>
+                            <div>
+                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Proyecto:</p>
+                                <p style="display:inline-block;">${proyecto.nombre}</p>
+                            </div>
+                            <div>
+                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Etapa:</p>
+                                <p style="display:inline-block;">${etapa.nombre}</p>
+                            </div>
+                            <div>
+                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Actividad:</p>
+                                <p style="display:inline-block;">${actividad}</p>
+                            </div>
+
                             ${
-                                bitacora.comentarios_bitacoras.map( (comentario) => {
-                                    return `<div>
-                                                <p style="font-size: 12px;font-weight: 700;">
-                                                    Autor:
-                                                    <span style="font-weight: 400;">
-                                                        ${  comentario.user.nombre + ' ' + comentario.user.apellidoPaterno }
-                                                    </span>
-                                                </p>
-                                                <p style="font-size: 12px;">
-                                                    ${ comentario.dataValues.comentario }
-                                                </p>
-    
-                                                <p style="font-size: 12px;font-weight: 700;">
-                                                    Fecha:  
-                                                    <span style="font-weight: 400;">
-                                                        ${ moment(comentario.dataValues.fecha).format('LLL') }
-                                                    </span>
-                                                </p>
-                                            </div>
-                                           ${
-                                                imagenes ? 
-                                                ` <div style="display:flex; flex-direction:row; width:100%;">
-                                                    ${
-                                                        comentario.galeria_comentarios.map( (imagen) => {
-                                                            return `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" target="_blank">
-                                                                        <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${ imagen.dataValues.url }" style="width:100px; height: 100px; padding:0 25px" />
-                                                                    </a>`
-                                                        }).join('')
-                                                    }
-                                                </div>` : ''
-                                           }
-                                            <hr style="border-color: rgba(86, 115, 155, .3); margin: 20px 0; border-bottom: 0;">`
-                                }).join('')
+                                contratista ? `
+                                <div>
+                                    <p style="display:inline-block;font-size: 14px;font-weight: bold;">Contratista:</p>
+                                    <p style="display:inline-block;">${contratista.nombre}</p>
+                                </div>
+                                ` : ''
+                            }
+                            ${ 
+                                participantes.length > 0 ? `
+                                <div>
+                                    <p style="display:inline-block;font-size: 14px;font-weight: bold;">Participantes:</p>
+                                    ${
+                                        participantes.map( participante => {
+                                            return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${participante.nombre} ${participante.apellidoPaterno} ${participante.apellidoMaterno}</p>`
+                                        }).join('')
+                                    }
+                                </div>
+                                ` : ''
+                            }
+                            ${ 
+                                ext_mail_bitacoras && ext_mail_bitacoras.length > 0 ? `
+                                <div>
+                                    <p style="display:inline-block;font-size: 14px;font-weight: bold;">Notificados:</p>
+                                    ${
+                                        ext_mail_bitacoras.map( notificado => {
+                                            return `<p style="width:auto; display:inline-block; margin: 0px 2px;background-color: rgba(227, 227, 227, .5);padding: 2px 10px;">${notificado.mail}</p>`
+                                        }).join('')
+                                    }  
+                                </div>
+                                ` : ''
+                            
                             }
                         </div>
+                        <div style="width:50%; float:left;">
+                            <div>
+                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Título:</p>
+                                <p style="display:inline-block;"> ${titulo} </p>
+                            </div>
+                            <div>
+                                <p style="display:inline-block;font-size: 14px;font-weight: bold;">Descripción:</p>
+                                <p style="display:inline-block;"> ${ descripcion } </p>
+                            </div>
+                        </div>
                     </div>
-                    <hr style="border-color: rgba(86, 115, 155, .3); margin: 10px 0; border-bottom: 0;">
-                    `
-                : '' }
-                <!-- Loop reporte --> 
+                    <div style="clear:both;"></div>
+                    ${
+                        imagenes && galeria_bitacoras ? `
+                        <div style="padding: 10px 0">
+                            <p style="font-size: 14px;font-weight: bold">Evidencia:</p>
+                            ${
+                                galeria_bitacoras.map( evidencia => {
+                                    if(evidencia.type === 'application/pdf'){
+                                        return (`
+                                             <a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${evidencia.url}" style="width:100px; height: 100px; padding: 10px 10px;text-decoration:none;">
+                                                <img src="data:image/png;base64,${logoPdfBase64}" style="width:100px; height: 100px; padding: 10px 10px;" />
+                                            </a>`)
+                                    }else{
+                                        return (
+                                            `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${evidencia.url}" style="width:100px; height: 100px; padding: 10px 10px;text-decoration:none;">
+                                                <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${evidencia.url}" style="width:100px; height: 100px; padding: 10px 10px;"/>
+                                            </a>
+                                            `
+                                        )
+                                    }
+                                }).join('')
+                            }
+                        </div>`
+
+                        : ''
+                    }
+        
+                   ${
+                     comentarios && comentarios_bitacoras.length > 0 ? `
+                     <div>
+                        <p style="width: 100%;font-size: 14px;font-weight: bold">Comentarios ( ${comentarios_bitacoras.length} )</p>
+                        ${
+                            comentarios_bitacoras.map( comentario => {
+                                return (`
+                                    <div style="margin-bottom: 15px;padding-left:15px">
+                                        <div style="width: 7px;height: 7px;background-color: rgba(0, 0, 0, .3)"></div>
+                                        <div style="width: calc( 100% - 30px);display: inline-block;border-left: 1px solid rgba(0, 0, 0, .1);padding-left: 5px;">
+                                            <div style="padding-left: 5px;">
+                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 14px;font-weight: bold;">Fecha:</p>
+                                                <p style="display: inline-block;margin: 5px 0 0;"> ${ moment(comentario.createdAt).format('LLL') } </p>
+                                            </div>
+                                            <div style="padding-left: 5px;">
+                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 14px;font-weight: bold;">Autor:</p>
+                                                <p style="display: inline-block;margin: 5px 0 0;"> ${comentario.user.nombre + ' ' + comentario.user.apellidoPaterno + ' ' + comentario.user.apellidoMaterno} </p>
+                                            </div>
+                                            <div style="padding-left: 5px;">
+                                                <p style="display: inline-block;margin: 5px 0 0;font-size: 14px;font-weight: bold;">Comentario:</p>
+                                                <p style="display: inline-block;margin: 5px 0 0;"> ${comentario.comentario} </p>
+                                            </div>
+                                            ${
+                                                imagenes && comentario.galeria_comentarios && comentario.galeria_comentarios.length > 0 ? `
+                                                <div style="padding: 10px 5px">
+                                                    <div style="padding: 10px 0">
+                                                        <p style="font-size: 14px;font-weight: bold">Evidencia:</p>
+                                                        ${
+                                                            comentario.galeria_comentarios.map( evidencia => ( 
+                                                                evidencia.type === 'application/pdf' ?
+                                                                    `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${evidencia.url}" style="width:100px; height: 100px; padding: 10px 10px;text-decoration:none;">
+                                                                        <img src="data:image/png;base64,${logoPdfBase64}" style="width:100px; height: 100px; padding: 10px 10px;"/>
+                                                                    </a>`
+                                                                :
+
+                                                                    `<a href="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${evidencia.url}" style="width:100px; height: 100px; padding: 10px 10px;text-decoration:none;">
+                                                                        <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${evidencia.url}" style="width:100px; height: 100px; padding: 10px 10px;"/>
+                                                                    </a>
+                                                                    `
+                                                            )).join(' ')
+                                                        }
+                                                    </div>
+                                                </div>
+                                                ` : ''
+                                            }
+                                        </div>
+                                        
+                                    </div>
+                            `)
+                            }).join('')
+
+                        }
+                    </div>
+                     `
+                     : ''
+                   }
                 </div>
-                `) }
-                ). join('') }
+                `)
+                }).join('')
+            }
             
         </body>
+        <style>
+        * {
+                
+                text-transform: none!important;
+            }
+        </style>
         </html>
+        <div id="pageFooter" style="text-align: center; height:30px;">
+            <div style="display: inline-block;"><span style="margin:0;">Página {{page}} de {{pages}}</span></div>
+            <div style="display: inline-block;float:right;"><img src="data:image/png;base64,${logoBase64}" style="width: 25px; height: 25px;" /></div>
+        </div>
     `  
         pdf.create(
             content,
             {
                 format: 'A4',
+                phantomPath: require('phantomjs-prebuilt').path,
                 orientation: 'portrait',
                 border: {
-                    right: '0.2in',
-                    left: '0.2in',
-                    top: '0.5in',
-                    bottom: '0.2in'
+                    right: '0.4in',
+                    left: '0.4in',
+                    top: '0.41in',
+                    bottom: '0.1in'
                 },
                 footer: {
-                    height: '0.3in',
-                    contents: {
-                        default: `
-                            <div style="text-align:right;color: rgba(86, 115, 155, .8);">
-                                <span>
-                                    {{page}}
-                                </span>
-                                    de
-                                <span>
-                                    {{pages}}
-                                </span>
-                            </div>
-                        `, // fallback value                        
-                    }
-                }, 
+                    height: '40px',
+                }
+
+                    
             }
         ).toFile(`./public/pdf/Reporte-${moment().format('DD-MM-YYYY-hh-mm')}.pdf`, (err, res) => {
             if (err) return console.log(err);

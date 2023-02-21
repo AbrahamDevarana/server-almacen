@@ -18,7 +18,7 @@ const Proyectos = db.define('proyectos', {
         allowNull: false,
     },
     logo: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
     },
     status: {
         type: Sequelize.BOOLEAN,
