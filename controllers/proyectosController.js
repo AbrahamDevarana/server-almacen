@@ -5,8 +5,18 @@ const { uploadDynamicFiles, deleteDynamicFiles } = require('../utils/dynamicFile
 const formidable = require('formidable-serverless');
 
 exports.getProyectos = async (req, res) => {
+
+    const { status } = req.query;
+
+    const where = {}
+
+    if (status) {
+        where.status = status
+    }
+
+
     try {
-        await Proyectos.findAll().then(proyectos => {
+        await Proyectos.findAll({where}).then(proyectos => {
             res.status(200).json({ proyectos });
         }).catch(error => {
             console.log(error);
@@ -106,7 +116,7 @@ exports.updateProyecto = async (req, res) => {
                 console.log(err)
                 return res.status(400).json({ msg: 'No se pudo crear el proyecto' });
             }
-            const { nombre, clave } = fields;
+            const { nombre, clave, status } = fields;
 
             const galeria = Object.values(files)
             const logo = galeria[0]
@@ -116,9 +126,10 @@ exports.updateProyecto = async (req, res) => {
             // borrar la imagen anterior
             const proyecto = await Proyectos.findByPk(id);
 
-            if(proyecto.logo !== null) {
-                console.log(oldLogo);
-                const resultDelete = await deleteDynamicFiles(oldLogo);
+            
+
+            if( proyecto.logo !== null && logo ) {
+                const resultDelete = await deleteDynamicFiles([proyecto.logo]);
                 
                 if (resultDelete.code !== 200) {
                     console.log('No se pudo borrar la imagen anterior');
@@ -129,6 +140,7 @@ exports.updateProyecto = async (req, res) => {
             await Proyectos.update({
                 nombre,
                 clave,
+                status
             }, {
                 where: {
                     id
