@@ -92,8 +92,13 @@ Prestamos.hasOne( DetalleSalida, {foreignKey: 'prestamoId'} )
 DetalleSalida.belongsTo( Prestamos, {foreignKey: 'prestamoId'} )
 
 
-// Bitacora
+// Proyectos
+Proyectos.hasMany(Etapas, { foreignKey: 'proyectoId' })
 
+// Etapas
+Etapas.belongsTo(Proyectos, { foreignKey: 'proyectoId' })
+
+// Bitacora
 
 Bitacora.belongsTo(Proyectos, { foreignKey: 'proyectoId', allowNull: true })
 Bitacora.belongsTo(Etapas, { foreignKey: 'etapaId', allowNull: true })

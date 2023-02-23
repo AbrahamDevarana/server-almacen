@@ -72,7 +72,7 @@ async function solicitarPrestamo ( responsable, actividad, usuario ){
                 </div>
                 `
     const html = createHTML(body)
-    mailSender(usuario.email, 'Solicitud de Prestamo', html)
+    mailSender(usuario.email, 'Solicitud de Préstamo', html)
 }
 
 
@@ -94,6 +94,10 @@ async function reporteBitacora ( autor, tipoBitacora, involucrados, uid, correos
                     </ul>
                     <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Puedes ver el reporte en la plataforma </p>
                     <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/bitacora/${uid}">Ingresa Aquí</a>                    
+                </div>
+                <div style="background-color:#56739B;">
+                    <p style="color:#f9f9f9;text-align: center; padding: 30px 50px; font-size: 14px;"> Para cualquier duda o aclaración favor de ponerse en contacto con 
+                    <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia.">Abraham Alvarado</a> del Departamento de Tecnología. </p>
                 </div>
     `
     const html = createHTML(body)

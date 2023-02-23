@@ -3,7 +3,7 @@ const Bottleneck = require("bottleneck");
 
 const limiter = new Bottleneck({
     maxConcurrent: 1,
-    minTime: 1000
+    minTime: 2000
   });
 
 exports.mailSender = (to, subject, html, attachments = false, bcc) => {

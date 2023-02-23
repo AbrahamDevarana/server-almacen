@@ -1,8 +1,7 @@
 const { Bitacora, TipoBitacora, GaleriaBitacora, User, Role} = require('../models')
 const moment = require('moment')
 const formidable = require('formidable-serverless')
-const { s3Client } = require('../utils/s3Client')
-const { PutObjectCommand } = require('@aws-sdk/client-s3')
+
 const tinify = require('tinify');
 const ComentariosBitacora = require('../models/ComentarioBitacora')
 const GaleriaComentario = require('../models/GaleriaComentario')
@@ -20,6 +19,7 @@ const { io } = require('../services/socketService')
 const Proyectos = require('../models/Proyectos')
 const db = require('../config/db')
 const MailBitacora = require('../models/MailBitacora')
+const { uploadDynamicFiles } = require('../utils/dynamicFiles')
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
@@ -270,7 +270,7 @@ exports.createBitacora = async (req, res) => {
                 tipoBitacoraId: fields.tipoBitacoraId,
                 autorId: req.user.id,
                 externoId: fields.externoId,
-                actividad: fields.actividad,
+                actividad: fields.actividad || fields.actividadExterno,
                 esInterno: fields.esInterno,
                 fecha: moment(new Date(fields.fecha)).format('YYYY-MM-DD HH:mm:ss'),
 
@@ -400,7 +400,8 @@ exports.createComentario = async (req, res) => {
 
 // Generar reporte de bitacoras
 exports.generateReport = async (req, res) => {
-    const { titulo, descripcion, comentarios, imagenes, selectedOption = [] } = req.body
+    const { titulo, descripcion, comentarios, imagenes, selectedOption = [], proyectoId } = req.body
+
     try {
 
         await Bitacora.findAll({
@@ -441,7 +442,13 @@ exports.generateReport = async (req, res) => {
                 
             ]
         }).then( async (bitacoras) => {
-            await generatePdf(res, bitacoras,  titulo, descripcion, comentarios, imagenes)
+            const {logo} = await Proyectos.findOne({
+                where: { id: proyectoId },
+                attributes: ['logo']
+            })
+
+            
+            await generatePdf(res, bitacoras,  titulo, descripcion, comentarios, imagenes, logo)
         })
         
         
@@ -506,58 +513,9 @@ exports.updateBitacoraConfirm = async (req, res) => {
 
 
 // Funciones
-const uploadDynamicFiles = async (files, folderName) => {
 
 
-    let galeriaSet  = []
-
-    return new Promise( async (resolve, reject) => {
-            
-            await Promise.all(files.map(async (item) => {
-                
-            const contentType = item.type
-            let file = ''
-            let folder = `${folderName}/files`
-
-
-            if ( contentType === 'image/jpeg' || contentType === 'image/png' || contentType === 'image/jpg' ) {
-                let source = tinify.fromFile(item.path);
-                file = await source.toBuffer();
-                folder = `${folderName}/images`
-            }else{
-                file = fs.readFileSync(item.path)
-            }
-            
-
-
-            const uploadParams = {
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Body: file,
-                Key: `${folder}/file-${ new Date().getTime() }`,
-                ACL: 'public-read',
-                ContentType: contentType,
-            }
-
-            console.log(uploadParams);
-
-            const data = await s3Client.send(new PutObjectCommand(uploadParams))
-            if(data) {
-                galeriaSet.push({url: uploadParams.Key, type: contentType})
-            }else{
-                reject('error')
-            }
-
-        })).catch( (err) => {
-            console.log(err);
-            reject(err)
-        })
-
-
-        resolve(galeriaSet);
-    })
-}
-
-const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios, imagenes) => {
+const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios, imagenes, logotipoProyecto) => {
 
 
     const logo = fs.readFileSync(path.resolve(__dirname, '../static/img/logo.png'))
@@ -565,9 +523,6 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
 
     const pdfIcon = fs.readFileSync(path.resolve(__dirname, '../static/img/pdf-icon.png'))
     const logoPdfBase64 = pdfIcon.toString('base64')
-
-    const fullLogo = fs.readFileSync(path.resolve(__dirname, '../static/img/full-logo.png'))
-    const logoFullBase64 = fullLogo.toString('base64')
 
     
     // print first bitacoras
@@ -650,7 +605,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                     <h1 style="color:#d64767;text-align: center;font-size:1.2em;margin:0>">Reporte ${titulo} </h1>
                 </th>
                 <th style="width:20%;text-align:center;border: 1px solid rgba(0, 0, 0, .1);">
-                    <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/iconos%2Froyalview-logo.png" style="width:calc(90% - 10px); padding-top:3px;margin:0;padding-bottom:0;">
+                    <img src="https://devarana-storage.sfo3.cdn.digitaloceanspaces.com/${logotipoProyecto}" style="width:calc(90% - 10px); padding-top:3px;margin:0;padding-bottom:0;">
                 </th>
             </table>
 
@@ -854,9 +809,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                 footer: {
                     height: '40px',
                 },
-                zoomFactor: '1',
-
-                    
+                zoomFactor: '1',                    
             }
         ).toFile(`./public/pdf/Reporte-${moment().format('DD-MM-YYYY-hh-mm')}.pdf`, (err, res) => {
             if (err) return console.log(err);

@@ -1,6 +1,8 @@
 const { validationResult } = require('express-validator');
 const Proyectos = require('../models/Proyectos');
 const { Op } = require('sequelize');
+const { uploadDynamicFiles, deleteDynamicFiles } = require('../utils/dynamicFiles');
+const formidable = require('formidable-serverless');
 
 exports.getProyectos = async (req, res) => {
     try {
@@ -38,17 +40,49 @@ exports.createProyecto = async (req, res) => {
     }
 
     try {
-        const { nombre, clave, logo } = req.body;
-        await Proyectos.create({
-            nombre,
-            clave,
-            logo
-        }).then(proyecto => {
-            res.status(200).json({ proyecto });
-        }).catch(error => {
-            console.log(error);
-            res.status(500).json({ msg: 'No se pudo crear el proyecto', error: error.message});
-        });
+        const form = new formidable.IncomingForm({ multiples: true })
+        form.keepExtensions = true
+        form.parse(req, async (err, fields, files) => {
+            
+            if (err) {
+                console.log(err)
+                return res.status(400).json({ msg: 'No se pudo crear el proyecto' });
+            }
+            const { nombre, clave } = fields;
+
+            const galeria = Object.values(files)
+            const logo = galeria[0]
+            
+            await Proyectos.create({
+                nombre,
+                clave,
+            }).then(proyecto => {
+
+                if (logo) {
+                    uploadDynamicFiles([logo], 'proyectos').then( async (galeriaSet) => {
+                        await Proyectos.update({
+                            logo: galeriaSet[0].url
+                        }, 
+                        {
+                            where: {
+                                id: proyecto.id
+                            }
+                        })
+                    }).catch(error => {
+                        console.log(error);
+                        res.status(500).json({ msg: 'No se pudo cargar la imagen' });
+                    });
+                }
+                            
+
+                res.status(200).json({ proyecto });
+            }
+            ).catch(error => {
+                console.log(error);
+                res.status(500).json({ msg: 'No se pudo crear el proyecto' });
+            });
+        })
+
     } catch (error) {
         console.log(error);
         res.status(500).json({ msg: 'No se pudo crear el proyecto' });
@@ -60,24 +94,63 @@ exports.updateProyecto = async (req, res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.map() });
     }
+    
+
 
     try {
-        const { id } = req.params;
-        const { nombre, clave, logo } = req.body;
-        await Proyectos.update({
-            nombre,
-            clave,
-            logo
-        }, {
-            where: {
-                id
+        const form = new formidable.IncomingForm({ multiples: true })
+        form.keepExtensions = true
+        form.parse(req, async (err, fields, files) => {
+            
+            if (err) {
+                console.log(err)
+                return res.status(400).json({ msg: 'No se pudo crear el proyecto' });
             }
-        }).then(proyecto => {
-            res.status(200).json({ proyecto });
-        }).catch(error => {
-            console.log(error);
-            res.status(500).json({ msg: 'No se pudo actualizar el proyecto' });
-        });
+            const { nombre, clave } = fields;
+
+            const galeria = Object.values(files)
+            const logo = galeria[0]
+
+            const { id } = req.params;
+
+            // borrar la imagen anterior
+            const proyecto = await Proyectos.findByPk(id);
+
+            if(proyecto.logo !== null) {
+                console.log(oldLogo);
+                const resultDelete = await deleteDynamicFiles(oldLogo);
+                
+                if (resultDelete.code !== 200) {
+                    console.log('No se pudo borrar la imagen anterior');
+                }
+            }   
+            
+
+            await Proyectos.update({
+                nombre,
+                clave,
+            }, {
+                where: {
+                    id
+                }
+            }).then(async proyecto => {
+                if (logo) {
+                    uploadDynamicFiles([logo], 'proyectos').then( async (galeriaSet) => {
+                        await Proyectos.update({ logo: galeriaSet[0].url }, { where: { id } })
+                        
+                    }).catch(error => {
+                        console.log(error);
+                        res.status(500).json({ msg: 'No se pudo cargar la imagen' });
+                    });
+                }
+    
+                res.status(200).json({ proyecto });
+                }).catch(error => {
+                    console.log(error);
+                    res.status(500).json({ msg: 'No se pudo actualizar el proyecto' });
+                }
+            );
+        })
     } catch (error) {
         console.log(error);
         res.status(500).json({ msg: 'No se pudo actualizar el proyecto' });

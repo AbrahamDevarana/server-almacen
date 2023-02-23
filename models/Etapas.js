@@ -16,6 +16,10 @@ const Etapas = db.define ('etapas', {
         type: Sequelize.TEXT,
         allowNull: true,
     },
+    proyectoId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+    },
     status: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
