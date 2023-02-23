@@ -9,6 +9,20 @@ const ValeSalida  = require('../models/ValeSalida');
 exports.getAllPrestamos = async (req, res) => {
 
     const { id } = req.user;
+    const { search } = req.query;
+
+    const whereSearch = search ? {
+        [Op.or]: [
+            { '$residente.nombre$': { [Op.like]: `%${search}%` } },
+            { '$residente.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$residente.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$owner.nombre$': { [Op.like]: `%${search}%` } },
+            { '$owner.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$owner.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$detalle_salida.insumo.nombre$': { [Op.like]: `%${search}%` } },   
+        ]
+    } : {};
+   
     try {
          
         await Prestamos.findAll({ 
@@ -34,8 +48,13 @@ exports.getAllPrestamos = async (req, res) => {
                 exclude: ['createdAt', 'updatedAt', 'deletedAt']
             },
             where : {
-                [Op.or]: [{ 'belongsTo': id }, { 'deliverTo': id }],
-                [Op.not]: {'$detalle_salida.id$' : null }
+                //  [Op.or]: [{ 'belongsTo': id }, { 'deliverTo': id }],
+                // [Op.not]: {'$detalle_salida.id$' : null }
+               [Op.and]: [
+                    { [Op.or]: [{ 'belongsTo': id }, { 'deliverTo': id }] },
+                    { '$detalle_salida.id$' : { [Op.not]: null } },
+                    whereSearch,
+               ]
             },
             order: [['id', 'DESC']] 
         })
@@ -51,6 +70,21 @@ exports.getAllPrestamos = async (req, res) => {
 }
 
 exports.getFullPrestamos = async (req, res) => {
+
+    const { search } = req.query;
+
+    const whereSearch = search ? {
+        [Op.or]: [
+            { '$residente.nombre$': { [Op.like]: `%${search}%` } },
+            { '$residente.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$residente.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$owner.nombre$': { [Op.like]: `%${search}%` } },
+            { '$owner.apellidoPaterno$': { [Op.like]: `%${search}%` } },
+            { '$owner.apellidoMaterno$': { [Op.like]: `%${search}%` } },
+            { '$detalle_salida.insumo.nombre$': { [Op.like]: `%${search}%` } },   
+        ]
+    } : {};
+
     try {
          
         await Prestamos.findAll({ 
@@ -76,7 +110,10 @@ exports.getFullPrestamos = async (req, res) => {
                 exclude: ['createdAt', 'updatedAt', 'deletedAt']
             },
             where : {
-                [Op.not]: {'$detalle_salida.id$' : null }
+                [Op.and]: {
+                    [Op.not]: {'$detalle_salida.id$' : null },
+                    ...whereSearch
+                }
             },
             order: [['id', 'DESC']] 
         })
