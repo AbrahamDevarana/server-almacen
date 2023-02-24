@@ -23,6 +23,10 @@ const createHTML = (body) => {
     <body style="background-color: #f9f9f9;">
         <div style="background-color:#56739B;padding: 25px 0;"> <img src="cid:logo" alt="Logo" style="max-width: 200px;margin: auto;display: block;"> </div>
         ${body}
+        <div style="background-color:#56739B;">
+            <p style="color:#f9f9f9;text-align: center; padding: 30px 50px; font-size: 14px;"> Para cualquier duda o aclaración favor de ponerse en contacto con 
+            <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia.">Abraham Alvarado</a> del Departamento de Tecnología. </p>
+        </div>
     </body>
     </html>`
 
@@ -66,10 +70,7 @@ async function solicitarPrestamo ( responsable, actividad, usuario ){
                     <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/prestamos">Ingresa Aquí</a>
                     
                 </div>
-                <div style="background-color:#56739B;">
-                    <p style="color:#f9f9f9;text-align: center; padding: 30px 50px; font-size: 14px;"> Para cualquier duda o aclaración favor de ponerse en contacto con 
-                    <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia.">Abraham Alvarado</a> del Departamento de Tecnología. </p>
-                </div>
+                
                 `
     const html = createHTML(body)
     mailSender(usuario.email, 'Solicitud de Préstamo', html)
@@ -77,8 +78,6 @@ async function solicitarPrestamo ( responsable, actividad, usuario ){
 
 
 async function reporteBitacora ( autor, tipoBitacora, involucrados, uid, correos){
-
-    console.log('correos', correos);
 
     const body = `
                 <div style="margin:auto; max-width:600px; width:100%; padding:15px;">
@@ -95,10 +94,7 @@ async function reporteBitacora ( autor, tipoBitacora, involucrados, uid, correos
                     <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Puedes ver el reporte en la plataforma </p>
                     <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/bitacora/${uid}">Ingresa Aquí</a>                    
                 </div>
-                <div style="background-color:#56739B;">
-                    <p style="color:#f9f9f9;text-align: center; padding: 30px 50px; font-size: 14px;"> Para cualquier duda o aclaración favor de ponerse en contacto con 
-                    <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia.">Abraham Alvarado</a> del Departamento de Tecnología. </p>
-                </div>
+                
     `
     const html = createHTML(body)
     

@@ -19,7 +19,8 @@ const { io } = require('../services/socketService')
 const Proyectos = require('../models/Proyectos')
 const db = require('../config/db')
 const MailBitacora = require('../models/MailBitacora')
-const { uploadDynamicFiles } = require('../utils/dynamicFiles')
+const { uploadDynamicFiles } = require('../utils/dynamicFiles');
+const { sendFiles } = require('../email/FIles');
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
@@ -400,7 +401,7 @@ exports.createComentario = async (req, res) => {
 
 // Generar reporte de bitacoras
 exports.generateReport = async (req, res) => {
-    const { titulo, descripcion, comentarios, imagenes, selectedOption = [], proyectoId } = req.body
+    const { titulo, descripcion, comentarios, imagenes, selectedOption = [], proyectoId, destinatarios } = req.body
 
     try {
 
@@ -448,7 +449,7 @@ exports.generateReport = async (req, res) => {
             })
 
             
-            await generatePdf(res, bitacoras,  titulo, descripcion, comentarios, imagenes, logo)
+            await generatePdf(res, bitacoras,  titulo, descripcion, comentarios, imagenes, logo, destinatarios)
         })
         
         
@@ -515,7 +516,7 @@ exports.updateBitacoraConfirm = async (req, res) => {
 // Funciones
 
 
-const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios, imagenes, logotipoProyecto) => {
+const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios, imagenes, logotipoProyecto, destinatarios) => {
 
 
     const logo = fs.readFileSync(path.resolve(__dirname, '../static/img/logo.png'))
@@ -819,6 +820,9 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                 response.contentType("application/pdf");
                 response.setHeader('Content-Disposition', `attachment; filename=Reporte-${moment().format('DD-MM-YYYY-hh-mm')}.pdf`);
                 response.send(data);
+
+                sendFiles(destinatarios, titulo, data)
+
                 fs.unlinkSync(res.filename, (err) => {  if (err) throw err });
             })                
         })

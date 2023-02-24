@@ -86,7 +86,26 @@ function mailNewUser (usuario) {
     </body>
     </html>`
 
-    mailSender(usuario.email, 'Bienvenid@ al Software de Gestión de Almacén', html, true)    
+
+    const extraAttachments = [
+        {
+            filename: 'pc.png',
+            path: './static/img/pc.png',
+            cid: 'pc'
+        },
+        {
+            filename: 'phone.png',
+            path: './static/img/phone.png',
+            cid: 'phone'
+        },
+        {
+            filename: 'tablet.png',
+            path: './static/img/tablet.png',
+            cid: 'tablet'
+        }
+    ]
+
+    mailSender(usuario.email, 'Bienvenid@ al Software de Gestión de Almacén', html, extraAttachments)    
 }
 
 
