@@ -152,7 +152,7 @@ exports.getBitacoras = async (req, res) => {
                     { model: Etapas, attributes: ['nombre'], where: etapaWhere},
                     {
                         model: User,
-                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno'],
+                        attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture'],
                         as: 'autorInt',
                         required: false,
                         where: Sequelize.where(Sequelize.col('bitacora.esInterno'), true),
