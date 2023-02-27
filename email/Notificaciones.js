@@ -25,7 +25,7 @@ const createHTML = (body) => {
         ${body}
         <div style="background-color:#56739B;">
             <p style="color:#f9f9f9;text-align: center; padding: 30px 50px; font-size: 14px;"> Para cualquier duda o aclaración favor de ponerse en contacto con 
-            <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia.">Abraham Alvarado</a> del Departamento de Tecnología. </p>
+            <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia."> el administrador del sistema. </a> </p>
         </div>
     </body>
     </html>`

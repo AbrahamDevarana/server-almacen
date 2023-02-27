@@ -38,14 +38,14 @@ function mailNewUser (usuario) {
             <tr>
                 <td>
                     <div style="padding: 25px 50px 0px">
-                        <h1 style="color:#646375;text-align: center;">Bienvenid@ al Software de Gestión de Construcción</h1>
+                        <h1 style="color:#646375;text-align: center;">Bienvenid@ al Software de Gestión de Obra</h1>
     
                         <p style="font-weight: bold;color:#646375;padding: 15px 0 15px; font-size: 18px;">
                             ${usuario.nombre} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno},
                         </p>
     
                         <p style="color:#646375;padding: 15px 0;font-size: 16px;">
-                            Bienvenid@ al Software de Gestión de Construcción, en este momento tenemos listo tu usuario, para que puedas acceder al sistema y comenzar a utilizarlo.
+                            Bienvenid@ al Software de Gestión de Obra, en este momento tenemos listo tu usuario, para que puedas acceder al sistema y comenzar a utilizarlo.
                         </p>
                         <p style="color:#646375;padding: 15px 0;font-size: 16px;">
                             Para acceder al sistema ingresa a través del siguiente link:
@@ -76,7 +76,7 @@ function mailNewUser (usuario) {
             <tr style="background-color:#56739B;">
                 <td>
                     <p style="color:#f9f9f9;text-align: center; padding: 30px 50px; font-size: 14px;"> Para cualquier duda o aclaración favor de ponerse en contacto con 
-                    <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia.">Abraham Alvarado</a> del Departamento de Tecnología. </p>
+                    <a style="color:#f9f9f9;font-weight:500;" href="mailto:abrahamalvarado@devarana.mx?subject=SG Almacén&body=Hola oye tengo un problema aquí adjunto evidencia."> el administrador del sistema. </a> </p>
                 </td>
             </tr>
     
