@@ -2,6 +2,7 @@ const jwt = require('../services/jwtStrategy')
 const moment = require('moment')
 const Users = require('../models/Users')
 const bcrypt = require('bcrypt')
+const Empresa = require('../models/Empresa')
 
 exports.getAccessToken = (req, res) => {
     if (req.user){
@@ -64,7 +65,7 @@ exports.loginWithPassword = async (req, res) => {
     // if(email.match(/@devarana.mx/)) return res.status(400).json({ message: 'Debes iniciar sesión con tu cuenta de Google' })
 
     try {
-        const user = await Users.findOne({ where: { email }, attributes: ['id', 'email', 'password', 'esInterno'] })
+        const user = await Users.findOne({ where: { email }, attributes: ['id', 'email', 'password', 'esInterno'], include: [{ model: Empresa }] })
         if(user){
             const isPasswordValid = bcrypt.compareSync(password, user.dataValues.password)
             if(isPasswordValid){

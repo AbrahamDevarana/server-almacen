@@ -52,6 +52,9 @@ exports.getBitacoras = async (req, res) => {
         proyectoId ? {"$proyecto.id$" : proyectoId } : {},
     ]
 
+    const proyectoWhereCounter = `proyectoId = ${proyectoId}`
+    
+
     const busquedaWhere = busqueda ?
         {
             [Op.or]: [
@@ -260,7 +263,7 @@ exports.createBitacora = async (req, res) => {
 
             const tipoBitacora = await TipoBitacora.findOne({ where: { id: fields.tipoBitacoraId } })
 
-            const { clave } = await Proyectos.findOne({ where: { id: fields.proyectoId } })
+            const { clave, nombre: nombreProyecto } = await Proyectos.findOne({ where: { id: fields.proyectoId } })
 
             await Bitacora.create({
                 titulo: fields.titulo,
@@ -318,9 +321,18 @@ exports.createBitacora = async (req, res) => {
                         })
                     }
 
+
+                    const reporte = {
+                        autor: req.user, 
+                        tipoBitacora: tipoBitacora.dataValues.nombre, 
+                        involucrados: users, 
+                        uid: bitacora.dataValues.uid, 
+                        correosParticipantes,
+                        proyecto: nombreProyecto
+                    }
                    
 
-                    await reporteBitacora(req.user, tipoBitacora.dataValues.nombre, users, bitacora.dataValues.uid, correosParticipantes)
+                    await reporteBitacora(reporte)
                 }
 
                 await uploadDynamicFiles(galeria, 'bitacoras').then( async (result) => {

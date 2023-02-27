@@ -38,14 +38,14 @@ function mailNewUser (usuario) {
             <tr>
                 <td>
                     <div style="padding: 25px 50px 0px">
-                        <h1 style="color:#646375;text-align: center;">Bienvenid@ al Software de Gestión de Vales de Almacén</h1>
+                        <h1 style="color:#646375;text-align: center;">Bienvenid@ al Software de Gestión de Construcción</h1>
     
                         <p style="font-weight: bold;color:#646375;padding: 15px 0 15px; font-size: 18px;">
                             ${usuario.nombre} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno},
                         </p>
     
                         <p style="color:#646375;padding: 15px 0;font-size: 16px;">
-                            Bienvenid@ al Software de Gestión de Construcción, en este momento tenemos listo tu usuario para hacer uso del módulo de Vales de Almacén.
+                            Bienvenid@ al Software de Gestión de Construcción, en este momento tenemos listo tu usuario, para que puedas acceder al sistema y comenzar a utilizarlo.
                         </p>
                         <p style="color:#646375;padding: 15px 0;font-size: 16px;">
                             Para acceder al sistema ingresa a través del siguiente link:
@@ -62,7 +62,6 @@ function mailNewUser (usuario) {
     
             <tr style="background-color: #fff;"> 
                 <td>
-                    <p style="font-size: 14px; color: #646375;text-align: center; padding: 35px 0;"> Puedes consultar el manual del software <a style="font-weight:500;color: #646375" href="https://www.canva.com/design/DAFLe-gu7Mk/mr5YoVYJgIDwsDfhqtp9Ew/view?utm_content=DAFLe-gu7Mk&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink"> aquí </a>  </p>
                     <p style="font-size: 14px; color: #646375;text-align: center; padding: 35px 0;"> Podrás acceder a través de tu computadora de escritorio y/o dispositivos móviles: </p>
                 </td>
             </tr>

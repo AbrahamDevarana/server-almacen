@@ -28,7 +28,10 @@ exports.getUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
 
-    const { search, esInterno } = req.query
+    const { search, esInterno, roles } = req.query
+
+
+
     const where = search ? 
     {
         [Op.or]: [
@@ -59,14 +62,22 @@ exports.getUsers = async (req, res) => {
     where.status = true
 
 
+
+    if(roles){
+        // change roles stringarray to Numberarray
+        roleNumber = roles.map( role => Number(role) )
+        where.tipoUsuario_id = {
+            [Op.in]: roleNumber
+        }
+    }
+
+
     try {
-        //  include Model ROle, and Model Permisos
-        // include model Empresa pivot table
 
         await Users.findAll( { where, include: [
             {  model: Role, include: Permisos },
             {  model: Empresa }
-        ]}).then(usuarios => {
+        ]}).then( usuarios => {
             res.status(200).json({ usuarios })
         }).catch(error => {
             res.status(500).json({ message: 'Error al obtener los usuarios', error: error.message })

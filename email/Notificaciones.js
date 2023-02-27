@@ -62,13 +62,12 @@ function completarVale( usuario, valeSalida ){
 async function solicitarPrestamo ( responsable, actividad, usuario ){
     const body = `
                 <div style="margin:auto; max-width:600px; width:100%; padding:15px;">
+                <p style="color:#646375;padding-top: 15px;font-size: 18px;text-align:center;">Gestión de Vales de Almacén</p>
                     <h1 style="color:#646375;text-align: center;">Solicitud de Préstamo</h1>
                     <p style="color:#646375;padding: 15px 0;font-size: 16px;">Hola <span style="color:#d64767;font-weight:800">${usuario.nombre} ${usuario.apellidoPaterno}</span>,</p>
-                    <p style="color:#646375;padding: 15px 0;font-size: 16px;">El usuario <span style="color:#d64767; font-weight:800">${responsable.nombre} ${responsable.apellidoPaterno}</span> ha solicitado un prestamo para la siguiente actividad: <span style="font-weight:800">${actividad.nombre}</span>.</p>
-                    <p style="color:#646375;padding: 5px 0;font-size: 16px;">Puedes aprobar o rechazar la solicitud en la plataforma.</p>
-                    <p style="color:#646375;padding: 5px 0;font-size: 16px; font-weight:800">Recuerda que sin tu aprovación no se le dará su material.</p>
+                    <p style="color:#646375;padding: 15px 0;font-size: 16px;">El usuario <span style="color:#d64767; font-weight:800">${responsable.nombre} ${responsable.apellidoPaterno}</span> ha solicitado un prestamo de material para la siguiente actividad: <span style="font-weight:800">${actividad.nombre}</span>.</p>
+                    <p style="color:#646375;padding: 5px 0;font-size: 16px;">Puedes aprobar o rechazar la solicitud en la plataforma dentro del módulo de prestamos.</p>
                     <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/prestamos">Ingresa Aquí</a>
-                    
                 </div>
                 
                 `
@@ -77,21 +76,24 @@ async function solicitarPrestamo ( responsable, actividad, usuario ){
 }
 
 
-async function reporteBitacora ( autor, tipoBitacora, involucrados, uid, correos){
+async function reporteBitacora ( reporte ){
+
+    const { autor, tipoBitacora, involucrados, uid, correosParticipantes, proyecto } = reporte
 
     const body = `
                 <div style="margin:auto; max-width:600px; width:100%; padding:15px;">
-                    <h1 style="color:#646375;text-align: center;">Reporte de ${tipoBitacora} </h1>
-                    <p style="color:#646375;padding: 5px 0;font-size: 16px;"> El usuario <span style="color:#d64767; font-weight:800">${autor.nombre} ${autor.apellidoPaterno}</span> ha creado un reporte de ${tipoBitacora} </p>
-                    <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Los siguientes usuarios han sido involucrados en el reporte: </p>
+                    <p style="color:#646375;padding-top: 15px;font-size: 18px;text-align:center;">Bitácora de Obra Digital</p>
+                    <h1 style="color:#646375;text-align: center;padding-bottom:10px;">Registro de ${tipoBitacora} </h1>
+                    <p style="color:#646375;padding: 5px 0;font-size: 16px;"> El usuario <span style="color:#d64767; font-weight:800">${autor.nombre} ${autor.apellidoPaterno}</span> ha creado un Registro de ${tipoBitacora} de ${ proyecto } </p>
+                    <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Los siguientes usuarios han sido incluidos en la notificación de dicho reporte: </p>
                     <ul>
                         ${ involucrados.length > 0 ?  involucrados.map( usuario => `<li style="color:#646375;padding: 5px 0;font-size: 16px;">${usuario.nombre} ${usuario.apellidoPaterno}</li>`).join('') : '' }
                         ${
-                            correos && correos.length > 0 ? 
-                            correos.map( correo => `<li style="color:#646375;padding: 5px 0;font-size: 16px;">${correo}</li>`).join('') : ''
+                            correosParticipantes && correosParticipantes.length > 0 ? 
+                            correosParticipantes.map( correo => `<li style="color:#646375;padding: 5px 0;font-size: 16px;">${correo}</li>`).join('') : ''
                         }
                     </ul>
-                    <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Puedes ver el reporte en la plataforma </p>
+                    <p style="color:#646375;padding: 5px 0;font-size: 16px;"> Puedes conocer más detalles ingresando a la plataforma de Bitácora de Obra Digital: </p>
                     <a style="font-size: 16px; margin: 15px auto; text-align: center; max-width: 150px; width: 100%; display:block; padding: 10px 15px; color:#f9f9f9; background-color:#d64767; text-decoration: none; border-radius: 15px;" href="http://erp-devarana.mx/bitacora/${uid}">Ingresa Aquí</a>                    
                 </div>
                 
@@ -103,11 +105,11 @@ async function reporteBitacora ( autor, tipoBitacora, involucrados, uid, correos
     involucrados.forEach( async usuario => {
         
         
-        mailSender(usuario.email, `Reporte de ${tipoBitacora}`, html )
+        mailSender(usuario.email, `Registro de ${tipoBitacora}`, html )
 
-        if( correos.length > 0 ){
-            correos.forEach( correo => {
-                mailSender(correo, `Reporte de ${tipoBitacora}`, html )
+        if( correosParticipantes.length > 0 ){
+            correosParticipantes.forEach( correo => {
+                mailSender(correo, `Registro de ${tipoBitacora}`, html )
             })
         }
     })

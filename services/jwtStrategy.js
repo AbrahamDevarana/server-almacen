@@ -5,6 +5,9 @@ require ('dotenv').config();
 
 
 exports.createAccessToken = (user) => {
+    
+    const empresaId = user.empresas ? user.empresas[0].id : null
+    
     const payload = {
         id: user.id,
         nombre: user.nombre,
@@ -16,6 +19,7 @@ exports.createAccessToken = (user) => {
         puesto_id: user.puesto_id,
         suAdmin: user.suAdmin,
         esInterno: user.esInterno,
+        empresaId,
         expiresIn: moment().add( 7 , 'days').unix(),
     }
 
