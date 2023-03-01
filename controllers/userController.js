@@ -6,6 +6,7 @@ const Permisos = require('../models/Permisos')
 const bcrypt = require('bcrypt')
 const { Op } = require('sequelize')
 const Empresa = require('../models/Empresa')
+const { mailExternalNewUser } = require('../email/ExternalUser')
 
 
 exports.getUser = async (req, res) => {
@@ -129,7 +130,11 @@ exports.createUser = async (req, res) => {
                 }
                 delete usuario.dataValues.password
                 usuario.getDataValue('Role', await usuario.getRole())                
-                mailNewUser(usuario)
+                if(esInterno){
+                    mailNewUser(usuario)
+                }else{
+                    mailExternalNewUser(usuario, password)
+                }
                 const userLoaded = await Users.findOne({ where: { id: usuario.id }, include: Role }).catch(error => {
                     res.status(500).json({ message: 'Error al obtener el usuario', error: error.message })
                 })
