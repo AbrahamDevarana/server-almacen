@@ -833,7 +833,9 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                 response.setHeader('Content-Disposition', `attachment; filename=Reporte-${moment().format('DD-MM-YYYY-hh-mm')}.pdf`);
                 response.send(data);
 
-                sendFiles(destinatarios, titulo, data)
+                if(destinatarios && destinatarios.length > 0){
+                    sendFiles(destinatarios, titulo, data)
+                }
 
                 fs.unlinkSync(res.filename, (err) => {  if (err) throw err });
             })                
