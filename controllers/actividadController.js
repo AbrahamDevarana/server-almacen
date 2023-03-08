@@ -35,12 +35,11 @@ exports.createActividad = async (req, res) => {
         return res.status(400).json({ message: 'Todos los campos son obligatorios', errors: errors.array() });
     }
 
-    const { nombre, descripcion, status } = req.body
+    const { nombre, type } = req.body
     try {
         const actividad = await Actividad.create({
             nombre,
-            descripcion,
-            status
+            type,
         }).catch(error => {
             res.status(500).json({ message: 'Error al crear la actividad', error: error.message })
         })
@@ -62,7 +61,7 @@ exports.updateActividad = async (req, res) => {
 
 
     const {id} = req.params
-    const {nombre, descripcion, status} = req.body
+    const {nombre, type, status} = req.body
 
     try{
         const actividad = await Actividad.findOne({where: {id}}).catch(error => {
@@ -70,7 +69,7 @@ exports.updateActividad = async (req, res) => {
         })
         if(actividad){
             actividad.nombre = nombre ?? actividad.nombre
-            actividad.descripcion = descripcion ?? actividad.descripcion
+            actividad.type = type ?? actividad.type
             actividad.status = status ?? actividad.status
             await actividad.save()
             res.status(200).json({actividad})

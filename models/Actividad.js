@@ -12,13 +12,12 @@ const Actividades = db.define('actividades', {
         type: Sequelize.STRING,
         allowNull: false,
     },
-    descripcion: {
+    type: {
         type: Sequelize.STRING,
-        allowNull: false
     },
     status: {
         type: Sequelize.BOOLEAN,
-        allowNull: false,
+        defaultValue: true
     },
     createdAt: {
         type: Sequelize.DATE,
