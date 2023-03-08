@@ -1,9 +1,27 @@
+
+const { Op } = require('sequelize');
 const Actividad = require('../models/Actividad');
 const { validationResult } = require('express-validator')
 
 exports.getActividades = async (req, res) => {
+
+    const { status, type, search } = req.query
+
+    const where = {}
+
+    if(status) (where.status = status)
+
+    if(type) (where.type = type)
+
+
+    if(search) ( 
+        where[Op.or] = [
+            { nombre: { [Op.like]: `%${search}%` } },
+            { type: { [Op.like]: `%${search}%` } },
+        ]
+    )
     try {
-        const actividades = await Actividad.findAll({ where: { status: 1 }}).catch(error => {
+        const actividades = await Actividad.findAll({ where }).catch(error => {
             res.status(500).json({ message: 'Error al obtener las actividades', error: error.message })
         })
         if(actividades){

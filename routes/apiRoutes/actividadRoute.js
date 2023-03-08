@@ -8,15 +8,11 @@ router.get('/:id', checkAccess('editar actividades'), actividadController.getAct
 router.post('/', checkAccess('crear actividades'), 
     [
         check('nombre').not().isEmpty(),
-        check('descripcion').not().isEmpty(),
-        check('status').not().isEmpty()
     ], actividadController.createActividad )
 
 router.put('/:id', checkAccess('editar actividades'), 
     [
         check('nombre').not().isEmpty(),
-        check('descripcion').not().isEmpty(),
-        check('status').not().isEmpty()
     ], actividadController.updateActividad)
     
 router.delete('/:id', checkAccess('eliminar actividades'), actividadController.deleteActividad)
