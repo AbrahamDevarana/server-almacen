@@ -105,6 +105,7 @@ Bitacora.belongsTo(Etapas, { foreignKey: 'etapaId', allowNull: true })
 Bitacora.belongsTo(Obra, { foreignKey: 'obraId', allowNull: true })
 Bitacora.belongsTo(Nivel, { foreignKey: 'nivelId', allowNull: true })
 Bitacora.belongsTo(Zona, { foreignKey: 'zonaId', allowNull: true })
+Bitacora.belongsTo(Empresa, { foreignKey: 'empresaId', allowNull: true })
 Bitacora.belongsTo(TipoBitacora, { foreignKey: 'tipoBitacoraId' })
 
 Bitacora.belongsToMany(User, {

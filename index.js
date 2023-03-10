@@ -41,7 +41,9 @@ app.use('/api', router)
 
 
 dbConfig.sync()
-.then( () => console.log('Conectado al servidor'))
+.then( () => {
+    console.log('DB Connected')
+})
 .catch( err => {
     const errorinfo = `${new Date(Date.now()).toLocaleString()} - ${err} \n`
     console.log(errorinfo);

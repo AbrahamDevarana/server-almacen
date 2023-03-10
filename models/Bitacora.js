@@ -47,6 +47,11 @@ const Bitacora = db.define('bitacora', {
         type: Sequelize.BOOLEAN,
         defaultValue: true
     },
+    empresaId: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: null
+    },
     tipoBitacoraId: {
         type: Sequelize.INTEGER,
         allowNull: false,

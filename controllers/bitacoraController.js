@@ -21,6 +21,7 @@ const db = require('../config/db')
 const MailBitacora = require('../models/MailBitacora')
 const { uploadDynamicFiles } = require('../utils/dynamicFiles');
 const { sendFiles } = require('../email/FIles');
+const Empresa = require('../models/Empresa');
 tinify.key = process.env.TINY_IMG_API_KEY;
 // moment locale mx
 moment.locale('es-mx')
@@ -151,6 +152,7 @@ exports.getBitacoras = async (req, res) => {
                     { model: TipoBitacora, attributes: ['nombre'] },
                     { model: GaleriaBitacora, attributes: ['url', 'type'] },
                     { model: Etapas, attributes: ['nombre'], where: etapaWhere},
+                    { model: Empresa, attributes: ['nombreCompleto', 'nombreCorto'] },
                     {
                         model: User,
                         attributes: ['nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture'],
@@ -197,6 +199,7 @@ exports.getBitacora = async (req, res) => {
                     { model: GaleriaBitacora, attributes: ['id', 'url', 'type'] },
                     { model: Etapas, attributes: ['nombre']},
                     { model: MailBitacora, attributes: ['id', 'mail']},
+                    { model: Empresa, attributes: ['nombreCompleto', 'nombreCorto'] },
                     { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno' ], as: 'participantes' },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
                         { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
@@ -277,6 +280,7 @@ exports.createBitacora = async (req, res) => {
                 externoId: fields.externoId,
                 actividad: fields.actividad || fields.actividadExterno,
                 esInterno: fields.esInterno,
+                empresaId: fields.empresaId,
                 fecha: moment(new Date(fields.fecha)).format('YYYY-MM-DD HH:mm:ss'),
 
             }).then( async (bitacora) => {
@@ -427,6 +431,7 @@ exports.generateReport = async (req, res) => {
                     { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'esInterno' ], as: 'participantes' },
                     { model: Proyectos, attributes: ['id', 'nombre']  },
                     { model: MailBitacora, attributes: ['id', 'mail']},
+                    { model: Empresa, attributes: ['id', 'nombreCompleto', 'nombreCorto'] },
                     { model: ComentariosBitacora, attributes: ['id', 'comentario', 'bitacoraId', 'autorId', 'createdAt'], include: [
                         { model: User, attributes: ['id', 'nombre', 'apellidoPaterno', 'apellidoMaterno', 'picture' ]},
                         { model: GaleriaComentario, attributes: ['id', 'url', 'type'] }
@@ -632,7 +637,7 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
             ${
                 bitacoras.map( (bitacora, index) => {
 
-                    const { folio, titulo, descripcion, actividad, fecha, tipo_bitacora, autorInt, autorExt, proyecto, etapa, contratista, participantes, galeria_bitacoras, comentarios_bitacoras, ext_mail_bitacoras } = bitacora
+                    const { folio, titulo, descripcion, actividad, fecha, tipo_bitacora, autorInt, autorExt, proyecto, etapa, empresa, contratista, participantes, galeria_bitacoras, comentarios_bitacoras, ext_mail_bitacoras } = bitacora
                     const { nombre:nombreTipoBitacora } = tipo_bitacora
 
                     return (`
@@ -669,6 +674,14 @@ const generatePdf = async (response, bitacoras, titulo, descripcion, comentarios
                                 <div>
                                     <p style="display:inline-block;font-size: 1em;font-weight: bold;">Contratista:</p>
                                     <p style="display:inline-block;">${contratista.nombre}</p>
+                                </div>
+                                ` : ''
+                            }
+                            ${
+                                empresa ? `
+                                <div>
+                                    <p style="display:inline-block;font-size: 1em;font-weight: bold;">Contratista:</p>
+                                    <p style="display:inline-block;">${empresa.nombreCompleto}</p>
                                 </div>
                                 ` : ''
                             }
