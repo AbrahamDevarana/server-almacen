@@ -127,6 +127,7 @@ exports.getBitacoras = async (req, res) => {
                     COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 2 THEN bitacoras.id END) AS acuerdos,
                     COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 3 THEN bitacoras.id END) AS inicio,
                     COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 4 THEN bitacoras.id END) AS cierre,
+                    COUNT(DISTINCT CASE WHEN bitacoras.tipoBitacoraId = 5 THEN bitacoras.id END) AS eventos,
                     SUM(CASE WHEN pivot_bitacora_users.visited = 0  and pivot_bitacora_users.userId = ${id} THEN 1 ELSE 0 END) AS noVisto
                     FROM bitacoras
                     LEFT JOIN pivot_bitacora_users ON pivot_bitacora_users.bitacoraId = bitacoras.id
