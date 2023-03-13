@@ -278,7 +278,7 @@ exports.createBitacora = async (req, res) => {
                 tipoBitacoraId: fields.tipoBitacoraId,
                 autorId: req.user.id,
                 externoId: fields.externoId,
-                actividad: fields.actividad || fields.actividadExterno,
+                actividad: fields.actividad,
                 esInterno: fields.esInterno,
                 empresaId: fields.empresaId,
                 fecha: moment(new Date(fields.fecha)).format('YYYY-MM-DD HH:mm:ss'),
