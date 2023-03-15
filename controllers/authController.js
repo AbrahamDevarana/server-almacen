@@ -3,6 +3,7 @@ const moment = require('moment')
 const Users = require('../models/Users')
 const bcrypt = require('bcrypt')
 const Empresa = require('../models/Empresa')
+const { generatePassword } = require('../utils/generatePassword')
 
 exports.getAccessToken = (req, res) => {
     if (req.user){
@@ -85,5 +86,33 @@ exports.loginWithPassword = async (req, res) => {
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Error al iniciar sesión' })
+    }
+}
+
+
+exports.resetPassword = async (req, res) => {
+    
+    const { email } = req.body
+    try {
+        const newPassword = generatePassword(12)
+        const usuario = await Users.findOne({ where: { email, esInterno: false } })
+
+        if(usuario){
+
+            const salt = bcrypt.genSaltSync(10)
+            const password = bcrypt.hashSync(newPassword, salt)
+
+            await Users.update({ password }, { where: { email } })
+
+            await resetPasswordEmail(email, newPassword)
+
+            res.status(200).json({ message: 'Se ha enviado un correo con tu nueva contraseña' })
+
+        }else{
+            res.status(404).json({ message: 'Correo inexistente.' })
+        }
+    
+    } catch (error) {
+        res.status(500).json({ message: 'Error del servidor', error: error.message })
     }
 }

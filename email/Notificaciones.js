@@ -117,6 +117,7 @@ async function reporteBitacora ( reporte ){
 
 
 module.exports = {
+    createHTML,
     cancelarVale,
     completarVale,
     solicitarPrestamo,
