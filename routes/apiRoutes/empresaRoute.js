@@ -3,7 +3,7 @@ const { check } = require('express-validator')
 const empresaController = require('../../controllers/empresaController')
 const checkAccess = require('../../middleware/checkAccess')
 
-router.get('/', checkAccess('ver empresas'), empresaController.getEmpresas)
+router.get('/', empresaController.getEmpresas)
 router.get('/:id', checkAccess('editar empresas'), empresaController.getEmpresa)
 router.post('/',  checkAccess('crear empresas'),
     [
