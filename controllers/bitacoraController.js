@@ -457,8 +457,9 @@ exports.generateReport = async (req, res) => {
                         required: false,
                     }
                 
-
-                
+            ],
+            order: [
+                ['id', 'ASC']
             ]
         }).then( async (bitacoras) => {
             const {logo} = await Proyectos.findOne({
