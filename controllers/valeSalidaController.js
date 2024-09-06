@@ -5,7 +5,7 @@ const { validationResult } = require('express-validator')
 const moment = require('moment')
 const { Op } = require("sequelize");
 const Users = require('../models/Users')
-const { cancelarVale, completarVale, solicitarPrestamo } = require('../email/Notificaciones')
+const { solicitarPrestamo } = require('../email/Notificaciones')
 const Permisos = require('../models/Permisos')
 const Role = require('../models/Role')
 const Prestamos = require('../models/Prestamos')
@@ -14,6 +14,7 @@ const { Obra, Nivel, Zona, Personal, Actividad } = require('../models')
 const Actividades = require('../models/Actividad')
 const { getPagination, getPagingData } = require('../utils/paginacion')
 const { io } = require('../services/socketService')
+const Proyectos = require('../models/Proyectos')
 
 
 exports.getValeSalida = async (req, res) => {
@@ -688,7 +689,22 @@ exports.cerrarValesAbiertos = async (req, res) => {
 
 
 exports.getAllValesSalida = async (req, res) => {
-    const { page, limit:size, search, status:statusVale, dateInit, dateEnd, sort} = req.query
+    const { page, limit:size, search, status:statusVale, dateInit, dateEnd, sort, proyectoId} = req.query
+    
+    const proyecto = await Proyectos.findOne({ where: { id: proyectoId } })
+    
+    const etapas = await proyecto.getEtapas()
+
+    // const obras = etapas.map( async item => await item.getObras())
+    let obras = []
+
+    for (let i = 0; i < etapas.length; i++) {
+        const obra = await etapas[i].getObras()
+        obras.push(obra)
+    }
+   
+    const obraId = obras.map( item => item.map( item => item.id)).flat()
+
 
     const { limit, offset } = getPagination(page, size)
 
@@ -719,6 +735,11 @@ exports.getAllValesSalida = async (req, res) => {
 
     const searchDate = dateInit && dateEnd ? {
         '$vale_salida.fecha$' : {[Op.between] : [ moment(dateInit).startOf('day').format("YYYY-MM-DD HH:mm:ss"),  moment(dateEnd).endOf('day').format("YYYY-MM-DD HH:mm:ss") ]}
+    } : null
+
+
+    const searchObra = obraId.length > 0 ? {
+        '$vale_salida.obraId$': { [Op.in]: obraId }
     } : null
 
 
@@ -766,12 +787,12 @@ exports.getAllValesSalida = async (req, res) => {
                 ],             
                 order: [['id', `${sort ? sort : 'DESC'}`]],
                 distinct: true,                
-                where: {[Op.and]: [searchValue, searchStatus, searchDate, userType ]}, 
+                where: {[Op.and]: [searchValue, searchStatus, searchDate, userType, searchObra ]}, 
                 limit: limit,
                 offset:offset,
             })
             .then(valeSalida => {
-                const response = getPagingData(valeSalida, page, limit)
+                const response = getPagingData(valeSalida, page, limit)                
                 res.status(200).json({ valeSalida:response })
             })
             .catch(error => {

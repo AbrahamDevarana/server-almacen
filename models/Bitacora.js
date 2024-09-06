@@ -81,16 +81,22 @@ const Bitacora = db.define('bitacora', {
         beforeUpdate: (bitacora) => {
             bitacora.updatedAt = new Date()
         },
-        afterCreate: (bitacora) => {
+        afterCreate: async (bitacora) => {
             // Obtener el la clave del proyecto y el id de la bitacora
+
+            const countBitacoras = await Bitacora.count({
+                where: {
+                    proyectoId: bitacora.proyectoId
+                }
+            })
 
             bitacora.getProyecto().then(proyecto => {
                 // consultar el tipo de bitacora
 
                 bitacora.update({
-                    folio: `${proyecto.clave}-${bitacora.id}`
+                    folio: `${proyecto.clave}-${countBitacoras}`
                 })
-            })          
+            }) 
         }
             
             
